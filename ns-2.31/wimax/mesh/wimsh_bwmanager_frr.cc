@@ -685,7 +685,7 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 
 		if ( it->service_ == 3 ) {
 
-			// (cancell UGS service) applies to neigbours of the transmiter
+			// (cancel UGS service) applies to neigbours of the transmiter
 			if ( it->direction_ == WimshMshDsch::RX_AVL &&
 					mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
 
@@ -697,7 +697,7 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 							it->frame_, it->persistence_, it->start_, it->range_, false);
 				}
 
-			// (cancell UGS service) applies to neighbours of the reiceiver
+			// (cancel UGS service) applies to neighbours of the reiceiver
 			} else if ( it->direction_ == WimshMshDsch::TX_AVL &&
 					mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
 
@@ -841,9 +841,9 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 		// get service class of request
 		unsigned char s = it->service_;
 
-		// cancell reservations
+		// cancel reservations
 		if ( it->persistence_ == 0 ) {
-			cancell_Granter (ndx, s);
+			cancel_Granter (ndx, s);
 			continue;
 		}
 
@@ -1325,8 +1325,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 								* ie.persistence_;
 						break;
 					case 1 :
-						// create UGS cancell IE
-						cancell_Requester (ndx, s, dsch);
+						// create UGS cancel IE
+						cancel_Requester (ndx, s, dsch);
 
 						// hold on request of bandwidth to next opportunity
 						request_UGS_[ndx]++;
@@ -1625,7 +1625,7 @@ WimshBwManagerFairRR::invalidate (unsigned int F)
 }
 
 void
-WimshBwManagerFairRR::cancell_Requester (unsigned int ndx,
+WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 		unsigned char s, WimshMshDsch* dsch)
 {
 	if ( WimaxDebug::enabled() ) fprintf (stderr,"requester vou cancelar o serviço UGS\n");
@@ -1633,7 +1633,7 @@ WimshBwManagerFairRR::cancell_Requester (unsigned int ndx,
 	unsigned int fs = mac_->frame();
 	unsigned int F;
 
-	// send UGS cancell ReqIE to receiver
+	// send UGS cancel ReqIE to receiver
 	WimshMshDsch::ReqIE req;
 	req.nodeId_ = dst;
 	req.level_ = 0;
@@ -1685,7 +1685,7 @@ WimshBwManagerFairRR::cancell_Requester (unsigned int ndx,
 }
 
 void
-WimshBwManagerFairRR::cancell_Granter (unsigned int ndx,
+WimshBwManagerFairRR::cancel_Granter (unsigned int ndx,
 		unsigned char s)
 {
 	if ( WimaxDebug::enabled() ) fprintf (stderr,"granter vou cancelar o serviço UGS\n");

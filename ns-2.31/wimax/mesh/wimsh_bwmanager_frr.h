@@ -372,11 +372,11 @@ protected:
 	//! Invalidate the data structures' entries for the current frame.
 	void invalidate (unsigned int F);
 
-	//! Cancell UGS reservation for requester's neighbours and itself
-	void cancell_Requester (unsigned int ndx, unsigned char s, WimshMshDsch* dsch);
+	//! Cancel UGS reservation for requester's neighbours and itself
+	void cancel_Requester (unsigned int ndx, unsigned char s, WimshMshDsch* dsch);
 
-	//! Cancell UGS reservation for granter's neighbours and itself
-	void cancell_Granter (unsigned int ndx, unsigned char s);
+	//! Cancel UGS reservation for granter's neighbours and itself
+	void cancel_Granter (unsigned int ndx, unsigned char s);
 
 private:
 	//! Decode grants/confirmations from an incoming MSH-DSCH message.
