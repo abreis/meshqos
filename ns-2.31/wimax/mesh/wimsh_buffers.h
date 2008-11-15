@@ -52,7 +52,7 @@ class WimshFragmentationBuffer {
 	//! Remaining size in this burst.
 	unsigned int size_;
 	//! Last PDU (or fragment thereof) that did not fit into the PDU burst.
-	WimaxPdu* lastPdu_;
+	std::vector <WimaxPdu*> lastPdu_;
 	//! Next Fragment Sequence Number (FSN) to be used.
 	unsigned char fsn_;
 public:
@@ -72,9 +72,13 @@ public:
 	  immediately after the invocation of newBurst(). In this case, false
 	  is returned to indicate that new PDUs cannot be added.
 	  */
-	bool newBurst (wimax::BurstProfile p, unsigned int size);
+	bool newBurst (wimax::BurstProfile p, unsigned int size, unsigned int s);
+	/*
+	//! Add a MSH-DSCH_rtPS, if possible. True if entirely added.	
+	//bool addDsch (WimshMshDsch* dsch);
 	//! Add a PDU, if possible. True if the PDU is entirely added.
-	bool addPdu (WimaxPdu* pdu);
+	*/
+	bool addPdu (WimaxPdu* pdu, unsigned int s);
 	//! Return the current PDU burst.
 	WimshBurst* getBurst () { return burst_; }
 	//! Return the remaining size.

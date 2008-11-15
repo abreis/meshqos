@@ -86,10 +86,18 @@ WimshSchedulerFairRR::command (int argc, const char * const* argv)
 void
 WimshSchedulerFairRR::initialize ()
 {
+	const unsigned int neighbors = mac_->nneighs();
+	
 	// resize the vector of links and unfinished vectors
-	link_.resize (mac_->nneighs());
-	unfinishedRound_.resize (mac_->nneighs());
-
+	cbr_.resize (neighbors);
+	link_.resize (neighbors);
+	unfinishedRound_.resize (neighbors);
+	for ( unsigned int ngh = 0 ; ngh < neighbors ; ngh++ ) {
+		cbr_[ngh].resize (4);
+		link_[ngh].resize (4);
+		unfinishedRound_[ngh].resize (4);
+	}
+		
 	// start the timer to remove stale flows
 	if ( interval_ > 0 ) timer_.start ( interval_ );
 }
@@ -106,12 +114,17 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 
 	// priority of this PDU
 	const unsigned char prio = pdu->hdr().meshCid().priority();
+	
+	// map high layer priority traffic to service class at mac layer
+	unsigned char s = ( prio == 0 || prio == 1 ) ? 0 :
+						( prio == 2 || prio == 3 ) ? 1 :
+						( prio == 4 || prio == 5 ) ? 2 : 3 ;
 
 	// if the size of this PDU overflows the buffer size, drop the PDU/SDU/IP
 	if ( ( bufferSharingMode_ == SHARED &&
 			 bufSize_ + pdu->size() > maxBufSize_ ) ||
 		  ( bufferSharingMode_ == PER_LINK &&
-			 link_[ndx].size_ + pdu->size() > maxBufSize_) ) {
+			 link_[ndx][s].size_ + pdu->size() > maxBufSize_) ) {
 		drop (pdu);
 		return;
 	}
@@ -131,7 +144,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 
 	// flag used to check whether such a flow already exists
 	bool valid;
-	FlowDesc& desc = link_[ndx].rr_.find (tmp, valid);
+	FlowDesc& desc = link_[ndx][s].rr_.find (tmp, valid);
 
 	// check for per-flow buffer overflow
 	if ( bufferSharingMode_ == PER_FLOW &&
@@ -149,8 +162,11 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	// be added by the fragmentation buffer or not
 
 	desc.size_ += pdu->size();        // per flow
-	link_[ndx].size_ += pdu->size();  // per link
+	link_[ndx][s].size_ += pdu->size();  // per link
 	bufSize_ += pdu->size();          // shared
+	
+	if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_addPdu link %i serv %d buffsize %d\n",ndx, s
+						, link_[ndx][s].size_ );
 
 	Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
 	Stat::put ("wimsh_bufsize_mac_d", mac_->index(), bufSize_ );
@@ -158,8 +174,8 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	// add the flow descriptor into the active list, is not already there
 	// if this is the case, then the weights should be recomputed, as well
 	if ( ! valid ) {
-		link_[ndx].rr_.insert (desc);
-		recompute (link_[ndx].rr_);
+		link_[ndx][s].rr_.insert (desc);
+		recompute (link_[ndx][s].rr_);
 	}
 
 	// indicate the updated backlog to the bandwidth manager
@@ -169,13 +185,23 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 			pdu->hdr().meshCid().priority(),  // priority
 			pdu->hdr().meshCid().dst(),       // next-hop
 		   pdu->size());                     // bytes
+	
+	// call search_tx_slot to handle uncoordinated message to this neighbour
+	// confirm that was't alredy called for bwmanager
+	// only considered for rtPS traffic
+	if ( s == wimax::RTPS && (mac_->bwmanager()->nextFrame_rtPS(ndx) + 1) < mac_->frame() )
+		mac_->bwmanager()->search_tx_slot(ndx, 0);
+	
+	recomputecbr (ndx, s, pdu->size());
 }
 
 void
-WimshSchedulerFairRR::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst)
+WimshSchedulerFairRR::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst, unsigned int service)
 {
 	// get the link index
 	unsigned int ndx = mac_->neigh2ndx(dst);
+	
+	unsigned int s = service;
 
 	// print some debug information
 	if ( WimaxDebug::trace("WSCH::schedule") ) {
@@ -183,8 +209,8 @@ WimshSchedulerFairRR::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst)
 			"%.9f WSCH::schedule   [%d] dst %d remaining %d",
 			NOW, mac_->nodeId(), dst, frag.size());
 
-		CircularList<FlowDesc>& rr = link_[ndx].rr_;
-		fprintf (stderr, " backlog %d", link_[ndx].size_);
+		CircularList<FlowDesc>& rr = link_[ndx][s].rr_;
+		fprintf (stderr, " backlog %d", link_[ndx][s].size_);
 		if ( rr.size() == 0 ) {
 			fprintf (stderr, " qsize 0");
 		} else {
@@ -198,7 +224,6 @@ WimshSchedulerFairRR::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst)
 				rr.move ();
 			}
 		}
-
 		fprintf (stderr, "\n");
 	}
 
@@ -210,15 +235,16 @@ WimshSchedulerFairRR::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst)
 	// current flow is lower than that of other active flows
 	// however, then we do not update the deficit counter with a new quantum
 
-	if ( unfinishedRound_[ndx] ) spare = serve (frag, ndx, true);
+	if ( unfinishedRound_[ndx][s] ) spare = serve (frag, ndx, s, true);
 
 	// get the round-robin list
-	CircularList<FlowDesc>& rr = link_[ndx].rr_;
+	CircularList<FlowDesc>& rr = link_[ndx][s].rr_;
 
 	// schedule PDUs directed to the specified neighbor on a DRR fashion
 	// until there is room into the fragmentation buffer
 	// and the output queue towards that node is backlogged
-	while ( ! rr.empty() && spare ) spare = serve (frag, ndx, false);
+	while ( ! rr.empty() && spare ) spare = serve (frag, ndx, s, false);
+		
 }
 
 void
@@ -233,10 +259,10 @@ WimshSchedulerFairRR::drop (WimaxPdu* pdu)
 
 bool
 WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
-		unsigned int ndx, bool unfinished)
+		unsigned int ndx, unsigned int s, bool unfinished)
 {
 	// get the current round-robin list
-	CircularList<FlowDesc>& rr = link_[ndx].rr_;
+	CircularList<FlowDesc>& rr = link_[ndx][s].rr_;
 
 	// get the current traffic flow
 	FlowDesc& flow = rr.current();
@@ -271,9 +297,9 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 
 		// update the buffer occupancies
 		flow.size_ -= pdu->size();          // flow
-		link_[ndx].size_ -= pdu->size();    // link
+		link_[ndx][s].size_ -= pdu->size();    // link
 		bufSize_ -= pdu->size();            // MAC
-
+		
 		Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
 		Stat::put ("wimsh_bufsize_mac_d", mac_->index(), bufSize_ );
 
@@ -284,7 +310,10 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 ////////////////////////////////////////////////////////////////////////////////
 
 		// add the PDU to the fragmentation buffer
-		spare = frag.addPdu (pdu);
+		spare = frag.addPdu (pdu, s);
+		
+		if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_serve_spare link %i serv %d buffsize %d pdu-size %d spare %d\n", 
+				ndx, s, link_[ndx][s].size_, pdu->size(), spare);
 	}
 
 	// if this round terminated because there is no more spare room
@@ -293,11 +322,11 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 	// phase will restart exactly from where we leave now
 
 	if ( ! spare ) {
-		unfinishedRound_[ndx] = true;
+		unfinishedRound_[ndx][s] = true;
 		return spare;
 	}
 
-	unfinishedRound_[ndx] = false;
+	unfinishedRound_[ndx][s] = false;
 
 	// if the current element does not have any more PDUs, remove it
 	if ( flow.size_ == 0 )
@@ -334,6 +363,37 @@ WimshSchedulerFairRR::recompute (CircularList<FlowDesc>& rr)
 }
 
 void
+WimshSchedulerFairRR::recomputecbr (unsigned int ndx, unsigned char s, unsigned int bytes)
+{
+	if ( cbr_[ndx][s].pkt_ == 0 ) {
+		cbr_[ndx][s].startime_ = NOW;
+		
+		if ( WimaxDebug::enabled() ) fprintf (stderr,"0 recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f\n", 
+		 mac_->nodeId(), ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_,
+									cbr_[ndx][s].startime_);
+	
+	} else {
+		cbr_[ndx][s].quocient_ = (unsigned int) ( cbr_[ndx][s].bytes_ * 8 / 
+							(NOW - cbr_[ndx][s].startime_ ) );
+		
+		// error of division by zero
+		if ( NOW - cbr_[ndx][s].startime_ == 0 ) cbr_[ndx][s].quocient_ = 0;
+	
+		if ( WimaxDebug::enabled() ) fprintf (stderr,"recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f endtime %.9f quocient %d frame %d\n", 
+		mac_->nodeId(),ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, 
+		cbr_[ndx][s].startime_, NOW, cbr_[ndx][s].quocient_, mac_->frame());
+	}
+	
+	cbr_[ndx][s].pkt_ ++;
+	cbr_[ndx][s].bytes_ += bytes;
+	
+	if (cbr_[ndx][s].pkt_ == 100) {
+		cbr_[ndx][s].pkt_ = 0;
+		cbr_[ndx][s].bytes_ = 0;
+	}
+}
+
+void
 WimshSchedulerFairRR::handle ()
 {
 	if ( WimaxDebug::trace("WSCH::handle") ) fprintf (stderr,
@@ -346,29 +406,30 @@ WimshSchedulerFairRR::handle ()
 	if ( interval_ <= 0 ) return;
 
 	// remove stale flows
-	std::vector<LinkDesc>::iterator link;
-	for ( link = link_.begin() ; link != link_.end() ; ++link ) {
-		CircularList<FlowDesc>& rr = link->rr_;
+//	std::vector<LinkDesc>::iterator link;
+	for ( unsigned int n = 0 ; n < mac_->nneighs() ; n++ )
+		for ( unsigned int s = 0 ; n < 4 ; s++ ) {	
+			CircularList<FlowDesc>& rr = link_[n][s].rr_;
 
-		bool changed = false;
+			bool changed = false;
 
-		for ( unsigned int i = 0 ; i < rr.size() ; i++ ) {
-		   // get the current traffic flow
-		   FlowDesc& flow = rr.current();
+			for ( unsigned int i = 0 ; i < rr.size() ; i++ ) {
+				// get the current traffic flow
+				FlowDesc& flow = rr.current();
 
-			// remove the traffic flow if it has to be considered as inactive, i.e.
-			// there are not any enqueued PDUs and the user-specified flow timeout
-			// interval has expired since the last PDU has been received
-			if ( NOW - flow.last_ > interval_ && flow.queue_.empty() ) {
-				rr.erase ();
-				changed = true;
-			} else {
-				rr.move ();
+				// remove the traffic flow if it has to be considered as inactive, i.e.
+				// there are not any enqueued PDUs and the user-specified flow timeout
+				// interval has expired since the last PDU has been received
+				if ( NOW - flow.last_ > interval_ && flow.queue_.empty() ) {
+					rr.erase ();
+					changed = true;
+				} else {
+					rr.move ();
+				}
 			}
+			// recompute weights, if needed
+			if ( changed ) recompute (rr);
 		}
-		// recompute weights, if needed
-		if ( changed ) recompute (rr);
-	}
 
 	// restart the timer
 	timer_.start ( interval_ );

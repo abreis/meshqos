@@ -211,6 +211,8 @@ WimshPhy::sendBurst (WimshBurst* burst)
 		burst->txtime() += phyMib_->symShortPreamble() * phyMib_->symDuration ();
 	} else if ( burst->type() == wimax::MSHDSCH ) {
 		burst->txtime() += phyMib_->symShortPreamble() * phyMib_->symDuration ();
+	//} else if ( burst->type() == wimax::MSHDSCH_uncoordinated ) {
+	//	burst->txtime() += phyMib_->symShortPreamble() * phyMib_->symDuration ();
 	} else if ( burst->type() == wimax::MSHNCFG ) {
 		burst->txtime() += phyMib_->symShortPreamble() * phyMib_->symDuration ();
 	} else if ( burst->type() == wimax::MSHNENT ) {
@@ -324,6 +326,7 @@ WimshPhy::recvBurst (WimshBurst* burst)
 			"%.9f WPHY::recvBurst  [%d] phy %p src %d type %s txtime %f\n",
 			NOW, mac_->nodeId(), this, burst->source(),
 			( burst->type() == wimax::MSHDSCH ) ? "dsch" :
+			//( burst->type() == wimax::MSHDSCH_uncoordinated ) ? "dsch_uncoordinated" :
 			( burst->type() == wimax::MSHNCFG ) ? "ncfg" :
 			( burst->type() == wimax::MSHNENT ) ? "nent" :
 			( burst->type() == wimax::DATA ) ? "data" :

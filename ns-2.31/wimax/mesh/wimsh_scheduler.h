@@ -55,6 +55,20 @@ protected:
 
 	//! Maximum buffer size (in bytes). Set by the MAC via Tcl command.
 	unsigned int maxBufSize_;
+	
+	//! Stores the information of outgoing traffic flows rate
+	struct Cbr {
+		
+		unsigned int pkt_;
+		unsigned int bytes_;
+		double startime_;
+		double endtime_;
+		unsigned int quocient_;
+		
+		Cbr () { pkt_ = 0; bytes_ = 0; startime_ = 0.0; endtime_ = 0.0;  quocient_ = 0; }
+	};
+	
+	std::vector< std::vector< Cbr > > cbr_;
 
 public:
 	//! Create an empty bandwidth manager.
@@ -69,16 +83,18 @@ public:
 	virtual void addPdu (WimaxPdu* pdu) = 0;
 
 	//! Schedule a new data burst to a neighbor.
-	virtual void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst) = 0;
+	virtual void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst, unsigned int service) = 0;
 
 	//! Return the size, in bytes, of the queue to a neighbor (by index).
-	virtual unsigned int neighbor (unsigned ndx) = 0;
+	virtual unsigned int neighbor (unsigned ndx, unsigned int service) = 0;
 
 	//! Tcl interface via MAC.
 	virtual int command (int argc, const char*const* argv);
 
 	//! Return the total buffer occupancy, in bytes.
 	virtual unsigned int bufSize () { return bufSize_; }
+	
+	unsigned int cbrQuocient (unsigned int ndx, unsigned int s ) { return cbr_[ndx][s].quocient_; }
 };
 
 /*
@@ -113,10 +129,10 @@ public:
 	void addPdu (WimaxPdu* pdu);
 
 	//! Schedule a new data burst to a neighbor.
-	void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst);
+	void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst, unsigned int service);
 
 	//! Return the size, in bytes, of the queue to a neighbor.
-	unsigned int neighbor (unsigned int ndx) { return size_[ndx]; }
+	unsigned int neighbor (unsigned ndx, unsigned int service) { return size_[ndx]; }
 
 	//! Tcl interface via MAC.
 	int command (int argc, const char*const* argv);

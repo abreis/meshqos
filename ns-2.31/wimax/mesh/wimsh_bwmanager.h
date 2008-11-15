@@ -60,7 +60,7 @@ protected:
 
 	  Note that there is the following (bad) trick. The elements in
 	  the channel_ array are initialized to 'zero' and those in the
-	  grants_ array to 'receive'. Therefore, whenever a node does not
+	  grants_ array to 'receive'(rx). Therefore, whenever a node does not
 	  send a confirmation (ie. it does not use that slot for transmission)
 	  and does not receive a confirmation addressed to itself (ie. it does
 	  not receive from a neighbor in that slot) then the slot is
@@ -76,11 +76,26 @@ protected:
 	std::vector< std::bitset<MAX_SLOTS> > grants_;
 	//! Array of vectors representing the grants' destinations.
 	std::vector< std::vector<WimaxNodeId> > dst_;
+	std::vector< std::vector<WimaxNodeId> > src_;
 	//! Array of vectors representing the channel identifiers.
 	std::vector< std::vector<unsigned int> > channel_;
+	//! Array of vectors representing the service class for each burst traffic.
+	std::vector< std::vector<unsigned char> > service_;	
+	//! Two-dimension bitmap stores uncoordinated MSH-DSCH single slot tx opportunity
+	std::vector< std::vector<unsigned int> > uncoordsch_;	
 
 	//! Next slot to be served.
 	unsigned int lastSlot_;
+	
+	//! turn on when able to tranmit service class scheduling message
+	std::vector< std::vector<unsigned int> > startHorizon_;
+	
+	//! store next frame opportunity to tranmit service class scheduling message
+	std::vector< std::vector<unsigned int> > nextFrame_;
+	
+	std::vector< std::vector<unsigned int> > unDschState_;
+	
+	std::vector<unsigned int> rtpsDschFrame_;
 	
 public:
 	//! Create an empty bandwidth manager.
@@ -95,7 +110,7 @@ public:
 	/*!
 	  Some fieds have been already filled by the coordinator.
 	  */
-	virtual void schedule (WimshMshDsch* dsch) = 0;
+	virtual void schedule (WimshMshDsch* dsch, unsigned int ndx) = 0;
 
 	//! Timer handler.
 	virtual void handle ();
@@ -108,17 +123,21 @@ public:
 			WimaxNodeId nexthop, unsigned int bytes ) = 0;
 
 	//! Indicate some additional on a link towards a neighbor.
-	virtual void backlog (WimaxNodeId nexthop, unsigned int bytes ) = 0;
+	virtual void backlog (WimaxNodeId nexthop, unsigned int bytes, unsigned int service ) = 0;
 
 	//! Indicate some data was received.
 	virtual void received (WimaxNodeId src, WimaxNodeId dst, unsigned char prio,
 			WimaxNodeId source, unsigned int bytes) = 0;
 
 	//! We sent out some data on a link (i.e. negative backlog).
-	virtual void sent (WimaxNodeId nexthop, unsigned int bytes) = 0;
+	virtual void sent (WimaxNodeId nexthop, unsigned int bytes, unsigned int service_class) = 0;
 
 	//! Tcl interface from the MAC layer.
 	virtual int command (int argc, const char*const* argv) = 0;
+	
+	virtual void search_tx_slot (unsigned int ndx, unsigned int reqState) = 0;
+		
+	unsigned int nextFrame_rtPS (unsigned int ndx) { return nextFrame_[ndx][2]; }
 
 protected:
 	//! Invalidate any data structure of frame F (modulo HORIZON).
@@ -145,7 +164,7 @@ WimshBwManager::setSlots (
    // for each frame
    for ( unsigned int f = 0 ; f < frange ; f++ ) {
       unsigned int F = ( fstart + f ) % HORIZON;
-
+		
       // for each minislot
       for ( unsigned int s = 0 ; s < mrange ; s++ ) {
          unsigned int S = mstart + s;
@@ -195,7 +214,7 @@ public:
 	/*!
 	  Some fieds have been already filled by the coordinator.
 	  */
-	void schedule (WimshMshDsch* dsch);
+	void schedule (WimshMshDsch* dsch, unsigned int ndx);
 
 	//! Do nothing.
 	void initialize () { }
@@ -203,16 +222,20 @@ public:
 	//! Do nothing.
 	void backlog (WimaxNodeId, WimaxNodeId, unsigned char,
 			WimaxNodeId, unsigned int) { }
-	//! Do nothing.
-	void backlog (WimaxNodeId nexthop, unsigned int bytes ) { }
+	//! Do nothing.LinkId
+	void backlog (WimaxNodeId nexthop, unsigned int bytes, unsigned int service ) { }
 	//! Do nothing.
 	void received (WimaxNodeId src, WimaxNodeId dst, unsigned char,
 			WimaxNodeId source, unsigned int bytes) { }
 	//! Do nothing.
-	void sent (WimaxNodeId nexthop, unsigned int bytes) { }
+	void sent (WimaxNodeId nexthop, unsigned int bytes, unsigned int service_class) { }
 
 	//! Tcl interface from the MAC layer.
 	int command (int argc, const char*const* argv);
+	
+	void search_tx_slot (unsigned int ndx, unsigned int reqState) { }
+	
+	void computecbr () { }
 
 protected:
 	//! Invalidate any data structure of frame F (modulo HORIZON).

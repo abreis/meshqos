@@ -89,6 +89,7 @@ WimshChannel::recvBurst (WimshBurst* burst)
 			"%.9f WCHN::recvBurst  [%d] src %d type %s txtime %f\n",
 			NOW, uid_, burst->source(),
 			( burst->type() == wimax::MSHDSCH ) ? "dsch" :
+			//( burst->type() == wimax::MSHDSCH_uncoordinated ) ? "dsch_uncoordinated" :
 			( burst->type() == wimax::MSHNCFG ) ? "ncfg" :
 			( burst->type() == wimax::MSHNENT ) ? "nent" :
 			( burst->type() == wimax::DATA ) ? "data" :"unkn", burst->txtime());
@@ -123,6 +124,7 @@ WimshChannel::handle (WimshBurst* burst)
 			"%.9f WCHN::handle     [%d] src %d type %s txtime %f error %d\n",
 			NOW, uid_, burst->source(),
 			( burst->type() == wimax::MSHDSCH ) ? "dsch" :
+			//( burst->type() == wimax::MSHDSCH_uncoordinated ) ? "dsch_uncoordinated" :
 			( burst->type() == wimax::MSHNCFG ) ? "ncfg" :
 			( burst->type() == wimax::MSHNENT ) ? "nent" :
 			( burst->type() == wimax::DATA ) ? "data" : "unkn",

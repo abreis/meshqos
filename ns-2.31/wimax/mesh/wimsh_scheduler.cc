@@ -118,12 +118,15 @@ WimshSchedulerFifo::addPdu (WimaxPdu* pdu)
 			(WimaxNodeId) HDR_IP(pdu->sdu()->ip())->saddr(),  // src node
 			(WimaxNodeId) HDR_IP(pdu->sdu()->ip())->daddr(),  // dst node
 			pdu->hdr().meshCid().priority(),                  // priority
+			
+//***aqui não tem os campos drop nem reliability...		
+			
 			pdu->hdr().meshCid().dst(),                       // next hop
 		   pdu->size());                                     // bytes
 }
 
 void
-WimshSchedulerFifo::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst)
+WimshSchedulerFifo::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst, unsigned int service)
 {
 	unsigned int dstNdx = mac_->neigh2ndx(dst);
 	if ( WimaxDebug::trace("WSCH::schedule") ) fprintf (stderr,
@@ -150,7 +153,7 @@ WimshSchedulerFifo::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst)
 		Stat::put ("wimsh_bufsize_d", mac_->index(), bufSize_ );
 
 		// add the PDU to the fragmentation buffer
-		spare = frag.addPdu (pdu);
+		spare = frag.addPdu (pdu, service);
 	}
 
 }

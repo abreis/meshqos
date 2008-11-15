@@ -102,6 +102,9 @@ public:
 
 	//! Return the current element.
 	T& current () { assert ( size_ > 0 ); return *cur_; }
+	
+	//! Return internal structure
+	std::list<T> list () { return list_; }
 };
 
 #endif // __NS2_WIMAX_CIRCULAR_H

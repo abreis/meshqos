@@ -37,6 +37,9 @@ enum ChannelStatus { TX, RX, NONE };
 //! PDU burst type.
 enum BurstType { DATA, MSHNCFG, MSHNENT, MSHDSCH };
 
+//! Service Class
+enum ServiceClass { BE, NRTPS, RTPS, UGS, N_SERV_CALSS };
+
 // :MESH: {
 //! Link direction (input or output).
 enum LinkDirection { IN, OUT };
@@ -63,12 +66,14 @@ struct LinkId {
 	unsigned int ndx_;
 	//! Link's direction.
 	wimax::LinkDirection dir_;
+	//! Service Class
+	unsigned char service_;
 	//! Default constructor.
-	LinkId (unsigned int ndx = 0, wimax::LinkDirection dir = wimax::IN)
-		: ndx_ (ndx), dir_ (dir) { }
+	LinkId (unsigned int ndx = 0, wimax::LinkDirection dir = wimax::IN, unsigned char service = 0)
+		: ndx_ (ndx), dir_ (dir), service_ (service) { }
 	//! Return false if either ndx_ or dir_ are different.
 	bool operator!= (const LinkId& x) {
-		return ( x.ndx_ != ndx_ || x.dir_ != dir_ ); }
+		return ( x.ndx_ != ndx_ || x.dir_ != dir_ || x.service_ != service_ ); }
 };
 
 //! Next-hop and number of hops towards a destination

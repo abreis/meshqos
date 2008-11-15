@@ -51,12 +51,15 @@ public:
 	enum { MAX_SIZE = 96 };
 
 	//! Persistence level of availabilities/requests/grants.
-	enum Persistence {
-		CANCEL = 0, FRAME1, FRAME2, FRAME4,
-		FRAME8, FRAME32, FRAME128, FOREVER };
+	//enum Persistence {
+	//	CANCEL = 0, FRAME1, FRAME2, FRAME4,
+	//	FRAME8, FRAME32, FRAME128, FOREVER };
 
 	//! Direction for availabilities IEs.
-	enum Direction { UNAVAILABLE = 0, TX_ONLY, RX_ONLY, AVAILABLE };
+	enum Direction { UNAVAILABLE = 0, TX_AVL, RX_AVL, AVAILABLE };
+	
+	//! QoS MSH-DSCH service type.
+	enum ServiceType { UGS, RTPS, NRTPS, BE , N_SERVICE_CALSS };
 
 	//! Request data structure (3 bytes).
 	struct ReqIE {
@@ -64,8 +67,12 @@ public:
 		WimaxNodeId nodeId_;
 		//! Demand level (8 bits).
 		unsigned char level_;
-		//! Demand persistence (3 bits).
-		Persistence persistence_;
+		//! Demand persistence (3 bits).  		!!! +5bits
+		unsigned char persistence_;
+		//! Service Class (2 bits).             !!! +2bits
+		unsigned char service_;
+		
+		bool reserved_;
 
 		//! Return the size (in bytes) of this IE.
 		static unsigned int size () { return 3; }
@@ -81,10 +88,12 @@ public:
 		unsigned char range_;
 		//! Direction (2 bits).
 		Direction direction_;
-		//! Persistence (3 bits).
-		Persistence persistence_;
+		//! Persistence (3 bits).    	 !!! +5bits
+		unsigned char persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
+		//! Service Class (2 bits).	  	 !!! +2bits
+		unsigned char service_;
 
 		//! Return the size (in bytes) of this IE.
 		static unsigned int size () { return 4; }
@@ -102,10 +111,12 @@ public:
 		unsigned char range_;
 		//! Direction (1 bit). True = from requester to granter. Otherwise, false.
 		bool fromRequester_;
-		//! Persistence (3 bits).
-		Persistence persistence_;
+		//! Persistence (8 bits).			!!! +5bits
+		unsigned char persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
+		//! Service Class (2 bits).			!!! +2bits
+		unsigned char service_;
 
 		//! Return the size (in bytes) of this IE.
 		static unsigned int size () { return 5; }
@@ -136,6 +147,10 @@ private:
 	WimaxMacHeader hdr_;
 	//! Mesh subheader = transmitter NodeId (16 bits).
 	WimaxNodeId src_;
+	//! reserved_ = 1 used for uncoordinated MSH-DSCH of rtPS, default = 0
+	bool reserved_;
+	//! Grant/Request Flag (1 bit).
+	bool grant_;
 	
 	//! Sequence counter (6 bits).
 	unsigned int nseq_;
@@ -175,6 +190,8 @@ public:
 		navl_ = 0;
 		ngnt_ = 0;
 		nngh_ = 0;
+		reserved_ = false;
+		grant_ = false;
 	}
 	//! Return the current message size (in bytes).
 	unsigned int size () { return hdr_.length(); }
@@ -185,6 +202,10 @@ public:
 	WimaxMacHeader hdr () { return hdr_; }
 	//! Return the transmitter NodeID (in the mesh subheader).
 	WimaxNodeId& src () { return src_; }
+	//! Get/set the QoS service type.
+	bool& reserved () { return reserved_; }
+	
+	bool& grant () { return grant_; }
 
 	//! Add an availabilities IE. Return the available space (in bytes).
 	unsigned int add (AvlIE x) {
@@ -192,6 +213,10 @@ public:
 			hdr_.length() += AvlIE::size(); avl_.push_front(x);
 		} else if ( allocationType_ == CONTIGUOUS ) addContiguous (x);
 		return remaining(); }
+		
+	unsigned int rmAvl () {
+		avl_.pop_front(); hdr_.length() -= AvlIE::size(); 
+		return remaining(); }		
 	//! Add a request IE. Return the available space (in bytes).
 	unsigned int add (ReqIE x) {
 		hdr_.length() += ReqIE::size(); req_.push_front(x); return remaining(); }
@@ -201,6 +226,9 @@ public:
 			hdr_.length() += GntIE::size(); gnt_.push_front(x);
 		} else if ( allocationType_ == CONTIGUOUS ) addContiguous (x);
 		return remaining(); }
+		
+	unsigned int gntCompact () {
+		compactGntList (); return remaining(); }
 	//! Add a neighbors IE. Return the available space (in bytes).
 	unsigned int add (NghIE x) {
 		hdr_.length() += NghIE::size(); ngh_.push_front(x); return remaining(); }
@@ -218,11 +246,12 @@ public:
 
 	//! Convert a number of minislots into a pair <level, persistence> for req.
 	static void slots2level (unsigned int N, unsigned int minislots,
-			unsigned char& level, Persistence& persistence);
+			unsigned char& level, unsigned char& persistence);
 
 	//! Get/set the allocation type.
 	static AllocationType& allocationType () { return allocationType_; }
 
+	/*
 	//! Convert the persistence into a number of frames (except FOREVER).
 	static unsigned int pers2frames (Persistence p) {
 		return ( p == CANCEL ) ? 0 :
@@ -232,12 +261,14 @@ public:
 			( p == FRAME8 ) ? 8 :
 			( p == FRAME32 ) ? 32 :
 			( p == FRAME128 ) ? 128 : UINT_MAX; }
-
+	*/
 protected:
 	//! Add a grant IE with contiguous allocation.
 	void addContiguous (GntIE& x);
 	//! Add an availability IE with contiguous allocation.
 	void addContiguous (AvlIE& x);
+	
+	void compactGntList ();
 };
 
 //! MSH-NCFG control message. We assume coordinated message scheduling.
@@ -456,7 +487,12 @@ public:
 	WimshMshDsch*& mshDsch () { return mshDsch_; }
 	//! Add an MSH-DSCH message to the burst.
 	void addMshDsch (WimshMshDsch* m);
-	
+/*	
+	//! Get a pointer to the MSH-DSCH uncoordinated message, if any.
+	WimshMshDsch_uncoordinated*& mshDsch_uncoordinated () { return mshDsch_uncoordinated_; }
+	//! Add an MSH-DSCH message to the burst.
+	void addMshDsch_uncoordinated (WimshMshDsch* m);
+*/	
 	//! Get a pointer to the MSH-NCFG message, if any.
 	WimshMshNcfg*& mshNcfg () { return mshNcfg_; }
 	//! Add an MSH-NCFG message to the burst.

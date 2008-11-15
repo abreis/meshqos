@@ -55,6 +55,7 @@ protected:
 
 		//! Quantum value, in bytes. Set by the recompute() function.
 		unsigned int quantum_;
+		
 		//! Deficit counter, in bytes.
 		unsigned int deficit_;
 
@@ -93,7 +94,7 @@ protected:
 		//! Build an empty link descriptor.
 		LinkDesc () { size_ = 0; }
 	};
-
+	
 	//! Factors to be used to compute weights according to priorities.
 	/*!
 		 Default values are all equal to 1.
@@ -108,7 +109,7 @@ protected:
 	unsigned int roundDuration_;
 
 	//! Array of link descriptors, one for each neighbor. Initialized by the MAC.
-	std::vector<LinkDesc> link_;
+	std::vector< std::vector< LinkDesc > > link_;
 
 	//! True if there is a pending DRR round.
 	/*!
@@ -119,7 +120,7 @@ protected:
 	  current flow is pointed by the current round-robin pointer in
 	  the active list.
 	  */
-	std::vector<bool> unfinishedRound_;
+	std::vector< std::vector < bool > > unfinishedRound_;
 
 	//! Buffer sharing mode. Default is SHARED.
 	BufferSharingMode bufferSharingMode_;
@@ -140,24 +141,26 @@ public:
 	void addPdu (WimaxPdu* pdu);
 
 	//! Schedule a new data burst to a neighbor.
-	void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst);
+	void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst, unsigned int service);
 
 	//! Return the size, in bytes, of the queue to a neighbor (by index).
-	unsigned int neighbor (unsigned ndx) { return link_[ndx].size_; }
+	unsigned int neighbor (unsigned ndx, unsigned int service) { return link_[ndx][service].size_; }
 	
 	//! Tcl interface via MAC.
 	int command (int argc, const char*const* argv);
-
+	
 private:
 	//! Drop a PDU (by deallocating PDU/SDU/IP).
 	void drop (WimaxPdu* pdu);
 
 	//! Serve a flow until its deficit or backlog are exhausted.
 	bool serve (WimshFragmentationBuffer& frag,
-			unsigned int ndx, bool unfinished);
+		unsigned int ndx, unsigned int serv, bool unfinished);
 
 	//! Recompute the quanta values of a given list of flow descriptors.
 	void recompute (CircularList<FlowDesc>& rr);
+	
+	void recomputecbr (unsigned int ndx, unsigned char s, unsigned int bytes);
 };
 
 #endif // __NS2_WIMSH_SCHEDULER_FRR_H

@@ -26,6 +26,7 @@
 #include <wimsh_mac.h>
 
 #include <rng.h>
+#include <math.h>
 
 //! Fair round robin bandwidth manager for 802.16. Single-radio only.
 /*!
@@ -108,6 +109,15 @@ protected:
 		  this output link will lag some bandwidth request.
 		  */
 		unsigned int def_out_;
+		
+		//! persistence of requste received
+		unsigned char pers_in_;
+		
+		//! level of request received (slots/frame)
+		unsigned int level_in_;
+		
+		//! tell regrant() when received last entry of confirmation set
+		bool lastCnf_;
 
 		//! Create an empty descriptor.
 		NeighDesc () {
@@ -121,17 +131,17 @@ protected:
 			backlog_ = 0;
 			def_in_  = 0;
 			def_out_ = 0;
+			pers_in_ = 1;
+			level_in_ = 0;
+			lastCnf_ = false;
 		}
 	};
 
 	//! Array of neighbor descriptors for bandwidth requesting/granting.
-	std::vector<NeighDesc> neigh_;
+	std::vector< std::vector< NeighDesc > > neigh_;
 
 	//! Active-list of neighbor descriptors for bandwidth granting/requesting.
-	CircularList<wimax::LinkId> activeList_;
-
-	//! Active-list of neighbors descriptors for bandwidth regranting.
-	CircularList<unsigned int> regntActiveList_;
+	CircularList<wimax::LinkId> activeList_[wimax::N_SERV_CALSS];
 
 	//! Neighbors's unavailabilities to transmit.
 	/*!
@@ -152,6 +162,8 @@ protected:
 	  of the current data frame, at the end of each frame.
 	  */
 	std::vector< std::vector< Bitmap > > neigh_tx_unavl_;
+	std::vector< std::vector< Bitmap > > neigh_tx_unavl_UGS_;
+	std::vector< std::vector< Bitmap > > neigh_tx_unavl_NRTPS_;
 
 	//! Combination of <channel, frame, slot> where this node cannot receive.
 	/*!
@@ -165,6 +177,8 @@ protected:
 	  of the current data frame, at the end of each frame.
 	  */
 	std::vector< Bitmap > self_rx_unavl_;
+	std::vector< Bitmap > self_rx_unavl_UGS_;
+	std::vector< Bitmap > self_rx_unavl_NRTPS_;
 
 	//! Combination of <channel, frame, slot> where this node cannot transmit.
 	/*!
@@ -177,6 +191,8 @@ protected:
 	  of the current data frame, at the end of each frame.
 	  */
 	std::vector< Bitmap > self_tx_unavl_;
+	std::vector< Bitmap > self_tx_unavl_UGS_;
+	std::vector< Bitmap > self_tx_unavl_NRTPS_;
 
 	//! Two-dimension bitmap representing this node unavailabilities.
 	/*!
@@ -190,6 +206,8 @@ protected:
 	  at the end of each frame.
 	  */
 	Bitmap busy_;
+	Bitmap busy_UGS_;
+	Bitmap busy_NRTPS_;
 
 	//! Two-dimension bitmap representing the slots unconfirmed by this node.
 	/*!
@@ -204,15 +222,24 @@ protected:
 	  at the end of each frame.
 	  */
 	Bitmap unconfirmedSlots_;
+	
+	Bitmap unconfirmedSlots_UGS_;
+	Bitmap unconfirmedSlots_NRTPS_;
 
 	//! List of unconfirmed grants directed to this node.
-	std::list<WimshMshDsch::GntIE> unconfirmed_;
+	//std::list<WimshMshDsch::GntIE> unconfirmed_;
+	std::vector< std::list<WimshMshDsch::GntIE> > unconfirmed_[2];
+	
+	//! List of grants wating for sending
+	std::list<WimshMshDsch::GntIE> grantWating_[2];
 
 	//! List of pending availabilities to send out.
-	std::list<WimshMshDsch::AvlIE> availabilities_;
+	std::list<WimshMshDsch::AvlIE> availabilities_[2];
 
-   //! True if availabilities have to be advertised. Configured via Tcl.
-   bool avlAdvertise_;
+	//! True if availabilities have to be advertised. Configured via Tcl.
+	bool avlAdvertise_;
+	
+	std::vector<bool> send_rtps_together_;
 
 	//! Regrant horizon offset, in frames. Set via Tcl. Default = 1.
 	unsigned int regrantOffset_;
@@ -235,6 +262,9 @@ protected:
 
 	//! Maximum deficit, in bytes. Set via Tcl command. Zero means no maximum.
 	unsigned int maxDeficit_;
+	
+	//! Minumim slots per frame granted to rtPS service
+	unsigned int nrtpsMinSlots_;
 
 	//! Maximum backlog, in bytes. Set via Tcl command. Zero means no maximum.
 	unsigned int maxBacklog_;
@@ -256,6 +286,8 @@ protected:
 
 	//! Random number generator to pick up channel/frame/slot when granting.
 	RNG grantFitRng;
+	
+	RNG frameSpacing;
 
 	//! True if the starting channel is picked up randomly when granting.
 	bool grantFitRandomChannel_;
@@ -271,6 +303,8 @@ protected:
 
 	//! Minimum grant size, in OFDM symbols, preamble not included. Default = 1.
 	unsigned int minGrant_;
+	
+	std::vector<unsigned int> request_UGS_;
 
 public:
 	//! Create an empty bandwidth manager.
@@ -285,7 +319,7 @@ public:
 	/*!
 	  Some fieds have been already filled by the coordinator.
 	  */
-	void schedule (WimshMshDsch* dsch);
+	void schedule (WimshMshDsch* dsch, unsigned int ndx);
 
 	//! Resize the internal data structures based on the number of neighbors.
 	void initialize ();
@@ -295,10 +329,10 @@ public:
 			WimaxNodeId nexthop, unsigned int bytes);
 
 	//! We have some new data to send out on a link.
-	void backlog (WimaxNodeId nexthop, unsigned int bytes);
+	void backlog (WimaxNodeId nexthop, unsigned int bytes, unsigned int service);
 
 	//! We sent out some data on a link (i.e. negative backlog).
-	void sent (WimaxNodeId nexthop, unsigned int bytes);
+	void sent (WimaxNodeId nexthop, unsigned int bytes, unsigned int service_class);
 
 	//! We received some new data addressed to this node.
 	void received (WimaxNodeId src, WimaxNodeId dst, unsigned char prio,
@@ -331,10 +365,18 @@ public:
 	    Choose the algorithm to fit the grant into the forthcoming frames.
 		 */
 	int command (int argc, const char*const* argv);
+	
+	void search_tx_slot (unsigned int ndx, unsigned int reqState);
 
 protected:
 	//! Invalidate the data structures' entries for the current frame.
 	void invalidate (unsigned int F);
+	
+	//! Cancell UGS reservation for requester's neighbours and itself
+	void cancell_Requester (unsigned int ndx, unsigned char s, WimshMshDsch* dsch);
+	
+	//! Cancell UGS reservation for granter's neighbours and itself
+	void cancell_Granter (unsigned int ndx, unsigned char s);
 
 private:
 	//! Decode grants/confirmations from an incoming MSH-DSCH message.
@@ -387,10 +429,12 @@ private:
      Note that the cnf_out_ data structure is updated with the number
 	  of minislots actually confirmed which will be used for transmission.
 	  */
-   void confirm (WimshMshDsch* dsch);
-   //! Advertise pending availabilities.
-   void availabilities (WimshMshDsch* dsch);
-   //! Request/grant bandwidth.
+	void confirm (WimshMshDsch* dsch, unsigned int n, unsigned int serv_class);
+	
+	//! Advertise pending availabilities.
+	void availabilities (WimshMshDsch* dsch, unsigned int s);
+	
+	//! Request/grant bandwidth.
 	/*!
 	  :TODO: more documentation (come on, this is a critical function!)
 
@@ -402,23 +446,8 @@ private:
 	  The granted minislots are marked as unavailable for reception.
 	  The amount of granted minislots are udpated.
 	  */
-   void requestGrant (WimshMshDsch* dsch);
-
-	//! Regrant as much as possible unconfirmed bandwidth.
-	/*!
-	  Bandwidth is regranted on a round-robin fashion. If it is not possible
-	  to regrant bandwidth to a neighbor, then the behavior depends on the
-	  someFairness_ flag. If true, regranting stops immediately, and
-	  next regranting will begin from the current neighbor. On the other
-	  hand, if it is false, the neighbor is skipped and regranting continues
-	  over the remaining neighbors until either none of them can be
-	  served or there is not any more spare room in the MSH-DSCH message.
-
-	  In any case, the gnt_in_ counter for this neighbor is not updated.
-	  In other words, the latter counts the bytes that have been granted
-	  the first time only.
-	  */
-	void regrant (WimshMshDsch* dsch);
+	void requestGrant (WimshMshDsch* dsch, 
+			unsigned int ndx, unsigned int s);
 
 	//! Return the real number of frames for which the persistence is relevant.
 	/*!
@@ -428,7 +457,7 @@ private:
 	  do not want to update frames in the past, because we would overwrite
 	  information that will be used in the future (in a circular manner).
 	  */
-	void realPersistence (unsigned int start, WimshMshDsch::Persistence pers,
+	void realPersistence (unsigned int start, unsigned char pers,
 			unsigned int& realStart, unsigned int& range);
 
 	//! First-fit to grant bandwidth to a neighbor.
@@ -446,16 +475,23 @@ private:
 	  range is returned.
 	  */
 	WimshMshDsch::GntIE grantFit (unsigned int ndx, unsigned int bytes,
-			unsigned int minFrame, unsigned int maxFrame, grantFitDesc& status);
+		unsigned int frame,
+		bool& room, grantFitDesc& status, 
+		unsigned int serv_class, WimshMshDsch* dsch);
+
+	//void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,		
+	void realGrantStart (unsigned int ndx,
+		unsigned int gframe, unsigned char gstart,
+		unsigned char grange, unsigned char gchannel, WimshMshDsch::GntIE& gnt);
 
 	//! First-fit to confirm bandwidth (similar to grantFit).
 	/*!
 	  A slot in a frame on a channel is eligible to be confirmed
 	  if the corresponding entry of busy_ is false.
 	  */
-	void confFit ( unsigned int fstart, unsigned int frange,
-			unsigned int mstart, unsigned int mrange,
-			WimshMshDsch::GntIE& gnt);
+	void confFit (unsigned int f, unsigned int mstart, 
+			unsigned int mrange, WimshMshDsch::GntIE& gnt, bool& room, 
+				unsigned int serv_class, WimshMshDsch* dsch);
 
 	//! Get the interval between two consecutive control opportunities in frames.
 	unsigned int handshake (WimaxNodeId x) {
@@ -468,7 +504,8 @@ private:
 		return (unsigned int) (ceil(wm_.weight (ndx, dir) * roundDuration_)); }
 
 	//! Debug function. Print out  RR data structures.
-	void printDataStructures (FILE* os);
+	void printDataStructures (FILE* os, WimshMshDsch* dsch);
 };
+
 
 #endif // __NS2_WIMSH_BW_MANAGER_FRR_H

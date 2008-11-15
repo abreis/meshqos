@@ -215,33 +215,34 @@ WimaxDebug::print (WimshMshDsch* dsch, FILE* os, const char* hdr)
 	std::list<WimshMshDsch::AvlIE>::iterator avlIt;
 	fprintf (os, "%sAVAILABILITIES (%d)\n", hdr, avl.size());
 	for ( avlIt = avl.begin() ; avlIt != avl.end() ; avlIt++ )
-		fprintf (os,"%sframe %3d start %3d range %3d dir %s pers %1d chan %2d\n",
+		fprintf (os,"%sframe %3d start %3d range %3d dir %s pers %3d chan %2d serv %d\n",
 				hdr, avlIt->frame_, avlIt->start_, avlIt->range_,
 				( avlIt->direction_ == 0 ) ? "NO" :
 				( avlIt->direction_ == 1 ) ? "TX" :
 				( avlIt->direction_ == 2 ) ? "RX" :
 				( avlIt->direction_ == 3 ) ? "OK" : "XX",
-				avlIt->persistence_, avlIt->channel_);
+				avlIt->persistence_, avlIt->channel_, avlIt->service_);
 
 	// requests
 	std::list<WimshMshDsch::ReqIE>& req = dsch->req();
 	std::list<WimshMshDsch::ReqIE>::iterator reqIt;
 	fprintf (os, "%sREQUESTS (%d)\n", hdr, req.size());
 	for ( reqIt = req.begin() ; reqIt != req.end() ; reqIt++ )
-		fprintf (os, "%snode  %3d level %3d pers %1d\n",
-				hdr, reqIt->nodeId_, reqIt->level_, reqIt->persistence_);
-
+		fprintf (os, "%snode  %3d level %3d pers %3d serv %d\n",
+				hdr, reqIt->nodeId_, reqIt->level_, reqIt->persistence_, reqIt->service_);
+						
 	// grants
 	std::list<WimshMshDsch::GntIE>& gnt = dsch->gnt();
 	std::list<WimshMshDsch::GntIE>::iterator gntIt;
 	fprintf (os, "%sGRANTS/CONFIRMATIONS (%d)\n", hdr, gnt.size());
-	for ( gntIt = gnt.begin() ; gntIt != gnt.end() ; gntIt++ )
+	for ( gntIt = gnt.begin() ; gntIt != gnt.end() ; gntIt++ ) {
 		fprintf (os, "%snode  %3d frame %3d start %3d range %3d dir %s "
-				"pers %1d chan %2d\n",
+				"pers %3d chan %2d serv %d \n",
 				hdr, gntIt->nodeId_, gntIt->frame_,
 				gntIt->start_, gntIt->range_,
 				( gntIt->fromRequester_ == true ) ? "CNF" : "GNT",
-				gntIt->persistence_, gntIt->channel_);
+				gntIt->persistence_, gntIt->channel_, gntIt->service_);
+	}
 }
 
 void

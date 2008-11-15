@@ -31,11 +31,13 @@ WimshFragmentationBuffer::WimshFragmentationBuffer ()
 {
 	fsn_ = 0;
 	burst_ = 0;
-	lastPdu_ = 0;
+	lastPdu_.resize(wimax::N_SERV_CALSS);
+	for ( unsigned int j = 0 ; j < wimax::N_SERV_CALSS ; j++ )
+		lastPdu_[j] = 0;
 }
 
 bool
-WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size)
+WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size, unsigned int s)
 {
 	size_ = size;
 	burst_ = new WimshBurst;
@@ -48,7 +50,7 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size)
 	//
 	// if there is no pending PDU, return with success
 	//
-	if ( lastPdu_ == 0 ) return true;
+	if ( lastPdu_[s] == 0 ) return true;
 
 	//
 	// if there is a pending PDU, add it immediately
@@ -56,19 +58,23 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size)
 
 	// compute how many bytes are needed to send the pending PDU
 	// unfragmented (note that the PDU can be a fragment already)
-	unsigned int needed = lastPdu_->size();
+	unsigned int needed = lastPdu_[s]->size();
 
 	// there is room for the whole PDU (or fragment thereof)
 	if ( needed <= size_ ) {
 
+	if ( WimaxDebug::enabled() ) fprintf (stderr,
+			"!!lastPdu tamanho %d service %d\n",lastPdu_[s]->size(), s);
+
+
 		// if the stored PDU is a fragment, then it is the last one
-		if ( lastPdu_->hdr().fragmentation() == true )
-			lastPdu_->fsh().state() = WimaxFsh::LAST_FRAG;
+		if ( lastPdu_[s]->hdr().fragmentation() == true )
+			lastPdu_[s]->fsh().state() = WimaxFsh::LAST_FRAG;
 
-		burst_->addData (lastPdu_);
-		size_ -= lastPdu_->size();
+		burst_->addData (lastPdu_[s]);
+		size_ -= lastPdu_[s]->size();
 
-		lastPdu_ = 0;
+		lastPdu_[s] = 0;
 		if ( size_ > WimaxPdu::minSize() ) return true;
 		return false;
 
@@ -77,7 +83,7 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size)
 
 		int fragsize =
 			  size_                        // remaining space
-			- lastPdu_->hdr().size()       // minus the MAC header
+			- lastPdu_[s]->hdr().size()       // minus the MAC header
 			- WimaxPdu::meshSubhdrSize()   // minus the mesh subheader
 			- WimaxFsh::size();            // minus the fragmentation subheader
 
@@ -86,12 +92,12 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size)
 		
 		// create a new PDU to be added to the burst
 		// note: the IP datagram is copied!
-		WimaxPdu* newpdu = new WimaxPdu (*lastPdu_);
-		WimaxSdu* newsdu = new WimaxSdu (*lastPdu_->sdu());
-		newsdu->copyPayload (lastPdu_->sdu());
+		WimaxPdu* newpdu = new WimaxPdu (*lastPdu_[s]);
+		WimaxSdu* newsdu = new WimaxSdu (*lastPdu_[s]->sdu());
+		newsdu->copyPayload (lastPdu_[s]->sdu());
 		newpdu->sdu() = newsdu;
 
-		if ( lastPdu_->hdr().fragmentation() == false ) {
+		if ( lastPdu_[s]->hdr().fragmentation() == false ) {
 			// set the header fields of the newly created PDU
 			newpdu->hdr().fragmentation() = true;
 			newpdu->fsh().state() = WimaxFsh::FIRST_FRAG;
@@ -102,18 +108,18 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size)
 			fsn ();
 
 			// update the frame sequence number and size of the last PDU
-			lastPdu_->hdr().fragmentation() = true;
-			lastPdu_->fsh().fsn() = newpdu->fsh().fsn();
-			lastPdu_->size (lastPdu_->sdu()->size() - fragsize);
+			lastPdu_[s]->hdr().fragmentation() = true;
+			lastPdu_[s]->fsh().fsn() = newpdu->fsh().fsn();
+			lastPdu_[s]->size (lastPdu_[s]->sdu()->size() - fragsize);
 		} else {
 			// set the header fields of the newly created PDU
 			newpdu->hdr().fragmentation() = true;
 			newpdu->fsh().state() = WimaxFsh::CONT_FRAG;
-			newpdu->fsh().fsn() = lastPdu_->fsh().fsn();
+			newpdu->fsh().fsn() = lastPdu_[s]->fsh().fsn();
 			newpdu->size (fragsize);
 
 			// update the size of the last PDU
-			lastPdu_->hdr().length() = lastPdu_->size () - fragsize;
+			lastPdu_[s]->hdr().length() = lastPdu_[s]->size () - fragsize;
 		}
 
 		size_ = 0;
@@ -121,9 +127,33 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size)
 		return false;
 	}
 }
-
+/*
 bool
-WimshFragmentationBuffer::addPdu (WimaxPdu* pdu)
+WimshFragmentationBuffer::addDsch (WimshMshDsch* dsch)
+{
+	// Check the dsch size against the remaining size.
+	if ( size_ >= dsch->size() ) {
+
+		// add the dsch to the burst.
+		burst_->addMshDsch_rtPS (dsch);
+		fprintf (stderr, "adicionou correctamente msh-dsch_rtPS ao burst de dados\n")
+
+		// Update the remaining size.
+		size_ -= dsch->size();
+
+		// Check whether there is still some room in this burst.
+		// Note that this is a necessary but not sufficient condition.
+		if ( size_ > WimaxPdu::minSize() ) {
+		fprintf (stderr, "alem da msh-dsch_rtPS ainda consigo adicionar mais pdus ao burts de dados \n")
+		return true;
+		}
+		return false;
+	} else
+		fprintf (stderr, "ERRO nao enviou a mensagem msh-dsch_rtPS porque não tinha espaco\n")
+}
+*/
+bool
+WimshFragmentationBuffer::addPdu (WimaxPdu* pdu, unsigned int s)
 {
 	// Check the PDU size against the remaining size.
 	// If there is enough room, do not fragment the PDU.
@@ -151,7 +181,7 @@ WimshFragmentationBuffer::addPdu (WimaxPdu* pdu)
 	// then fragment it. Otherwise, just keep the PDU unfragmented for later.
 
 	// In any case, save the last PDU.
-	lastPdu_ = pdu;
+	lastPdu_[s] = pdu;
 
 	// Check the maximum fragment size.
 	int fragsize =
@@ -177,9 +207,9 @@ WimshFragmentationBuffer::addPdu (WimaxPdu* pdu)
 		fsn();
 
 		// Update the size of the last PDU.
-		lastPdu_->hdr().fragmentation() = true;
-		lastPdu_->fsh().fsn() = newpdu->fsh().fsn();
-		lastPdu_->size (lastPdu_->sdu()->size() - fragsize);
+		lastPdu_[s]->hdr().fragmentation() = true;
+		lastPdu_[s]->fsh().fsn() = newpdu->fsh().fsn();
+		lastPdu_[s]->size (lastPdu_[s]->sdu()->size() - fragsize);
 
 		size_ = 0;
 		burst_->addData (newpdu);

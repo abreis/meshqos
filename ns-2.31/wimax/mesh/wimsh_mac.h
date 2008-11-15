@@ -360,6 +360,7 @@ public:
 	  then send it to the PHY layer.
 	  */
 	void opportunity (WimshMshDsch* dsch);
+	void uncoordinated_opportunity (unsigned int dst, bool grant);
 	//! Receive a partial MSH-NCFG from the coordinator and send it to the PHY.
 	void opportunity (WimshMshNcfg* ncfg);
 	//! Receive a partial MSH-NENT from the coordinator and send it to the PHY.
@@ -453,10 +454,13 @@ public:
 	void receive (unsigned int channel);
 
 	//! Transmit data over a given channel. Single-radio only.
-	void transmit (unsigned int range, WimaxNodeId dst, unsigned int channel);
+	void transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, unsigned int service);
 
 	//! Return the number of neighbors of this node.
 	unsigned int nneighs () { return nneighs_; }
+	
+	//! My estimated interval time between two consecutive opportunities.
+	double hSelf () { return hSelf_; }
 
 	//! Return the number of available channels.
 	unsigned int nchannels () { return channel_.size(); }
