@@ -1,0 +1,98 @@
+# vim: syntax=tcl
+# Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
+# http://info.iet.unipi.it/~cng/ns2mesh80216/
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
+
+#
+# 802.16 mesh Tcl scenario metrics configuration
+# author: C.Cicconetti <claudio.cicconetti@iet.unipi.it>
+#
+
+#
+# metrics definition procedure
+#
+proc create_metrics {} {
+   global ns opt
+
+	set buffer $opt(buffer)
+	set nbins [expr $opt(buffer) / 1000]
+
+	$ns stat add wimsh_dsch_election_slots_d  dst discrete 16 115 100
+	$ns stat add wimsh_dsch_inter_time_rcv_d  dst discrete 0 0.1 250
+	$ns stat add wimsh_dsch_inter_time_snd_d  dst discrete 0 0.1 250
+	$ns stat add wimsh_bufsize_mac_d    dst continuous 0  $buffer $nbins
+	$ns stat add wimsh_delay_access_d   dst discrete   0  5       100
+	$ns stat add wimsh_delay_hopbyhop_d dst discrete   0  5       100
+	$ns stat add wimsh_dsch_size_d      dst discrete   15 120     105
+	$ns stat add wimsh_unused_d         dst discrete   0  256     256
+
+	$ns stat add wimsh_gnt_in               avg continuous
+	$ns stat add wimsh_gnt_size             avg discrete
+	$ns stat add wimsh_gnt_out              avg continuous
+
+	$ns stat add wimsh_cnf_in               avg continuous
+	$ns stat add wimsh_cnf_size             avg discrete
+	$ns stat add wimsh_cnf_out              avg continuous
+
+	$ns stat add wimsh_req_in               avg continuous
+	$ns stat add wimsh_req_out              avg continuous
+
+	$ns stat add wimsh_regnt_in             avg rate
+
+	$ns stat add wimsh_active_flows          avg continuous
+	$ns stat add wimsh_dd_timeout            avg rate
+	$ns stat add wimsh_mac_tpt              avg rate
+	$ns stat add wimsh_chn_ctrl_tpt         avg rate
+	$ns stat add wimsh_chn_data_tpt         avg rate
+	$ns stat add wimsh_drop_overflow        avg rate
+	$ns stat add wimsh_bufsize_mac_a        avg continuous
+	$ns stat add wimsh_delay_access_a       avg discrete
+	$ns stat add wimsh_delay_hopbyhop_a     avg discrete
+	$ns stat add wimsh_dsch_size_a          avg discrete
+	$ns stat add wimsh_election_util        avg discrete
+	$ns stat add wimsh_unused_a             avg discrete
+
+	$ns stat add wimsh_dsch_h_error         avg discrete
+	$ns stat add wimsh_dsch_error           avg discrete
+	$ns stat add wimsh_dsch_election_random avg discrete
+	$ns stat add wimsh_dsch_election_slots  avg discrete
+	$ns stat add wimsh_dsch_inter_frame_rcv avg discrete
+	$ns stat add wimsh_dsch_inter_time_rcv  avg discrete
+	$ns stat add wimsh_dsch_inter_frame_snd avg discrete
+	$ns stat add wimsh_dsch_inter_time_snd  avg discrete
+	$ns stat add wimsh_dsch_competing       avg discrete
+	$ns stat add wimsh_ncfg_election_random avg discrete
+	$ns stat add wimsh_ncfg_election_slots  avg discrete
+	$ns stat add wimsh_ncfg_inter_frame     avg discrete
+	$ns stat add wimsh_ncfg_inter_time      avg discrete
+	$ns stat add wimsh_nent_inter_frame     avg discrete
+	$ns stat add wimsh_nent_inter_time      avg discrete
+	$ns stat add wimsh_sponsor_latency      avg discrete
+	$ns stat add wimsh_linkest_latency      avg discrete
+	$ns stat add wimsh_scan_latency         avg discrete
+
+	$ns stat add voip_mos_talkspurt        avg discrete
+	$ns stat add voip_%_of_bad_talkspurts  avg discrete
+
+	$ns stat add tcp_cwnd_a      avg continuous
+	$ns stat add tcp_dupacks     avg continuous
+	$ns stat add tcp_ssthresh    avg continuous
+	$ns stat add tcp_rtt         avg continuous
+	$ns stat add tcp_srtt        avg continuous
+	$ns stat add tcp_rexmitpack  avg rate
+	$ns stat add tcp_rexmitbytes avg rate
+	$ns stat add tcp_cwnd_d      dst continuous 0 128 128
+}

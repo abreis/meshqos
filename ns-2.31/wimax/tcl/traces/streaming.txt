@@ -1,0 +1,296 @@
+                          Video: Jurassic_Park_1_DVD
+
+   [ [1]Trace     Website ]->[ [2]Video     Traces ]->[ [3]MPEG4    Video
+   Library ]->[ [4]Jurassic_Park_1_DVD ]->[ Details ]
+
+   [Jurassic_Park_1_DVD.gif] Properties:
+   Format: cif
+   Enc. mode: spatial
+   Rate Control (CBR)
+   Target rate: 1Mbps
+   Base layer
+   Frame stuffing: zero
+   Details for: frame
+   [5]Terse Trace File (base layer only)
+
+   Number of Frames 54000
+   Compression Ratio 36.4914
+   Minimum Frame Size (Bytes) 8
+   Maximum Frame Size (Bytes) 29088
+   Mean Frame Size (KBytes) 4.167116
+   Sum of Frame Sizes (Bytes) 225024272
+   Peak / Mean Ratio 6.980367
+   Variance of Frame Sizes 829095809.529219
+   Coefficient of Variation of Frame Sizes 0.863728
+   Mean Bit Rate (Mbps) 1.000108
+   Peak Bit Rate (Mbps) 6.981120
+   Hurst Paramater (Variance Time) 0.452932
+   Hurst Parameter (R/S @ agg. level 1) 0.390034
+   Hurst Parameter (R/S @ agg. level 2) 0.416569
+   Hurst Parameter (R/S @ agg. level 3) 0.401496
+   Hurst Parameter (R/S @ agg. level 12) 0.445520
+   Hurst Parameter (R/S @ agg. level 24) 0.424522
+   Hurst Parameter (R/S @ agg. level 48) 0.441780
+   Hurst Parameter (R/S @ agg. level 96) 0.458655
+   Hurst Parameter (R/S @ agg. level 192) 0.449927
+   Hurst Parameter (R/S @ agg. level 300) 0.581539
+   Hurst Parameter (R/S @ agg. level 396) 0.458522
+   Hurst Parameter (R/S @ agg. level 504) 0.449859
+   Hurst Parameter (R/S @ agg. level 600) 0.552704
+   Hurst Parameter (R/S @ agg. level 696) 0.401226
+   Hurst Parameter (R/S @ agg. level 792) 0.493579
+   Hurst Parameter (Periodogram @ agg. level 12) 1.201966
+   Hurst Parameter (Periodogram @ agg. level 24) 1.300298
+   Hurst Parameter (Periodogram @ agg. level 48) 1.094727
+   Hurst Parameter (Periodogram @ agg. level 96) 1.201210
+   Hurst Parameter (Periodogram @ agg. level 192) 1.276778
+   Hurst Parameter (Periodogram @ agg. level 300) 1.318802
+   Hurst Parameter (Periodogram @ agg. level 396) 1.364695
+   Hurst Parameter (Periodogram @ agg. level 504) 1.206245
+   Hurst Parameter (Periodogram @ agg. level 600) 0.990669
+   Hurst Parameter (Periodogram @ agg. level 696) 1.098927
+   Hurst Parameter (Periodogram @ agg. level 792) 1.240540
+   Alpha (LDestimate) 0.051193
+   Alpha (LDestimate) 0.95 Confidence Interval [-1.294, 1.396]
+   Hurst Parameter (LDestimate) 0.525596
+   Hurst Parameter (LDestimate) 0.95 Confidence Interval [-0.147, 1.198]
+   cfCest (LDestimate) 3721387.340755
+   cfest (LDestimate) 3671057.607644
+   Cest (LDestimate) 1.013710
+   Goodness of Fit (LDestimate) 0.294879
+   j1opt (LDestimate) 11.000000
+   Alpha (MDestimate @ q=0.500000) 0.630
+   Alpha (MDestimate @ q=0.500000) 0.95 Confidence Interval [-4.070,
+   5.329]
+   Hurst Parameter (MDEstimate @ q=0.500000) 1.760
+   Hurst  Parameter  (MDEstimate  @  q=0.500000) 0.95 Confidence [-6.639,
+   12.158]
+   Zeta (MDestimate @ q=0.500000) 0.380
+   Zeta  (MDestimate  @  q=0.500000)  0.95  Confidence  Interval [-4.320,
+   5.079]
+   Variance Per Zeta (MDestimate @ q=0.500000) 5.7493
+   Goodness of Fit Q (MDestimate @ q=0.500000) 0.000000
+   Alpha (MDestimate @ q=1.000000) 1.048
+   Alpha  (MDestimate  @  q=1.000000)  0.95 Confidence Interval [-10.373,
+   12.468]
+   Hurst Parameter (MDEstimate @ q=1.000000) 1.548
+   Hurst  Parameter  (MDEstimate  @  q=1.000000) 0.95 Confidence [-8.873,
+   13.968]
+   Zeta (MDestimate @ q=1.000000) 0.548
+   Zeta  (MDestimate  @  q=1.000000)  0.95  Confidence Interval [-10.873,
+   11.968]
+   Variance Per Zeta (MDestimate @ q=1.000000) 33.9552
+   Goodness of Fit Q (MDestimate @ q=1.000000) 0.000000
+   Alpha (MDestimate @ q=1.500000) 1.339
+   Alpha  (MDestimate  @  q=1.500000)  0.95 Confidence Interval [-17.374,
+   20.053]
+   Hurst Parameter (MDEstimate @ q=1.500000) 1.393
+   Hurst  Parameter  (MDEstimate  @ q=1.500000) 0.95 Confidence [-10.083,
+   14.869]
+   Zeta (MDestimate @ q=1.500000) 0.589
+   Zeta  (MDestimate  @  q=1.500000)  0.95  Confidence Interval [-18.124,
+   19.303]
+   Variance Per Zeta (MDestimate @ q=1.500000) 91.1670
+   Goodness of Fit Q (MDestimate @ q=1.500000) 0.000000
+   Alpha (MDestimate @ q=2.000000) 1.604
+   Alpha  (MDestimate  @  q=2.000000)  0.95 Confidence Interval [-24.546,
+   27.754]
+   Hurst Parameter (MDEstimate @ q=2.000000) 1.302
+   Hurst  Parameter  (MDEstimate  @ q=2.000000) 0.95 Confidence [-10.773,
+   15.377]
+   Zeta (MDestimate @ q=2.000000) 0.604
+   Zeta  (MDestimate  @  q=2.000000)  0.95  Confidence Interval [-25.546,
+   26.754]
+   Variance Per Zeta (MDestimate @ q=2.000000) 178.0269
+   Goodness of Fit Q (MDestimate @ q=2.000000) 0.000000
+   Alpha (MDestimate @ q=2.500000) 1.847
+   Alpha  (MDestimate  @  q=2.500000)  0.95 Confidence Interval [-31.774,
+   35.469]
+   Hurst Parameter (MDEstimate @ q=2.500000) 1.239
+   Hurst  Parameter  (MDEstimate  @ q=2.500000) 0.95 Confidence [-11.210,
+   15.688]
+   Zeta (MDestimate @ q=2.500000) 0.597
+   Zeta  (MDestimate  @  q=2.500000)  0.95  Confidence Interval [-33.024,
+   34.219]
+   Variance Per Zeta (MDestimate @ q=2.500000) 294.2909
+   Goodness of Fit Q (MDestimate @ q=2.500000) 0.000000
+   Alpha (MDestimate @ q=3.000000) 2.071
+   Alpha  (MDestimate  @  q=3.000000)  0.95 Confidence Interval [-39.014,
+   43.155]
+   Hurst Parameter (MDEstimate @ q=3.000000) 1.190
+   Hurst  Parameter  (MDEstimate  @ q=3.000000) 0.95 Confidence [-11.505,
+   15.885]
+   Zeta (MDestimate @ q=3.000000) 0.571
+   Zeta  (MDestimate  @  q=3.000000)  0.95  Confidence Interval [-40.514,
+   41.655]
+   Variance Per Zeta (MDestimate @ q=3.000000) 439.4332
+   Goodness of Fit Q (MDestimate @ q=3.000000) 0.000000
+   Alpha (MDestimate @ q=3.500000) 2.277
+   Alpha  (MDestimate  @  q=3.500000)  0.95 Confidence Interval [-46.242,
+   50.795]
+   Hurst Parameter (MDEstimate @ q=3.500000) 1.150
+   Hurst  Parameter  (MDEstimate  @ q=3.500000) 0.95 Confidence [-11.712,
+   16.013]
+   Zeta (MDestimate @ q=3.500000) 0.527
+   Zeta  (MDestimate  @  q=3.500000)  0.95  Confidence Interval [-47.992,
+   49.045]
+   Variance Per Zeta (MDestimate @ q=3.500000) 612.8389
+   Goodness of Fit Q (MDestimate @ q=3.500000) 0.000000
+   Alpha (MDestimate @ q=4.000000) 2.469
+   Alpha  (MDestimate  @  q=4.000000)  0.95 Confidence Interval [-53.446,
+   58.385]
+   Hurst Parameter (MDEstimate @ q=4.000000) 1.117
+   Hurst  Parameter  (MDEstimate  @ q=4.000000) 0.95 Confidence [-11.862,
+   16.096]
+   Zeta (MDestimate @ q=4.000000) 0.469
+   Zeta  (MDestimate  @  q=4.000000)  0.95  Confidence Interval [-55.446,
+   56.385]
+   Variance Per Zeta (MDestimate @ q=4.000000) 813.9483
+   Goodness of Fit Q (MDestimate @ q=4.000000) 0.000000
+   Trace / Data File Plot
+   [6]Frame Autocorrelation [7]pic
+   [8]pdf [9]pic
+   [10]Terse agg. level 1 Data [11]pic
+   [12]Terse agg. level 2 Data [13]pic
+   [14]Terse agg. level 3 Data [15]pic
+   [16]Terse agg. level 12 Data [17]pic
+   [18]Terse agg. level 48 Data [19]pic
+   [20]Terse agg. level 96 Data [21]pic
+   [22]Terse agg. level 192 Data [23]pic
+   [24]Terse agg. level 396 Data [25]pic
+   [26]Terse agg. level 792 Data [27]pic
+   [28]Variance Time Data [29]pic
+   [30]RS agg. level 1 Data [31]pic
+   [32]RS agg. level 2 Data [33]pic
+   [34]RS agg. level 3 Data [35]pic
+   [36]RS agg. level 12 Data [37]pic
+   [38]RS agg. level 48 Data [39]pic
+   [40]RS agg. level 96 Data [41]pic
+   [42]RS agg. level 192 Data [43]pic
+   [44]RS agg. level 396 Data [45]pic
+   [46]RS agg. level 792 Data [47]pic
+   [48]Periodogram agg. level 12 Data [49]pic
+   [50]Periodogram agg. level 24 Data [51]pic
+   [52]Periodogram agg. level 48 Data [53]pic
+   [54]Periodogram agg. level 96 Data [55]pic
+   [56]Periodogram agg. level 192 Data [57]pic
+   [58]Periodogram agg. level 300 Data [59]pic
+   [60]Periodogram agg. level 396 Data [61]pic
+   [62]Periodogram agg. level 504 Data [63]pic
+   [64]Periodogram agg. level 600 Data [65]pic
+   [66]Periodogram agg. level 696 Data [67]pic
+   [68]Periodogram agg. level 792 Data [69]pic
+   [70]Multiscale Data [71]pic
+   [72]Linear Multiscale Data [73]pic
+   [74]Logscale Data [75]pic
+   [76]Goodness Data [77]pic
+   [78]QMultiscale @ q=0.5 Data [79]pic
+   [80]QMultiscale @ q=1.0 Data [81]pic
+   [82]QMultiscale @ q=1.5 Data [83]pic
+   [84]QMultiscale @ q=2.0 Data [85]pic
+   [86]QMultiscale @ q=2.5 Data [87]pic
+   [88]QMultiscale @ q=3.0 Data [89]pic
+   [90]QMultiscale @ q=3.5 Data [91]pic
+   [92]QMultiscale @ q=4.0 Data [93]pic
+   [asulogo-120.png]
+   This  material  is  based  upon work supported by the National Science
+   Foundation under Grants No. ANI-0133525 and ANI-0136774. Any opinions,
+   findings,   and  conclusions  or  recommendations  expressed  in  this
+   material are those of the author(s) and do not necessarily reflect the
+   views of the National Science Foundation.
+
+References
+
+   1. http://trace.eas.asu.edu/
+   2. http://trace.eas.asu.edu/tracemain.html
+   3. http://trace.eas.asu.edu/cgi-bin/main.cgi
+   4. http://trace.eas.asu.edu/cgi-bin/show.cgi?name=Jurassic_Park_1_DVD
+   5. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/terseb.data
+   6. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/acf.data
+   7. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/acf.fig.gif
+   8. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/pdf.data
+   9. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/pdf.fig.gif
+  10. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg1.data
+  11. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg1.fig.gif
+  12. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg2.data
+  13. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg2.fig.gif
+  14. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg3.data
+  15. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg3.fig.gif
+  16. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg12.data
+  17. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg12.fig.gif
+  18. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg48.data
+  19. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg48.fig.gif
+  20. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg96.data
+  21. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg96.fig.gif
+  22. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg192.data
+  23. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg192.fig.gif
+  24. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg396.data
+  25. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg396.fig.gif
+  26. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg792.data
+  27. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/tagg792.fig.gif
+  28. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/variancefile.data
+  29. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/vt.fig.gif
+  30. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg1.data
+  31. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg1.fig.gif
+  32. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg2.data
+  33. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg2.fig.gif
+  34. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg3.data
+  35. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg3.fig.gif
+  36. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg12.data
+  37. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg12.fig.gif
+  38. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg48.data
+  39. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg48.fig.gif
+  40. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg96.data
+  41. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg96.fig.gif
+  42. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg192.data
+  43. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg192.fig.gif
+  44. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg396.data
+  45. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg396.fig.gif
+  46. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg792.data
+  47. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/rsagg792.fig.gif
+  48. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram12.data
+  49. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram12.fig.gif
+  50. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram24.data
+  51. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram24.fig.gif
+  52. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram48.data
+  53. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram48.fig.gif
+  54. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram96.data
+  55. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram96.fig.gif
+  56. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram192.data
+  57. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram192.fig.gif
+  58. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram300.data
+  59. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram300.fig.gif
+  60. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram396.data
+  61. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram396.fig.gif
+  62. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram504.data
+  63. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram504.fig.gif
+  64. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram600.data
+  65. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram600.fig.gif
+  66. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram696.data
+  67. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram696.fig.gif
+  68. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram792.data
+  69. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/periodogram792.fig.gif
+  70. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/multiscale.data
+  71. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/multiscale.fig.gif
+  72. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/lmultiscale.data
+  73. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/lmultiscale.fig.gif
+  74. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/logscale.data
+  75. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/logscale.fig.gif
+  76. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/goodness.data
+  77. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/goodness.fig.gif
+  78. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale1.data
+  79. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale1.fig.gif
+  80. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale2.data
+  81. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale2.fig.gif
+  82. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale3.data
+  83. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale3.fig.gif
+  84. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale4.data
+  85. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale4.fig.gif
+  86. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale5.data
+  87. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale5.fig.gif
+  88. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale6.data
+  89. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale6.fig.gif
+  90. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale7.data
+  91. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale7.fig.gif
+  92. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale8.data
+  93. http://trace.eas.asu.edu/scale/Jurassic_Park_1_DVD/cif/spatial/gopone/rc/7/bonly/zero/frame/qmultiscale8.fig.gif

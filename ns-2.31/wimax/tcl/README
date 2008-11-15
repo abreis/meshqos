@@ -1,0 +1,32 @@
+To execute the sample scenario included, run:
+
+   $PATH_TO_NS/ns mesh.tcl
+
+This will produce a file called 'out' which can be analyzed in human-readable
+form by means of the utility 'recover' of the stat-utils. See the website
+of the ns2hcca module for more information on how to use these utilities:
+
+	http://info.iet.unipi.it/~cng/ns2measure/
+
+If you want to enable debug, just run:
+
+   $PATH_TO_NS/ns mesh.tcl -debug DEBUG
+
+This will produce *a lot* of debugging information on the standard error.
+
+The simulation parameters can be modified by either modifying the values
+set in the mesh.tcl file or by specifying the new value in the command line.
+For instance, if you want to set the number of nodes to 7, you can either
+modify the corresponding mesh.tcl line into:
+
+   set opt(n) 7
+
+or run the simulator via:
+
+   $PATH_TO_NS/ns mesh.tcl -n 7
+
+This is true for *all* the variables of the Tcl hash $opt(*).
+
+The simulation parameters are (somewhat) explained in the mesh.tcl file.
+The list of the available topologies is reported in the file TOPOLOGIES
+in this directory.

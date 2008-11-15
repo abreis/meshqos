@@ -1,0 +1,786 @@
+# vim: syntax=tcl
+# Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
+# http://info.iet.unipi.it/~cng/ns2mesh80216/
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
+#
+
+#
+# 802.16 mesh Tcl scenario configuration header file
+# author: C.Cicconetti <claudio.cicconetti@iet.unipi.it>
+#
+
+################################################################################
+#                       CONFIGURATION OF PARAMETERS                            #
+################################################################################
+
+#
+# simulation environment
+#
+set opt(run)        1         ;# replic ID
+set opt(duration)   10.0      ;# run duration, in seconds
+set opt(warm)       2.0       ;# run duration, in seconds
+set opt(out)        "out"     ;# statistics output file
+set opt(debug)      ""        ;# debug configuration file, "" = no debug
+set opt(startdebug) 0.0       ;# start time of debug output
+
+#
+# topology
+#
+set opt(topology)       "chain"  ;# see TOPOLOGIES
+set opt(n)              4        ;# meaningful with: chain, ring, grid,
+                                 ;#    multiring, star, clique, bintree
+											;#    trinagular (see TOPOLOGIES)
+set opt(branches)       3        ;# meaningful with: star, multiring
+                                 ;# (see TOPOLOGIES)
+set opt(random-nodeid) "on"      ;# mix up NodeIDs randomly
+
+#
+# PHY
+#
+set opt(channel)        1      ;# number of channels
+set opt(radio)          1      ;# number of radios
+set opt(chan-data-per)  0      ;# channel data PDU error rate
+set opt(chan-ctrl-per)  0      ;# channel control PDU error rate
+set opt(propagation)    4      ;# physical propagation, in us
+set opt(sym-duration)   20     ;# OFDM symbol duration, in us
+set opt(sym-perframe)   500    ;# number of OFDM symbols per frame
+set opt(bandwidth)      "10"   ;# in MHz, if set overrides the OFDM symbol
+                               ;# duration and the number of OFDM symbols
+                               ;# per frame (ie. the frame duration)
+set opt(cyclic-prefix)  "1/16" ;# cyclic prefix, only used if bandwidth is set
+set opt(control)        4      ;# number of MSH-DSCH opportunities per frame
+set opt(cfg-interval)   16     ;# number of MSH-DSCH frames between two
+                               ;# consecutive MSH-NCFG frames
+set opt(msh-dsch-avg-bad)  -1  ;# consecutive bad MSH-DSCH messages
+set opt(msh-dsch-avg-good) -1  ;# consecutive good MSH-DSCH messages
+
+#
+# MAC
+#
+set opt(allocation)  "contiguous"  ;# MSH-DSCH allocation type
+set opt(hest-curr)   .1            ;# weight for H's estimations (current value)
+set opt(hest-past)   .9            ;# weight for H's estimations (past values)
+
+#
+# bandwidth manager
+#
+set opt(bwmanager)            "fair-rr"  ;# bandwidth manager type
+set opt(availabilities)       "on"       ;# RR, FairRR bwmanagers
+set opt(regrant)              "on"       ;# RR, FairRR bwmanagers
+set opt(regrant-offset)       1          ;# RR, FairRR bwmanagers, in frames
+set opt(regrant-duration)     1          ;# RR, FairRR bwmanagers, in handshakes
+set opt(grant-fairness)       "on"       ;# FairRR bwmanager = {on, off}
+set opt(regrant-same-horizon) "off"      ;# FairRR bwmanager = {on, off}
+set opt(regrant-fairness)     "on"       ;# FairRR bwmanager = {on, off}
+set opt(request-fairness)     "on"       ;# FairRR bwmanager = {on, off}
+set opt(bwm-round-duration)   21312      ;# FairRR bwmanager, in bytes
+set opt(weight-timeout)       120        ;# FairRR bwmanager, in sec
+set opt(max-deficit)          0          ;# FairRR bwmanager, in bytes
+set opt(max-backlog)          0          ;# FairRR bwmanager, in bytes
+set opt(weight-flow)          "on"       ;# FairRR bwmanager = {on, off}
+set opt(grant-rnd-channel)    "on"       ;# FairRR bwmanager = {on, off}
+set opt(dd-timeout)           "50"       ;# FairRR bwmanager, in MSH-DSCH opps
+set opt(min-grant)            "1"        ;# FairRR bwmanager, in OFDM symbols
+
+set opt(prio-weight)        "1 2 4"    ;# priority weights, used by both the
+                                       ;# FairRR bwmanager and the scheduler
+
+#
+# distributed election coordinator
+#
+set opt(coordinator)      "standard" ;# coordinator type
+set opt(coordmode)        "xmtunaware" ;# coordinator mode
+set opt(holdoff-dsch-def) 0          ;# holdoff exponent for MSH-DSCH msgs
+set opt(holdoff-ncfg-def) 0          ;# holdoff exponent for MSH-NCFG msgs
+set opt(holdoff-dsch)     { }        ;# used to set different holdoffs
+set opt(holdoff-ncfg)     { }        ;# used to set different holdoffs
+set opt(control-period)   4          ;# dummy coordinator, number of frames
+set opt(max-advertised)   -1         ;# maximum number of advertised neighbors
+
+#
+# forwarding
+#
+set opt(forwarding)           "spf"    ;# forwarding type
+set opt(maxnumhops)           20       ;# maximum path length
+set opt(profileupdateperiod)  4        ;# number of frames to update profiles
+set opt(samplingperiod)       4        ;# sampling nodes'load period (frames)
+set opt(chi)                  0.5      ;# weight of grants for links' cost
+set opt(beta)                 0.5      ;# weight of new samples for nodes' load
+
+#
+# packet scheduler
+#
+set opt(scheduler)          "fair-rr"  ;# packet scheduler type
+set opt(buffer)             1000000    ;# buffer size, in bytes
+set opt(sch-round-duration) 21312      ;# FairRR scheduler, in bytes
+set opt(buffer-sharing)     "per-flow" ;# FairRR scheduler only
+
+#
+# link profiles
+#
+set opt(prfall) 0    ;# default burst profile index, overriden by prfndx's
+set opt(prfsrc) { }  ;# QPSK_1_2 = 0,  QPSK_3_4 = 1,
+set opt(prfdst) { }  ;# QAM16_1_2 = 2, QAM16_3_4 = 3,
+set opt(prfndx) { }  ;# QAM64_2_3 = 4, QAM64_3_4 = 5
+
+################################################################################
+#                       DEFINITION OF PROCEDURES                               #
+################################################################################
+
+#
+# parse command-line options and store values into the $opt(.) hash
+#
+proc getopt {argc argv} {
+   global opt
+
+   for {set i 0} {$i < $argc} {incr i} {
+      set arg [lindex $argv $i]
+      if {[string range $arg 0 0] != "-"} continue
+
+      set name [string range $arg 1 end]
+      set opt($name) [lindex $argv [expr $i+1]]
+   }
+}
+
+#
+# print out options
+#
+proc printopt { } {
+   global opt
+
+   foreach x [lsort [array names opt]] {
+      puts "$x = $opt($x)"
+   }
+}
+
+#
+# alive function
+#
+proc alive { } {
+   global ns opt
+
+   if { [$ns now] != 0 } {
+      puts -nonewline \
+         [format "elapsed %.0f s (remaining %.0f s) completed %.f%%" \
+         [$ns now] \
+         [expr $opt(duration) - [$ns now]] \
+         [expr 100 * [$ns now] / $opt(duration)]]
+      if { [$ns now] >= $opt(warm) } {
+         puts " stat collection ON"
+      } else {
+         puts ""
+      }
+   }
+   $ns at [expr [$ns now] + $opt(duration) / 10.0] "alive"
+}
+
+#
+# collect statistics at the end of the simulation
+#
+proc finish {} {
+   global ns simtime
+
+   # print statistics to output file
+   $ns stat print
+
+   # print out the simulation time
+   set simtime [expr [clock seconds] - $simtime]
+   puts "run duration: $simtime s"
+
+   exit 0
+}
+
+#
+# initialize simulation
+#
+proc init {} {
+   global opt defaultRNG ns simtime
+
+   # create the simulator instance
+   set ns [new Simulator]  ;# create a new simulator instance
+   $defaultRNG seed 1
+
+   # initialize statistics collection
+   $ns run-identifier $opt(run)
+   $ns stat file "$opt(out)"
+   $ns at $opt(warm) "$ns stat on"
+   $ns at $opt(duration) "finish"
+
+	# add default probes
+	$ns stat add e2e_owd_a    avg discrete
+	$ns stat add e2e_tpt      avg rate
+	$ns stat add e2e_owpl     avg rate
+	$ns stat add tcp_cwnd_a   avg continuous
+	$ns stat add tcp_dupacks  avg continuous
+	$ns stat add tcp_ssthresh avg continuous
+	$ns stat add tcp_rtt      avg continuous
+	$ns stat add tcp_srtt     avg continuous
+	$ns stat add fairness     avg continuous
+
+	$ns stat add tcp_cwnd_d   dst continuous 0 128 128
+	$ns stat add e2e_owd_d    dst discrete 0.0 5.0 100
+	$ns stat add e2e_ipdv_d   dst discrete 0.0 5.0 100 
+
+   # open trace files
+   set opt(trace) [open "/dev/null" w]
+
+   # configure 802.16 debug
+   set debug [new WimaxDebug]
+   $debug disable
+   
+   # read configuration from the debug file, in needed
+   if { $opt(debug) != "" } {
+      # enable debug at startdebug time
+      $ns at $opt(startdebug) "$debug enable"
+
+      # try to open the debug file for reading debug configuration
+      if { ! [file exists $opt(debug)] } {
+         puts "Oops, file '$opt(debug)' does not exist. Please use -debug"
+         exit 0
+      }
+      set debugfile [open $opt(debug) r]
+      while { [gets $debugfile line] >= 0 } {
+         if { [string index $line 0] != "#" } {  ;# skip comments
+            $debug trace $line on
+         }
+      }
+
+      # close the debug configuration file
+      close $debugfile
+   }
+
+   set simtime [clock seconds]
+
+   $ns trace-all $opt(trace)
+}
+
+#
+# define the network topology
+#
+proc create_topology {} {
+   global ns opt node node topo defaultRNG invmap map
+
+   # set the node configuration options
+   # most of them are not used with IEEE 802.16 nodes, but we still
+   # set them so as to avoid annoying ns2 complaints
+
+   set topo_unused [new Topography]                ;# not used
+   set chan_unused [new Channel/WirelessChannel]   ;# not used
+   $ns node-config -llType LL -macType WimshMac -adhocRouting DumbAgent
+
+   $ns node-config \
+      -ifqType Queue/DropTail/PriQueue \
+      -ifqLen 50 \
+      -antType Antenna/OmniAntenna \
+      -propType Propagation/TwoRayGround \
+      -phyType Phy/WirelessPhy \
+      -topoInstance $topo_unused \
+      -agentTrace OFF \
+      -routerTrace OFF \
+      -macTrace OFF \
+      -movementTrace OFF \
+      -channel $chan_unused
+
+   # create and initialize the network topology
+   set topo [new WimshTopology/Simple]
+
+   # compute the number of nodes according to different topologies
+   if { $opt(topology) == "chain" \
+      || $opt(topology) == "ring" \
+      || $opt(topology) == "multiring"} {
+      # the number of nodes is n
+      set opt(nodes) $opt(n)
+   } elseif { $opt(topology) == "grid" || $opt(topology) == "grid-full" } {
+      # the number of nodes is n^2
+      set opt(nodes) [expr $opt(n) * $opt(n)]
+   } elseif { $opt(topology) == "triangular" } {
+      # the number of nodes is (n+1)(n+2)/2
+      set opt(nodes) [expr ( ( $opt(n) + 1 ) * ( $opt(n) + 2 ) ) / 2]
+   } elseif { $opt(topology) == "clique" } {
+      # the number of nodes is n
+      set opt(nodes) $opt(n)
+   } elseif { $opt(topology) == "star" } {
+      # the number of nodes is branches * (n-1) + 1
+      set opt(nodes) [expr $opt(branches) * ( $opt(n) - 1 ) + 1]
+   } elseif { $opt(topology) == "bintree" } {
+      # the number of nodes is 2^n - 1
+      set opt(nodes) [expr int(pow(2, $opt(n)) - 1)]
+   } elseif { $opt(topology) == "hexagon" } {
+      # the number of nodes is 6
+      set opt(nodes) 6
+   } elseif { $opt(topology) == "star2" } {
+      # the number of nodes is 8
+      set opt(nodes) 8
+   } else {
+      # unknown topology
+      puts "unknown topology '$opt(topology)'"
+      exit 1
+   }
+
+   #
+   # mix up the node indexes into the map
+   #
+   if { $opt(random-nodeid) == "on" } {
+      for { set i 0 } { $i < $opt(nodes) } { incr i } {
+         while { 1 } {
+            set x [$defaultRNG integer $opt(nodes)]
+            set found 0
+            for { set j 0 } { $j < $i } { incr j } {
+               if { $map($j) == $x } {
+                  set found 1
+                  break
+               }
+            }
+            if { $found == 0 } {
+               set map($i) $x
+               break
+            }
+         }
+      }
+
+      # invert the map created
+      for { set i 0 } { $i < $opt(nodes) } { incr i } {
+         set invmap($map($i)) $i
+      }
+   } else {
+      for { set i 0 } { $i < $opt(nodes) } { incr i } {
+         set map($i) $i
+         set invmap($i) $i
+      }
+   }
+
+   # print the map created
+   if { $opt(debug) != "" } {
+      puts "** index <-> NodeID/IP address **"
+      for { set i 0 } { $i < $opt(nodes) } { incr i } {
+         puts "index = $invmap($i), NodeID = $i"
+      }
+   }
+
+   #
+   # CHAIN, RING
+   #
+   if { $opt(topology) == "chain" || $opt(topology) == "ring" } {
+      for { set i 0 } { $i < [expr $opt(n) - 1] } { incr i } {
+         $topo connect $map($i) $map([expr $i + 1])
+      }
+      if { $opt(topology) == "ring" } {
+         $topo connect $map([expr $opt(n) - 1]) $map(0)
+      }
+
+   #
+   # MULTIRING
+   #
+   } elseif { $opt(topology) == "multiring" } {
+      if { [expr $opt(branches) % 2] != 0 } {
+         puts "In a multiring, the number of branches must be an even number"
+         exit 0
+      }
+
+      for { set i 1 } { $i <= [expr $opt(branches) / 2] } { incr i } {
+         for { set j 0 } { $j < $opt(n) } { incr j } {
+            $topo connect \
+               $map([expr $j % $opt(n)]) \
+               $map([expr ($j + $i) % $opt(n)])
+         }
+      }
+
+   #
+   # GRID
+   #
+   } elseif { $opt(topology) == "grid" } {
+      for { set i 0 } { $i < $opt(n) } { incr i } {
+         for { set j 0 } { $j < $opt(n) } { incr j } {
+            set curnode [expr $j + $opt(n) * $i]
+            if { $i > 0 } {
+               $topo connect $map($curnode) $map([expr $curnode - $opt(n)])
+            }
+            if { $j > 0 } {
+               $topo connect $map($curnode) $map([expr $curnode - 1])
+            }
+         }
+      }
+
+   #
+   # FULL GRID (no edge effect)
+   #
+   } elseif { $opt(topology) == "grid-full" } {
+      for { set i 0 } { $i < $opt(n) } { incr i } {
+         for { set j 0 } { $j < $opt(n) } { incr j } {
+            set curnode [expr $j + $opt(n) * $i]
+				if { $i > 0 } {
+               $topo connect $map($curnode) $map([expr $curnode - $opt(n)])
+            } else {
+               $topo connect $map($curnode) $map([expr $curnode + ( $opt(n) - 1 ) * $opt(n)])
+            } 
+            if { $j > 0 } {
+               $topo connect $map($curnode) $map([expr $curnode - 1])
+            } else {
+               $topo connect $map($curnode) $map([expr $curnode + $opt(n) - 1])
+				}
+         }
+      }
+
+   #
+   # TRIANGULAR
+   #
+   } elseif { $opt(topology) == "triangular" } {
+      for { set i 0 } { $i < $opt(n) } { incr i } {
+         for { set j 0 } { $j <= $i } { incr j } {
+            set curnode [expr ( $i * ( $i + 1 ) ) / 2 + $j]
+				set leftnode [expr $curnode + $i + 1]
+				set rightnode [expr $leftnode + 1]
+				$topo connect $map($curnode) $map($leftnode)
+				$topo connect $map($curnode) $map($rightnode)
+				$topo connect $map($leftnode) $map($rightnode)
+         }
+      }
+      
+   #
+   # CLIQUE
+   #
+   } elseif { $opt(topology) == "clique" } {
+      for { set i 0 } { $i < $opt(n) } { incr i } {
+         for { set j [expr $i + 1] } { $j < $opt(n) } { incr j } {
+            $topo connect $map($i) $map($j)
+         }
+      }
+
+   #
+   # BINTREE
+   #
+   } elseif { $opt(topology) == "bintree" } {
+      for { set i 0 } { $i < [expr $opt(n) - 1]} { incr i } {
+         for { set j 0 } { $j < [expr int(pow(2, $i))] } { incr j } {
+            $topo connect $map([expr int(pow(2, $i)) - 1 + $j]) \
+               $map([expr int(pow(2, $i+1)) - 1 + $j * 2])
+            $topo connect $map([expr int(pow(2, $i)) - 1 + $j]) \
+               $map([expr int(pow(2, $i+1)) - 1 + $j * 2 + 1])
+         }
+      }
+
+   #
+   # STAR
+   #
+   } elseif { $opt(topology) == "star" } {
+      for { set i 0 } { $i < [expr $opt(n) - 1] } { incr i } {
+         for { set j 0 } { $j < $opt(branches) } { incr j } {
+            if { $i == 0 } {
+               $topo connect $map(0) $map([expr $j + 1])
+            } else {
+               $topo connect $map([expr $opt(branches) * ( $i - 1 ) + $j + 1]) \
+                  $map([expr $opt(branches) * $i + $j + 1])
+            }
+         }
+      }
+
+   #
+   # HEXAGON
+   #
+   } elseif { $opt(topology) == "hexagon" } {
+      $topo connect $map(0) $map(1)
+      $topo connect $map(0) $map(2)
+      $topo connect $map(1) $map(2)
+      $topo connect $map(1) $map(3)
+      $topo connect $map(2) $map(4)
+      $topo connect $map(3) $map(4)
+      $topo connect $map(3) $map(5)
+      $topo connect $map(4) $map(5)
+
+   #
+   # STAR2
+   #
+   } elseif { $opt(topology) == "star2" } {
+      $topo connect $map(0) $map(1)
+      $topo connect $map(0) $map(2)
+      $topo connect $map(0) $map(3)
+      $topo connect $map(1) $map(2)
+      $topo connect $map(1) $map(3)
+      $topo connect $map(2) $map(3)
+
+      $topo connect $map(0) $map(4)
+      $topo connect $map(1) $map(5)
+      $topo connect $map(2) $map(6)
+      $topo connect $map(3) $map(7)
+   }
+
+   # initialize the topology
+   $topo initialize
+
+   # dump the topology to standard error, if needed
+   if { $opt(debug) != "" } {
+      $topo dump
+   }
+}
+
+#
+# creates and initializes nodes (MAC/PHY) + management information bases
+#
+proc create_nodes {} {
+   global ns opt node macmib node topo invmap phymib map
+
+   # compute the OFDM symbol duration and the number of OFDM symbols
+   # per frame according to the standard document, par. 12.3.2
+   # if the bandwidth is not set, then user-defined values are used
+
+   if { $opt(bandwidth) != "" } {
+      if { $opt(cyclic-prefix) == "1/4" } {
+         set G .25
+      } elseif { $opt(cyclic-prefix) == "1/8" } {
+         set G .125
+      } elseif { $opt(cyclic-prefix) == "1/16" } {
+         set G .0625
+      } elseif { $opt(cyclic-prefix) == "1/32" } {
+         set G .03125
+      } else {
+         puts "The cyclic prefix $opt(cyclic-prefix) is not valid"
+         exit 0
+      }
+
+      # select the frame duration, in ms, and the 'x' values
+      if { $opt(bandwidth) == "3.5" } {
+         set f 4
+         set x 4e6
+      } elseif { $opt(bandwidth) == "7" } {
+         set f 4
+         set x 8e6
+      } elseif { $opt(bandwidth) == "3" } {
+         set f 10
+         set x 3.44e6
+      } elseif { $opt(bandwidth) == "5.5" } {
+         set f 10
+         set x 6.32e6
+      } elseif { $opt(bandwidth) == "10" } {
+         set f 4
+         set x 1.152e7
+      } else {
+         puts "The bandwidth value $opt(bandwidth) MHz is not valid"
+         exit 0
+      }
+
+      # compute the OFDM symbol duration
+      set T [expr 1e6 * (1.0 + $G) * (256.0 / $x )];
+
+   # user-defined values 
+   } else {
+      set T $opt(sym-duration)
+      set f [expr 1e-3 * $opt(sym-duration) * $opt(sym-perframe)]
+   }
+
+   # create and initialize the PHY MIB
+   set phymib [new WimshPhyMib]
+   $phymib symDuration $T
+   $phymib frameDuration $f
+   $phymib controlSlots $opt(control)
+   $phymib cfg-interval $opt(cfg-interval)
+   $phymib recompute
+
+   # create and initialize the MAC MIB
+   set macmib [new WimshMacMib]
+   $macmib phymib $phymib
+   $macmib allocation $opt(allocation)
+
+   # create and initialize the 802.16 channels
+   for { set j 0 } { $j < $opt(channel) } { incr j } {
+      set chan($j) [new WimshChannel]
+      $chan($j) topology $topo
+      $chan($j) propagation $opt(propagation)
+      $chan($j) id [expr 1 + $j]
+      if { $opt(chan-data-per) != 0 } {
+         $chan($j) error data $opt(chan-data-per)
+      }
+      if { $opt(chan-ctrl-per) != 0 } {
+         $chan($j) error control $opt(chan-ctrl-per)
+      }
+   }
+
+   # create the 802.16 nodes
+   for { set i 0 } { $i < $opt(nodes) } { incr i } {
+      # create node (+MAC) and bind MAC-LL
+      set node($invmap($i)) [$ns node]
+
+      # get a reference to the node's MAC
+      set mac($i) [$node($invmap($i)) getMac 0]
+
+      # set the index for statistical purposes
+      $mac($i) index $invmap($i)
+
+      # set the weight for the estimation of the H values
+      $mac($i) estcurr $opt(hest-curr)
+      $mac($i) estpast $opt(hest-past)
+
+      # bind the MAC to the PHY and MAC MIBs
+      $mac($i) macmib $macmib
+      $mac($i) phymib $phymib
+
+      # bind the MAC to the topology
+      $mac($i) topology $topo
+
+      # define the list of channels that all the nodes can use
+      for { set j 0 } { $j < $opt(channel) } { incr j } {
+         $mac($i) channel $chan($j)
+      }
+
+      # create and initialize the list of radios of this node
+      for { set j 0 } { $j < $opt(radio) } { incr j } {
+         set phy [new WimshPhy]
+         $phy mac $mac($i)
+         $phy topology $topo
+         $phy phymib $phymib
+         $phy epsilon 5
+         $mac($i) phy $phy
+      }
+
+      # create some MAC submodules
+      $mac($i) forwarding $opt(forwarding)
+      $mac($i) bwmanager $opt(bwmanager)
+      $mac($i) scheduler $opt(scheduler)
+      $mac($i) coordinator $opt(coordinator)
+      
+      # configure the forwarding module
+      if { $opt(forwarding) == "opp" } {
+         $mac($i) forwarding maxnumhops $opt(maxnumhops)
+         $mac($i) forwarding samplingperiod $opt(samplingperiod)
+         $mac($i) forwarding profileupdateperiod $opt(profileupdateperiod)
+         $mac($i) forwarding chi $opt(chi)
+         $mac($i) forwarding beta $opt(beta)
+      }
+
+      # configure the coordinator
+      if { $opt(coordinator) == "dummy" } {
+         if { $opt(coordmode) == "fixed" } {
+            $mac($i) coordinator slot [expr $i % $opt(control)]
+            $mac($i) coordinator frame $opt(control-period)
+            $mac($i) coordinator first [expr $i / $opt(control)]
+         } elseif { $opt(coordmode) == "moving" } {
+            $mac($i) coordinator slot [expr $i * \
+               ( $opt(control) * $opt(control-period) ) / $opt(nodes)]
+            $mac($i) coordinator period \
+            [expr $opt(control) * $opt(control-period)]
+         }
+         $mac($i) coordinator mode $opt(coordmode)
+      } elseif { $opt(coordinator) == "standard" } {
+         $mac($i) coordinator nextxmttime $i
+         if { [llength $opt(holdoff-dsch)] == 0 } {
+            $mac($i) coordinator holdoffexp-dsch $opt(holdoff-dsch-def)
+         } else {
+            $mac($i) coordinator holdoffexp-dsch \
+					[lindex $opt(holdoff-dsch) $invmap($i)]
+         }
+         if { [llength $opt(holdoff-ncfg)] == 0 } {
+            $mac($i) coordinator holdoffexp-ncfg $opt(holdoff-ncfg-def)
+         } else {
+            $mac($i) coordinator holdoffexp-ncfg \
+					[lindex $opt(holdoff-ncfg) $invmap($i)]
+         }
+         $mac($i) coordinator mode $opt(coordmode)
+         $mac($i) coordinator max-advertised $opt(max-advertised)
+      } 
+         
+      # configure the bwmanager
+      if { $opt(bwmanager) == "fair-rr" } {
+         $mac($i) bwmanager availabilities $opt(availabilities)
+         $mac($i) bwmanager fairness no
+         if { $opt(grant-fairness) == "on" } {
+            $mac($i) bwmanager fairness grant
+         }
+         if { $opt(regrant-fairness) == "on" } {
+            $mac($i) bwmanager fairness regrant
+         }
+         if { $opt(request-fairness) == "on" } {
+            $mac($i) bwmanager fairness request
+         }
+         $mac($i) bwmanager regrant $opt(regrant)
+         $mac($i) bwmanager regrant-offset $opt(regrant-offset)
+         $mac($i) bwmanager regrant-duration $opt(regrant-duration)
+         $mac($i) bwmanager regrant-same-horizon $opt(regrant-same-horizon)
+         $mac($i) bwmanager round-duration $opt(bwm-round-duration)
+         $mac($i) bwmanager max-deficit $opt(max-deficit)
+         $mac($i) bwmanager max-backlog $opt(max-backlog)
+         if { $opt(grant-rnd-channel) == "on" } {
+            $mac($i) bwmanager grant-fit channel random
+         }
+         $mac($i) bwmanager dd-timeout $opt(dd-timeout)
+			$mac($i) bwmanager min-grant $opt(min-grant)
+
+			# configure the weight manager of the bandwidth manager
+         $mac($i) bwmanager wm weight-flow $opt(weight-flow)
+			for { set j 0 } { $j < [llength $opt(prio-weight)] } { incr j } {
+				$mac($i) bwmanager wm prio-weight $j [lindex $opt(prio-weight) $j]
+			}
+         if { $opt(weight-timeout) != "never" } {
+            $mac($i) bwmanager wm weight-timeout $opt(weight-timeout)
+         }
+      } else {
+			die "Invalid bandwidth manager '$opt(bwmanager)'"
+		}
+
+      # configure the scheduler
+      $mac($i) scheduler size $opt(buffer)
+      if { $opt(scheduler) == "fair-rr" } {
+         $mac($i) scheduler round-duration $opt(sch-round-duration)
+         $mac($i) scheduler buffer-sharing $opt(buffer-sharing)
+         if { $opt(weight-timeout) != "never" } {
+            $mac($i) scheduler weight-timeout $opt(weight-timeout)
+         }
+			for { set j 0 } { $j < [llength $opt(prio-weight)] } { incr j } {
+				$mac($i) scheduler prio-weight $j [lindex $opt(prio-weight) $j]
+			}
+      }
+
+      # configure corruption of MSH-DSCH messages at the MAC layer
+      $mac($i) msh-dsch-avg-bad $opt(msh-dsch-avg-bad)
+      $mac($i) msh-dsch-avg-good $opt(msh-dsch-avg-good)
+
+      # initialize MAC data structures
+      $mac($i) initialize
+   }
+}
+
+#
+# definition of link profiles. Note: links are simmetric
+#
+proc create_profiles {} {
+   global ns opt node map phymib
+
+   # QPSK_1_2  = 0  QPSK_3_4  = 1
+   # QAM16_1_2 = 2  QAM16_3_4 = 3
+   # QAM64_2_3 = 4  QAM64_3_4 = 5
+
+   # set the default burst profile on all MACs
+   for { set i 0 } { $i < $opt(nodes) } { incr i } {
+      [$node($i) getMac 0] profile $opt(prfall) all
+   }
+
+   # set specific burst profiles, overriding the default one
+   for { set i 0 } { $i < [llength $opt(prfsrc)] } { incr i } {
+      set macsrc [$node([lindex $opt(prfsrc) $i]) getMac 0]
+      set macdst [$node([lindex $opt(prfdst) $i]) getMac 0]
+      $macsrc profile [lindex $opt(prfndx) $i] $map([lindex $opt(prfdst) $i])
+      $macdst profile [lindex $opt(prfndx) $i] $map([lindex $opt(prfsrc) $i])
+   }
+
+   # dump the forwarding data structures if needed
+   # dump the PHY MIB profiles of each MAC layer
+   if { $opt(debug) != "" } {   
+      for { set i 0 } { $i < $opt(nodes) } { incr i } {
+         set mac [$node($i) getMac 0]
+         $mac dump profile
+         $mac forwarding dump
+      }   
+      $phymib dump
+   }
+}

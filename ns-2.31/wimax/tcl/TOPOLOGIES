@@ -1,0 +1,168 @@
+Below is the description of the topology types supported by header.
+
+V = number of edges (i.e. nodes in connectivity graph)
+E = number of vertices (i.e. links in the connectivity graph)
+
+**
+** chain
+**
+
+V = opt(n)
+E = V - 1
+
+  0 - 1 - 2 - ... - N-1
+
+**
+** ring
+**
+
+V = opt(n)
+E = V
+
+
+   0 - 1 - 2 - ... - N-1
+   |                  |
+   --------------------
+
+**
+** multiring
+**
+
+V = opt(n)
+B = opt(branches) --> must be an even number
+E = V * B / 2            if B < N
+E = V * (V - 1) / 2      if B = N
+
+Let vertices be numbered from 0 to N-1.
+Then, each vertex i has an edge with B vertices:
+- i + kj, j = 1,...,B/2
+- i - kj, j = 1,...,B/2
+
+If B is 2, then the multiring is a simple ring.
+If B is N, then the multiring is a clique.
+
+**
+** clique
+**
+
+V = opt(n)
+E = V * ( V - 1 ) / 2
+
+node i is connected to every node j = 0, ..., N-1, j != i
+
+**
+** grid
+**
+
+N = opt(n)
+V = N^2
+E = 2N * ( N - 1 )
+
+E.g. N = 3
+
+  0 --- 1 --- 2
+  |     |     |
+  3 --- 4 --- 5
+  |     |     |
+  6 --- 7 --- 8
+
+**
+** grid-full
+**
+
+N = opt(n)
+V = N^2
+E = 2N^1
+
+E.g. N = 3
+
+       6     7     8
+       |     |     |
+  2 -- 0 --- 1 --- 2 -- 0
+       |     |     |
+  5 -- 3 --- 4 --- 5 -- 3
+       |     |     |
+  8 -- 6 --- 7 --- 8 -- 6
+       |     |     |
+		 0     1     2
+
+**
+** bintree
+**
+
+N = opt(n)
+V = 2^N - 1
+E = 2^N - 2
+
+E.g. N = 4
+
+         ____ 0 _____
+        /            \
+     _ 1 _          _ 2 _
+    /     \        /     \
+   3       4      5       6
+ /   \   /   \  /   \   /   \
+ 7   8   9  10 11   12 13   14
+
+**
+** star
+**
+
+N = opt(n)         (branch size)
+B = opt(branches)  (number of branches)
+V = B * ( N - 1 ) + 1
+E = B * ( N - 1 )
+
+E.g. N = 3, B = 4
+
+          5
+          |
+          1
+          |
+8 -- 4 -- 0 -- 2 -- 6
+          |
+          3
+          |
+          7
+
+**
+** hexagon
+**
+
+V = 6
+E = 8
+
+      2 ----- 4
+   _/ |       | \_
+  /   |       |   \
+ 0    |       |    5
+  \_  |       |  _/
+    \ |       | /
+      1 ----- 3
+
+**
+** star2
+**
+
+V = 8
+E = 10
+
+TODO
+
+**
+** triangular
+**
+
+N = opt(n)
+V = (n+1)(n+2)/2
+E = 3n(n+1)/2
+
+E.g. N = 2
+
+                        0
+                      /   \
+                     /     \
+                    1 _____ 2
+                   / \     / \
+                  /   \   /   \
+                 3 ___ 4 5 ___ 6
