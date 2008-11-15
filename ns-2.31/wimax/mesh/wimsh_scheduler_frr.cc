@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -87,7 +87,7 @@ void
 WimshSchedulerFairRR::initialize ()
 {
 	const unsigned int neighbors = mac_->nneighs();
-	
+
 	// resize the vector of links and unfinished vectors
 	cbr_.resize (neighbors);
 	link_.resize (neighbors);
@@ -97,7 +97,7 @@ WimshSchedulerFairRR::initialize ()
 		link_[ngh].resize (4);
 		unfinishedRound_[ngh].resize (4);
 	}
-		
+
 	// start the timer to remove stale flows
 	if ( interval_ > 0 ) timer_.start ( interval_ );
 }
@@ -114,7 +114,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 
 	// priority of this PDU
 	const unsigned char prio = pdu->hdr().meshCid().priority();
-	
+
 	// map high layer priority traffic to service class at mac layer
 	unsigned char s = ( prio == 0 || prio == 1 ) ? 0 :
 						( prio == 2 || prio == 3 ) ? 1 :
@@ -128,7 +128,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 		drop (pdu);
 		return;
 	}
-	
+
 	// check if there are already PDUs buffered from this traffic flow
 	// to do so, we create a new FlowDesc with empty queue, which is
 	// used only to this purpose. If there are no buffered PDUs that
@@ -164,7 +164,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	desc.size_ += pdu->size();        // per flow
 	link_[ndx][s].size_ += pdu->size();  // per link
 	bufSize_ += pdu->size();          // shared
-	
+
 	if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_addPdu link %i serv %d buffsize %d\n",ndx, s
 						, link_[ndx][s].size_ );
 
@@ -185,13 +185,13 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 			pdu->hdr().meshCid().priority(),  // priority
 			pdu->hdr().meshCid().dst(),       // next-hop
 		   pdu->size());                     // bytes
-	
+
 	// call search_tx_slot to handle uncoordinated message to this neighbour
 	// confirm that was't alredy called for bwmanager
 	// only considered for rtPS traffic
 	if ( s == wimax::RTPS && (mac_->bwmanager()->nextFrame_rtPS(ndx) + 1) < mac_->frame() )
 		mac_->bwmanager()->search_tx_slot(ndx, 0);
-	
+
 	recomputecbr (ndx, s, pdu->size());
 }
 
@@ -200,7 +200,7 @@ WimshSchedulerFairRR::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst,
 {
 	// get the link index
 	unsigned int ndx = mac_->neigh2ndx(dst);
-	
+
 	unsigned int s = service;
 
 	// print some debug information
@@ -244,7 +244,7 @@ WimshSchedulerFairRR::schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst,
 	// until there is room into the fragmentation buffer
 	// and the output queue towards that node is backlogged
 	while ( ! rr.empty() && spare ) spare = serve (frag, ndx, s, false);
-		
+
 }
 
 void
@@ -266,7 +266,7 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 
 	// get the current traffic flow
 	FlowDesc& flow = rr.current();
-	
+
 	// update the deficit counter, unless unfinished
 	if ( ! unfinished ) {
 		flow.deficit_ += flow.quantum_;
@@ -276,7 +276,7 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 
 	// becomes false if there is not anymore capacity available
 	bool spare = true;
-	
+
 	// try to grant up to flow.deficit_ bytes from this queue
 	while ( spare && flow.deficit_ > 0 ) {
 
@@ -299,20 +299,20 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 		flow.size_ -= pdu->size();          // flow
 		link_[ndx][s].size_ -= pdu->size();    // link
 		bufSize_ -= pdu->size();            // MAC
-		
+
 		Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
 		Stat::put ("wimsh_bufsize_mac_d", mac_->index(), bufSize_ );
 
 		// update the deficit counter
 ////////////////////////////////////////////////////////////////////////////////
-// :XXX: -= sdu->size() 
+// :XXX: -= sdu->size()
 		flow.deficit_ -= pdu->size();
 ////////////////////////////////////////////////////////////////////////////////
 
 		// add the PDU to the fragmentation buffer
 		spare = frag.addPdu (pdu, s);
-		
-		if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_serve_spare link %i serv %d buffsize %d pdu-size %d spare %d\n", 
+
+		if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_serve_spare link %i serv %d buffsize %d pdu-size %d spare %d\n",
 				ndx, s, link_[ndx][s].size_, pdu->size(), spare);
 	}
 
@@ -367,26 +367,26 @@ WimshSchedulerFairRR::recomputecbr (unsigned int ndx, unsigned char s, unsigned 
 {
 	if ( cbr_[ndx][s].pkt_ == 0 ) {
 		cbr_[ndx][s].startime_ = NOW;
-		
-		if ( WimaxDebug::enabled() ) fprintf (stderr,"0 recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f\n", 
+
+		if ( WimaxDebug::enabled() ) fprintf (stderr,"0 recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f\n",
 		 mac_->nodeId(), ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_,
 									cbr_[ndx][s].startime_);
-	
+
 	} else {
-		cbr_[ndx][s].quocient_ = (unsigned int) ( cbr_[ndx][s].bytes_ * 8 / 
+		cbr_[ndx][s].quocient_ = (unsigned int) ( cbr_[ndx][s].bytes_ * 8 /
 							(NOW - cbr_[ndx][s].startime_ ) );
-		
+
 		// error of division by zero
 		if ( NOW - cbr_[ndx][s].startime_ == 0 ) cbr_[ndx][s].quocient_ = 0;
-	
-		if ( WimaxDebug::enabled() ) fprintf (stderr,"recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f endtime %.9f quocient %d frame %d\n", 
-		mac_->nodeId(),ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, 
+
+		if ( WimaxDebug::enabled() ) fprintf (stderr,"recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f endtime %.9f quocient %d frame %d\n",
+		mac_->nodeId(),ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_,
 		cbr_[ndx][s].startime_, NOW, cbr_[ndx][s].quocient_, mac_->frame());
 	}
-	
+
 	cbr_[ndx][s].pkt_ ++;
 	cbr_[ndx][s].bytes_ += bytes;
-	
+
 	if (cbr_[ndx][s].pkt_ == 100) {
 		cbr_[ndx][s].pkt_ = 0;
 		cbr_[ndx][s].bytes_ = 0;
@@ -408,7 +408,7 @@ WimshSchedulerFairRR::handle ()
 	// remove stale flows
 //	std::vector<LinkDesc>::iterator link;
 	for ( unsigned int n = 0 ; n < mac_->nneighs() ; n++ )
-		for ( unsigned int s = 0 ; n < 4 ; s++ ) {	
+		for ( unsigned int s = 0 ; n < 4 ; s++ ) {
 			CircularList<FlowDesc>& rr = link_[n][s].rr_;
 
 			bool changed = false;

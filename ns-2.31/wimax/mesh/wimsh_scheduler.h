@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -48,26 +48,26 @@ protected:
 	//! Cumulative occupancy (in bytes) of the FIFO queues.
 	/*!
 	  Must be updated by the functions of derived classes.
-	  
+
 	  For instance, it may be used to drop packets.
 	  */
 	unsigned int bufSize_;
 
 	//! Maximum buffer size (in bytes). Set by the MAC via Tcl command.
 	unsigned int maxBufSize_;
-	
+
 	//! Stores the information of outgoing traffic flows rate
 	struct Cbr {
-		
+
 		unsigned int pkt_;
 		unsigned int bytes_;
 		double startime_;
 		double endtime_;
 		unsigned int quocient_;
-		
+
 		Cbr () { pkt_ = 0; bytes_ = 0; startime_ = 0.0; endtime_ = 0.0;  quocient_ = 0; }
 	};
-	
+
 	std::vector< std::vector< Cbr > > cbr_;
 
 public:
@@ -93,7 +93,7 @@ public:
 
 	//! Return the total buffer occupancy, in bytes.
 	virtual unsigned int bufSize () { return bufSize_; }
-	
+
 	unsigned int cbrQuocient (unsigned int ndx, unsigned int s ) { return cbr_[ndx][s].quocient_; }
 };
 

@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -110,20 +110,20 @@ WimshBurst::WimshBurst (const WimshBurst& obj)
 		WimaxSdu* sdu = new WimaxSdu (*(*it)->sdu());
 		sdu->copyPayload ((*it)->sdu());
 		pdu->sdu() = sdu;
-		
+
 		pdus_.push_back (pdu);
 	}
 
 	// copy the MSH-DSCH, if any
 	if ( obj.mshDsch_ ) mshDsch_ = new WimshMshDsch (*obj.mshDsch_);
 	else mshDsch_ = 0;
-/*	
+/*
 	if ( obj.mshDsch_uncoordinated_ ) mshDsch_uncoordinated_ = new WimshMshDsch (*obj.mshDsch_uncoordinated_);
 	else mshDsch_uncoordinated_ = 0;
 */
 	if ( obj.mshNcfg_ ) mshNcfg_ = new WimshMshNcfg (*obj.mshNcfg_);
 	else mshNcfg_ = 0;
-	
+
 	if ( obj.mshNent_ ) mshNent_ = new WimshMshNent (*obj.mshNent_);
 	else mshNent_ = 0;
 }
@@ -192,7 +192,7 @@ WimshMshDsch::addContiguous (GntIE& x)
 				break;
 			}
 		}
-		
+
 		// chek identical requests in contiguous frames
 		if ( x.nodeId_ == it->nodeId_ &&
 				x.frame_ == (it->frame_ + it->persistence_) &&
@@ -203,7 +203,7 @@ WimshMshDsch::addContiguous (GntIE& x)
 				x.service_ == it->service_ ) {
 
 			it->persistence_++;
-			break;	
+			break;
 		}
 	}
 
@@ -213,13 +213,13 @@ WimshMshDsch::addContiguous (GntIE& x)
 		gnt_.push_front(x);
 	}
 }
-	
+
 void
 WimshMshDsch::compactGntList ()
 {
 	std::list<GntIE>::iterator it;
 	std::list<GntIE>::iterator last = gnt_.begin();
-	
+
 	for ( it = gnt_.begin() ; it != gnt_.end() ; ++it ) {
 		if ( last->nodeId_ == it->nodeId_ &&
 				last->frame_ == (it->frame_ + 1) &&
@@ -235,10 +235,10 @@ WimshMshDsch::compactGntList ()
 			break;
 		}
 	}
-	
+
 	last = gnt_.begin();
 	for ( it = gnt_.begin() ; it != gnt_.end() ; ++it ) {
-		
+
 		if ( last->nodeId_ == it->nodeId_ &&
 				last->frame_ == (it->frame_ + 2) &&
 				last->start_ == it->start_ &&
@@ -254,10 +254,10 @@ WimshMshDsch::compactGntList ()
 			break;
 		}
 	}
-	
+
 	last = gnt_.begin();
 	for ( it = gnt_.begin() ; it != gnt_.end() ; ++it ) {
-		
+
 		if ( last->nodeId_ == it->nodeId_ &&
 				last->frame_ == (it->frame_ + 4) &&
 				last->start_ == it->start_ &&
@@ -270,14 +270,14 @@ WimshMshDsch::compactGntList ()
 			it->persistence_ = 8;
 			hdr_.length() -= GntIE::size();
 			gnt_.erase(last);
-			break;			
+			break;
 		}
 	}
-	
+
 	//! Ouch!
 	last = gnt_.begin();
 	for ( it = gnt_.begin() ; it != gnt_.end() ; ++it ) {
-		
+
 		if ( last->nodeId_ == it->nodeId_ &&
 				last->frame_ == (it->frame_ + 24) &&
 				last->start_ == it->start_ &&
@@ -290,10 +290,10 @@ WimshMshDsch::compactGntList ()
 			it->persistence_ = 32;
 			hdr_.length() -= GntIE::size();
 			gnt_.erase(last);
-			
+
 			last = gnt_.begin();
 			gnt_.erase(last);
-			
+
 			last = gnt_.begin();
 			gnt_.erase(last);
 			break;
@@ -311,7 +311,7 @@ WimshMshDsch::addContiguous (AvlIE& x)
 		if ( x.frame_ == it->frame_ &&
 				x.persistence_ == it->persistence_ &&
 				x.direction_ == it->direction_ &&
-				x.channel_ == it->channel_ && 
+				x.channel_ == it->channel_ &&
 				x.service_ == it->service_ ) {
 
 			// check if (x, *it) are contiguous
@@ -326,7 +326,7 @@ WimshMshDsch::addContiguous (AvlIE& x)
 				break;
 			}
 		}
-		
+
 		// chek identical requests in contiguous frames
 		if ( x.frame_ == (it->frame_ + it->persistence_) &&
 				x.start_ == it->start_ &&
@@ -337,7 +337,7 @@ WimshMshDsch::addContiguous (AvlIE& x)
 
 			it->persistence_++;
 			//if ( x.last_ ) it->last_ = true;
-			break;	
+			break;
 		}
 	}
 

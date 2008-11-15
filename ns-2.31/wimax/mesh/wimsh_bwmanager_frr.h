@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -109,13 +109,13 @@ protected:
 		  this output link will lag some bandwidth request.
 		  */
 		unsigned int def_out_;
-		
+
 		//! persistence of requste received
 		unsigned char pers_in_;
-		
+
 		//! level of request received (slots/frame)
 		unsigned int level_in_;
-		
+
 		//! tell regrant() when received last entry of confirmation set
 		bool lastCnf_;
 
@@ -198,7 +198,7 @@ protected:
 	/*!
 	  The bit busy_[F][S] is set (ie. true) if this node cannot
 	  receive/transmit in the minislot S of frame F.
-	  
+
 	  This data structure is used when granting/confirming bandwidth.
 
 	  The F-th entry of this data structure is reset by handle(), where
@@ -222,14 +222,14 @@ protected:
 	  at the end of each frame.
 	  */
 	Bitmap unconfirmedSlots_;
-	
+
 	Bitmap unconfirmedSlots_UGS_;
 	Bitmap unconfirmedSlots_NRTPS_;
 
 	//! List of unconfirmed grants directed to this node.
 	//std::list<WimshMshDsch::GntIE> unconfirmed_;
 	std::vector< std::list<WimshMshDsch::GntIE> > unconfirmed_[2];
-	
+
 	//! List of grants wating for sending
 	std::list<WimshMshDsch::GntIE> grantWating_[2];
 
@@ -238,7 +238,7 @@ protected:
 
 	//! True if availabilities have to be advertised. Configured via Tcl.
 	bool avlAdvertise_;
-	
+
 	std::vector<bool> send_rtps_together_;
 
 	//! Regrant horizon offset, in frames. Set via Tcl. Default = 1.
@@ -262,7 +262,7 @@ protected:
 
 	//! Maximum deficit, in bytes. Set via Tcl command. Zero means no maximum.
 	unsigned int maxDeficit_;
-	
+
 	//! Minumim slots per frame granted to rtPS service
 	unsigned int nrtpsMinSlots_;
 
@@ -286,7 +286,7 @@ protected:
 
 	//! Random number generator to pick up channel/frame/slot when granting.
 	RNG grantFitRng;
-	
+
 	RNG frameSpacing;
 
 	//! True if the starting channel is picked up randomly when granting.
@@ -303,7 +303,7 @@ protected:
 
 	//! Minimum grant size, in OFDM symbols, preamble not included. Default = 1.
 	unsigned int minGrant_;
-	
+
 	std::vector<unsigned int> request_UGS_;
 
 public:
@@ -365,16 +365,16 @@ public:
 	    Choose the algorithm to fit the grant into the forthcoming frames.
 		 */
 	int command (int argc, const char*const* argv);
-	
+
 	void search_tx_slot (unsigned int ndx, unsigned int reqState);
 
 protected:
 	//! Invalidate the data structures' entries for the current frame.
 	void invalidate (unsigned int F);
-	
+
 	//! Cancell UGS reservation for requester's neighbours and itself
 	void cancell_Requester (unsigned int ndx, unsigned char s, WimshMshDsch* dsch);
-	
+
 	//! Cancell UGS reservation for granter's neighbours and itself
 	void cancell_Granter (unsigned int ndx, unsigned char s);
 
@@ -430,10 +430,10 @@ private:
 	  of minislots actually confirmed which will be used for transmission.
 	  */
 	void confirm (WimshMshDsch* dsch, unsigned int n, unsigned int serv_class);
-	
+
 	//! Advertise pending availabilities.
 	void availabilities (WimshMshDsch* dsch, unsigned int s);
-	
+
 	//! Request/grant bandwidth.
 	/*!
 	  :TODO: more documentation (come on, this is a critical function!)
@@ -446,7 +446,7 @@ private:
 	  The granted minislots are marked as unavailable for reception.
 	  The amount of granted minislots are udpated.
 	  */
-	void requestGrant (WimshMshDsch* dsch, 
+	void requestGrant (WimshMshDsch* dsch,
 			unsigned int ndx, unsigned int s);
 
 	//! Return the real number of frames for which the persistence is relevant.
@@ -469,17 +469,17 @@ private:
 	  A slot in a frame on a channel is eligible to be granted to
 	  the requester if the corresponding entry in the following
 	  data structures are false: busy_, neigh_tx_unavl_, unconfirmed_.
-	  
+
 	  If it is not possible to schedule bandiwdth to ndx in the
 	  specified time window, then a grant with an empty minislot
 	  range is returned.
 	  */
 	WimshMshDsch::GntIE grantFit (unsigned int ndx, unsigned int bytes,
 		unsigned int frame,
-		bool& room, grantFitDesc& status, 
+		bool& room, grantFitDesc& status,
 		unsigned int serv_class, WimshMshDsch* dsch);
 
-	//void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,		
+	//void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,
 	void realGrantStart (unsigned int ndx,
 		unsigned int gframe, unsigned char gstart,
 		unsigned char grange, unsigned char gchannel, WimshMshDsch::GntIE& gnt);
@@ -489,8 +489,8 @@ private:
 	  A slot in a frame on a channel is eligible to be confirmed
 	  if the corresponding entry of busy_ is false.
 	  */
-	void confFit (unsigned int f, unsigned int mstart, 
-			unsigned int mrange, WimshMshDsch::GntIE& gnt, bool& room, 
+	void confFit (unsigned int f, unsigned int mstart,
+			unsigned int mrange, WimshMshDsch::GntIE& gnt, bool& room,
 				unsigned int serv_class, WimshMshDsch* dsch);
 
 	//! Get the interval between two consecutive control opportunities in frames.

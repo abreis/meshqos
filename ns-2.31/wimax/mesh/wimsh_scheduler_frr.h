@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -55,7 +55,7 @@ protected:
 
 		//! Quantum value, in bytes. Set by the recompute() function.
 		unsigned int quantum_;
-		
+
 		//! Deficit counter, in bytes.
 		unsigned int deficit_;
 
@@ -94,7 +94,7 @@ protected:
 		//! Build an empty link descriptor.
 		LinkDesc () { size_ = 0; }
 	};
-	
+
 	//! Factors to be used to compute weights according to priorities.
 	/*!
 		 Default values are all equal to 1.
@@ -145,10 +145,10 @@ public:
 
 	//! Return the size, in bytes, of the queue to a neighbor (by index).
 	unsigned int neighbor (unsigned ndx, unsigned int service) { return link_[ndx][service].size_; }
-	
+
 	//! Tcl interface via MAC.
 	int command (int argc, const char*const* argv);
-	
+
 private:
 	//! Drop a PDU (by deallocating PDU/SDU/IP).
 	void drop (WimaxPdu* pdu);
@@ -159,7 +159,7 @@ private:
 
 	//! Recompute the quanta values of a given list of flow descriptors.
 	void recompute (CircularList<FlowDesc>& rr);
-	
+
 	void recomputecbr (unsigned int ndx, unsigned char s, unsigned int bytes);
 };
 

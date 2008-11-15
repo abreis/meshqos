@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -34,17 +34,17 @@
 /*!
   :TODO: update the documentation
 
-  Implements the 802.16 standard election mechanism modified to avoid 
+  Implements the 802.16 standard election mechanism modified to avoid
   collision of requests. Two modification are implemented
 
   In 'XMTAWARE' mode, the standard 802.16 MAC protocol is modified to
-  make SSs transmit the NextXmtTime information 
+  make SSs transmit the NextXmtTime information
 
   In 'XMTUNAWARE' mode, the election mechanism is performed in the worst
   case:
   	i) the EarliestSubsequentXmtTime = holdOffTime + xmtTimeWindow lower
   	bound
-  	ii) two-hop neighbors are always considered competing nodes 
+  	ii) two-hop neighbors are always considered competing nodes
   */
 class WimshCoordinatorStandard : public WimshCoordinator {
 	//! Coordination type (fixed or moving).
@@ -82,7 +82,7 @@ class WimshCoordinatorStandard : public WimshCoordinator {
 
 	//! Neighbors information data structure.
 	struct NeighInfo{
-		//! Next trasmit time 
+		//! Next trasmit time
 		unsigned nextXmtTime_;
 		//! Next Transmit mx
 		unsigned short nextXmtMx_;
@@ -98,9 +98,9 @@ class WimshCoordinatorStandard : public WimshCoordinator {
 		bool competing_;
 		//! Time stamp update
 		unsigned int timeStamp_;
-		
+
 		//! Constructor
-		NeighInfo(unsigned nextXmtTime, unsigned short nextXmtMx, 
+		NeighInfo(unsigned nextXmtTime, unsigned short nextXmtMx,
 			WimaxNodeId nodeID, unsigned short nhop){
 			nextXmtTime_ = nextXmtTime; nextXmtMx_ = nextXmtMx;
 			nodeID_ = nodeID; nhop_ = nhop; earlSubXmtTime_ = 0;
@@ -108,8 +108,8 @@ class WimshCoordinatorStandard : public WimshCoordinator {
 		}
 
 		//! Operator redefinition for sorting the list of NeighInfo
-		bool operator < (const NeighInfo right) { 
-			return nextXmtTime_ < right.nextXmtTime_; }	
+		bool operator < (const NeighInfo right) {
+			return nextXmtTime_ < right.nextXmtTime_; }
 	};
 
 	//! List of neighbors for the purpose of sending MSH-DSCH messages.
@@ -138,7 +138,7 @@ class WimshCoordinatorStandard : public WimshCoordinator {
 public:
 	//! Create the coordinator.
 	WimshCoordinatorStandard (WimshMac* m, WimshPhyMib* p);
-		
+
 	//! Manage MSH-DSCH message from the MAC.
 	void recvMshDsch (WimshMshDsch* dsch, double txtime = 0);
 	//! Manage MSH-NCFG message from the MAC.
@@ -162,17 +162,17 @@ protected:
 	void electionNcfg ();
 	//! Election procedure called by handle().
 	void electionNent ();
-	
+
 	//! Fill the IE about myself with scheduling information.
 	void fillSelf (WimshMshDsch* dsch);
 
 	//! Fill the IEs about my neighbors with scheduling information.
 	void fillNeighbors (WimshMshDsch* dsch);
 
-	//! Fill the IE about myself with scheduling information. 
+	//! Fill the IE about myself with scheduling information.
 	void fillSelf (WimshMshNcfg* ncfg);
 
-	//! Fill the IEs about my neighbors with scheduling information.	
+	//! Fill the IEs about my neighbors with scheduling information.
 	void fillNeighbors (WimshMshNcfg* ncfg);
 
 private:
@@ -181,7 +181,7 @@ private:
 
 	//! Competition procedure
 	/*!
-	  Run the standard mesh election procedure as specified in 
+	  Run the standard mesh election procedure as specified in
 	  IEEE 802.16-2004 standard, Section 6.3.7.5.5.6 pp. 159-160
 	  nextXmtTime_ is filled with the slot number relative to
 	  the node's next Xmt Time
@@ -197,7 +197,7 @@ private:
 	  */
 	unsigned int competingNodes (unsigned int TempXmtTime,
 			std::list<NeighInfo>& nghList);
-	
+
 	//! Execute the mesh election procedure
 	/*!
 	  This function is identical to that in the standard p. 160

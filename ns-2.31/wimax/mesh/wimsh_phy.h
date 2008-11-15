@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -186,7 +186,7 @@ public:
 	  If this is not from a neighbor of ours, then just ignore the burst.
 	  The burst is also ignore if there was a channel or tx/rx switch
 	  of the PHY during this burst's transmission.
-	  
+
 	  :TODO: This function should be optimized.
 	  */
 	void handle (WimshBurst*);

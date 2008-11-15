@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -57,7 +57,7 @@ public:
 
 	//! Direction for availabilities IEs.
 	enum Direction { UNAVAILABLE = 0, TX_AVL, RX_AVL, AVAILABLE };
-	
+
 	//! QoS MSH-DSCH service type.
 	enum ServiceType { UGS, RTPS, NRTPS, BE , N_SERVICE_CALSS };
 
@@ -71,13 +71,13 @@ public:
 		unsigned char persistence_;
 		//! Service Class (2 bits).             !!! +2bits
 		unsigned char service_;
-		
+
 		bool reserved_;
 
 		//! Return the size (in bytes) of this IE.
 		static unsigned int size () { return 3; }
 	};
-	
+
 	//! Availability data structure (4 bytes).
 	struct AvlIE {
 		//! Start frame number. IRL = 8 bits. Here we use the full frame number.
@@ -151,7 +151,7 @@ private:
 	bool reserved_;
 	//! Grant/Request Flag (1 bit).
 	bool grant_;
-	
+
 	//! Sequence counter (6 bits).
 	unsigned int nseq_;
 	//! Number of requests (4 bits).
@@ -177,7 +177,7 @@ private:
 
 	//! Allocation type. Changed via allocationType(). Default = BASIC.
 	static AllocationType allocationType_;
-	
+
 public:
 	//! Create an empty MSH-DSCH message.
 	WimshMshDsch () {
@@ -204,7 +204,7 @@ public:
 	WimaxNodeId& src () { return src_; }
 	//! Get/set the QoS service type.
 	bool& reserved () { return reserved_; }
-	
+
 	bool& grant () { return grant_; }
 
 	//! Add an availabilities IE. Return the available space (in bytes).
@@ -213,10 +213,10 @@ public:
 			hdr_.length() += AvlIE::size(); avl_.push_front(x);
 		} else if ( allocationType_ == CONTIGUOUS ) addContiguous (x);
 		return remaining(); }
-		
+
 	unsigned int rmAvl () {
-		avl_.pop_front(); hdr_.length() -= AvlIE::size(); 
-		return remaining(); }		
+		avl_.pop_front(); hdr_.length() -= AvlIE::size();
+		return remaining(); }
 	//! Add a request IE. Return the available space (in bytes).
 	unsigned int add (ReqIE x) {
 		hdr_.length() += ReqIE::size(); req_.push_front(x); return remaining(); }
@@ -226,7 +226,7 @@ public:
 			hdr_.length() += GntIE::size(); gnt_.push_front(x);
 		} else if ( allocationType_ == CONTIGUOUS ) addContiguous (x);
 		return remaining(); }
-		
+
 	unsigned int gntCompact () {
 		compactGntList (); return remaining(); }
 	//! Add a neighbors IE. Return the available space (in bytes).
@@ -267,7 +267,7 @@ protected:
 	void addContiguous (GntIE& x);
 	//! Add an availability IE with contiguous allocation.
 	void addContiguous (AvlIE& x);
-	
+
 	void compactGntList ();
 };
 
@@ -312,7 +312,7 @@ private:
 	WimaxMacHeader hdr_;
 	//! Mesh subheader = transmitter NodeId (16 bits).
 	WimaxNodeId src_;
-	
+
 	//! Number of advertised neighbors (8 bits) not including itself.
 	unsigned int nngh_;
 
@@ -321,7 +321,7 @@ private:
 
 	//! Information on myself, about the distributed election mechanism.
 	NghIE myself_;
-	
+
 	// MSH-NCFG message type.
 	Type type_;
 
@@ -437,7 +437,7 @@ private:
 
 	//! Pointer to the MSH-DSCH message (if type == wimax::MSHNENT).
 	WimshMshNent* mshNent_;
-	
+
 	//------------------//
 	//-- Other fields --//
 	//------------------//
@@ -475,7 +475,7 @@ public:
 		size_ += pdu->size(); }
 	//! Remove a PDU from the burst. The PDU must be freed afterwards.
 	WimaxPdu* pdu () {
-		if ( pdus_.empty() ) return 0; 
+		if ( pdus_.empty() ) return 0;
 		WimaxPdu* tmp = pdus_.front(); pdus_.pop_front(); return tmp; }
 
 	//! Return the list of PDUs.
@@ -487,12 +487,12 @@ public:
 	WimshMshDsch*& mshDsch () { return mshDsch_; }
 	//! Add an MSH-DSCH message to the burst.
 	void addMshDsch (WimshMshDsch* m);
-/*	
+/*
 	//! Get a pointer to the MSH-DSCH uncoordinated message, if any.
 	WimshMshDsch_uncoordinated*& mshDsch_uncoordinated () { return mshDsch_uncoordinated_; }
 	//! Add an MSH-DSCH message to the burst.
 	void addMshDsch_uncoordinated (WimshMshDsch* m);
-*/	
+*/
 	//! Get a pointer to the MSH-NCFG message, if any.
 	WimshMshNcfg*& mshNcfg () { return mshNcfg_; }
 	//! Add an MSH-NCFG message to the burst.

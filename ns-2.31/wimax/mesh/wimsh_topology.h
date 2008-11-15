@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -64,7 +64,7 @@ public:
 	  Given a source and a destination computes the possible next hops
 	  vector
 	  */
-	virtual std::vector< wimax::NextHopInfo > getDestinationVect 
+	virtual std::vector< wimax::NextHopInfo > getDestinationVect
 								( WimaxNodeId src, WimaxNodeId dst ) = 0;
 
 
@@ -147,7 +147,7 @@ class WimshTopologySimple : public WimshTopology {
 	  towards the destination.
 	  */
 	RNG rng;
-	
+
 public:
 	//! Create an empty topology object.
 	WimshTopologySimple ();
@@ -175,11 +175,11 @@ public:
 	  Given a source and a destination computes the possible next hops
 	  vector
 	  */
-	std::vector< wimax::NextHopInfo > getDestinationVect 
+	std::vector< wimax::NextHopInfo > getDestinationVect
 								( WimaxNodeId src, WimaxNodeId dst );
 	//! Return the number of node in the scenario
 	unsigned int numNodes() { return connectivity_.getRows(); }
-	
+
 protected:
 	//! Compute the conflict and apsp matrices.
 	void recompute ();

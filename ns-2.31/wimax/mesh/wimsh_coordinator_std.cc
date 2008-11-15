@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -31,7 +31,7 @@
  * class WimaxStandardCoordinator
  *
  */
- 
+
 WimshCoordinatorStandard::WimshCoordinatorStandard(WimshMac* m, WimshPhyMib* p):
    WimshCoordinator (m)
 {
@@ -79,13 +79,13 @@ WimshCoordinatorStandard::initialize ()
    myDsch_.nextXmtMx_ = 0;
    myNcfg_.nextXmtMx_ = 0;
    std::vector<WimaxNodeId> neigh;
-   
+
    // get the first hop neighbors
    mac_->topology()->neighbors( mac_->nodeId(), neigh, 1 );
    // update the neighbor list
    for ( unsigned int i = 0; i < neigh.size(); i++ ){
-      nghListDsch_.push_back( NeighInfo(0, 0, neigh.at(i), 1) ); 
-      nghListNcfg_.push_back( NeighInfo(0, 0, neigh.at(i), 1) ); 
+      nghListDsch_.push_back( NeighInfo(0, 0, neigh.at(i), 1) );
+      nghListNcfg_.push_back( NeighInfo(0, 0, neigh.at(i), 1) );
    }
    neigh.clear();
 
@@ -93,8 +93,8 @@ WimshCoordinatorStandard::initialize ()
    mac_->topology()->neighbors( mac_->nodeId(), neigh, 2 );
    // update the neighbor list
    for ( unsigned int i = 0; i < neigh.size(); i++ ){
-      nghListDsch_.push_back( NeighInfo(0, 0, neigh.at(i), 2) ); 
-      nghListNcfg_.push_back( NeighInfo(0, 0, neigh.at(i), 2) ); 
+      nghListDsch_.push_back( NeighInfo(0, 0, neigh.at(i), 2) );
+      nghListNcfg_.push_back( NeighInfo(0, 0, neigh.at(i), 2) );
    }
 
    // set the maxClique_ flag (false by default)
@@ -125,7 +125,7 @@ WimshCoordinatorStandard::start ()
    // compute the first transmission opportunity
 	const unsigned int C = phyMib_->controlSlots();
 	const unsigned int T = phyMib_->cfgInterval ();
-   
+
    nextDschSlot_   = myDsch_.nextXmtTime_ % C;
    nextDschFrame_  = myDsch_.nextXmtTime_ / C;
 	nextDschFrame_ += 1 + nextDschFrame_ / T;
@@ -139,7 +139,7 @@ WimshCoordinatorStandard::start ()
 
 	timer_.start (0);
 }
- 
+
 
 void
 WimshCoordinatorStandard::fillSelf (WimshMshDsch* dsch)
@@ -175,7 +175,7 @@ WimshCoordinatorStandard::fillNeighbors (WimshMshDsch* dsch)
       if ( ( maxAdvertisedNeighbors_ >= 0 &&
              (int)advertisedNeighbors >= maxAdvertisedNeighbors_ ) ||
            dsch->remaining() < WimshMshDsch::NghIE::size() ) break;
-      
+
       WimshMshDsch::NghIE ie; // new information element
 
       // check if the xmtTime info is updated
@@ -186,7 +186,7 @@ WimshCoordinatorStandard::fillNeighbors (WimshMshDsch* dsch)
          ie.xmtHoldoffExponent_ = it->holdOffExp_;
          ie.nodeId_ = it->nodeID_;
 
-         // chech the condition to add to the dsch 
+         // chech the condition to add to the dsch
          if ( it->nhop_ == 1 ) {
             dsch->add (ie);
             ++advertisedNeighbors;
@@ -223,13 +223,13 @@ WimshCoordinatorStandard::fillNeighbors (WimshMshNcfg* ncfg)
 void
 WimshCoordinatorStandard::recvMshDsch (WimshMshDsch *dsch, double txtime)
 {
-   assert ( initialized ); 
+   assert ( initialized );
    if ( WimaxDebug::trace("WCRD::recvMshDsch") ) fprintf (stderr,
       "%.9f WMAC::recvMshDsch[%d]\n", NOW, mac_->nodeId());
-   
+
    // compute the current slot from the beginning of time
    const unsigned int currentSlot = currentCtrlSlotDsch(txtime);
-   
+
    std::map< WimaxNodeId, NeighInfo* >::iterator neighbor_it;
    // list scan is optimized by means of the neighbors map
    neighbor_it = nghMapDsch_.find( dsch->myself().nodeId_ );
@@ -254,12 +254,12 @@ WimshCoordinatorStandard::recvMshDsch (WimshMshDsch *dsch, double txtime)
       // update neighbor infos
       std::list< WimshMshDsch::NghIE > nghList = dsch->ngh();
       std::list< WimshMshDsch::NghIE >::iterator it;
-   
+
       for ( it = nghList.begin(); it != nghList.end(); ++it ){
 
          neighbor_it = nghMapDsch_.find( it->nodeId_ );
 
-         if( neighbor_it != nghMapDsch_.end() && 
+         if( neighbor_it != nghMapDsch_.end() &&
             neighbor_it->second->nhop_ == 2  ) {
             // update
             neighbor_it->second->nextXmtTime_ = it->nextXmtTime_;
@@ -275,14 +275,14 @@ WimshCoordinatorStandard::recvMshDsch (WimshMshDsch *dsch, double txtime)
 void
 WimshCoordinatorStandard::recvMshNcfg (WimshMshNcfg *ncfg, double txtime)
 {
-   assert ( initialized ); 
+   assert ( initialized );
 
    if ( WimaxDebug::trace("WCRD::recvMshNcfg") ) fprintf (stderr,
       "%.9f WMAC::recvMshNcfg[%d]\n", NOW, mac_->nodeId());
 
    // compute the current slot from the beginning of time
    const unsigned int currentSlot = currentCtrlSlotNcfg(txtime);
-   
+
    std::map< WimaxNodeId, NeighInfo* >::iterator neighbor_it;
    // list scan is optimized by means of the neighbors map
    neighbor_it = nghMapNcfg_.find( ncfg->myself().nodeId_ );
@@ -307,7 +307,7 @@ WimshCoordinatorStandard::recvMshNcfg (WimshMshNcfg *ncfg, double txtime)
 
 void
 WimshCoordinatorStandard::electionDsch ()
-{   
+{
    // number of control slots per frame
    const unsigned int C = phyMib_->controlSlots ();
 	const unsigned int T = phyMib_->cfgInterval ();
@@ -345,7 +345,7 @@ WimshCoordinatorStandard::electionDsch ()
 
 void
 WimshCoordinatorStandard::electionNcfg ()
-{   
+{
    // number of control slots per frame
    const unsigned int C = phyMib_->controlSlots ();
 	const unsigned int T = phyMib_->cfgInterval ();
@@ -380,11 +380,11 @@ WimshCoordinatorStandard::electionNent ()
 	nextNentFrame_ += T + 1;
 }
 
-void 
+void
 WimshCoordinatorStandard::competition (
 		std::list<NeighInfo>& nghList,
-		MyInfo& my, wimax::BurstType type) 
-{   
+		MyInfo& my, wimax::BurstType type)
+{
    // compute the current slot from the beginning of time
    unsigned int currentSlot = 0;
 	if ( type == wimax::MSHDSCH ) currentSlot = currentCtrlSlotDsch();
@@ -398,9 +398,9 @@ WimshCoordinatorStandard::competition (
 
       it->nextXmtTime_ = ( it->nextXmtTime_ > elapsed ) ?
          it->nextXmtTime_ - elapsed : 0;
-      
+
       // set the earliest subsequent xmt time
-      it->earlSubXmtTime_ = it->nextXmtTime_ 
+      it->earlSubXmtTime_ = it->nextXmtTime_
          + computeHoldoffTime( it->holdOffExp_ );
    }
    // sort the neighbor list
@@ -421,12 +421,12 @@ WimshCoordinatorStandard::competition (
          success = true;
          my.nextXmtTime_ = TempXmtTime;
          my.nextXmtMx_ = computeXmtTimeMx( my.holdOffExp_, my.nextXmtTime_ );
-      }   
+      }
    }
 }
 
-bool 
-WimshCoordinatorStandard::meshElection (unsigned int TempXmtTime, 
+bool
+WimshCoordinatorStandard::meshElection (unsigned int TempXmtTime,
                                short unsigned int nodeID,
 										 std::list<NeighInfo>& nghList,
 										 wimax::BurstType type)
@@ -441,26 +441,26 @@ WimshCoordinatorStandard::meshElection (unsigned int TempXmtTime,
    unsigned int nbr_smear_val, smear_val1, smear_val2;
    smear_val1 = inline_smear( nodeID ^ ( TempXmtTime + currentSlot ) );
    smear_val2 = inline_smear( nodeID + ( TempXmtTime + currentSlot ) );
-   
+
    std::list<NeighInfo>::iterator it;
    for( it = nghList.begin(); it != nghList.end(); ++it ){
       if( it->competing_ ){
-         nbr_smear_val = inline_smear( it->nodeID_ ^ 
+         nbr_smear_val = inline_smear( it->nodeID_ ^
             ( TempXmtTime + currentSlot ) );
 
          if( nbr_smear_val > smear_val1 ){
             return false;
          } else if( nbr_smear_val == smear_val1 ) {
-            nbr_smear_val = inline_smear( it->nodeID_ + 
+            nbr_smear_val = inline_smear( it->nodeID_ +
                ( TempXmtTime + currentSlot ) );
 
             if( nbr_smear_val > smear_val2 ) {
                return false;
             }
          } else if( nbr_smear_val == smear_val2 ) {
-            if( ( ( ( TempXmtTime + currentSlot )%2 == 0 ) && 
+            if( ( ( ( TempXmtTime + currentSlot )%2 == 0 ) &&
                ( it->nodeID_ > nodeID ) ) ||
-               ( ( ( TempXmtTime + currentSlot )%2 == 1 ) && 
+               ( ( ( TempXmtTime + currentSlot )%2 == 1 ) &&
                ( it->nodeID_ < nodeID ) ) ) {
                return false;
             }
@@ -482,10 +482,10 @@ WimshCoordinatorStandard::competingNodes (unsigned int TempXmtTime,
       unsigned int holdexp = it->holdOffExp_;
       // information not updated
       // it is considered a competing node
-      if( it->nextXmtTime_ == 0 ){ 
+      if( it->nextXmtTime_ == 0 ){
          it->competing_ = true;
 			++competingNodes;
-      } else { 
+      } else {
          if (
               ( type_ == XMTAWARE && it->nextXmtTime_ == TempXmtTime ) ||
               ( type_ == XMTUNAWARE &&
@@ -522,7 +522,7 @@ WimshCoordinatorStandard::computeXmtTimeMx
    bool found = false;
    unsigned int x = 0;
    while( !found ) {
-      if( ( NextXmtTime > x * hold ) && 
+      if( ( NextXmtTime > x * hold ) &&
          ( NextXmtTime <= (x+1) * hold ) ) found = true;
       else x++;
    }
@@ -531,11 +531,11 @@ WimshCoordinatorStandard::computeXmtTimeMx
 
 
 
-bool 
-WimshCoordinatorStandard::eligible 
+bool
+WimshCoordinatorStandard::eligible
    ( unsigned xmtmx, unsigned TempXmtTime, unsigned holdexp )
 {
-   return    ( ( xmtmx < TempXmtTime ) && 
+   return    ( ( xmtmx < TempXmtTime ) &&
       ( TempXmtTime <= ( ( xmtmx + 1 ) * ( 1 << holdexp ) ) ) );
 }
 
@@ -553,7 +553,7 @@ WimshCoordinatorStandard::inline_smear(unsigned short int val)
    return val;
 }
 
-unsigned int 
+unsigned int
 WimshCoordinatorStandard::currentCtrlSlot (double txtime)
 {
    // number of control slots per frame
@@ -563,12 +563,12 @@ WimshCoordinatorStandard::currentCtrlSlot (double txtime)
    const unsigned int curslotFrame = (unsigned int) round (
          ( NOW  - mac_->frame() * phyMib_->frameDuration() - txtime ) /
          phyMib_->controlSlotDuration() );
-   
+
    // return the current slot from the beginning of time
    return ( C * mac_->frame() + curslotFrame );
 }
 
-unsigned int 
+unsigned int
 WimshCoordinatorStandard::currentCtrlSlotDsch (double txtime)
 {
    const unsigned int C = phyMib_->controlSlots();
@@ -580,7 +580,7 @@ WimshCoordinatorStandard::currentCtrlSlotDsch (double txtime)
 	return slot;
 }
 
-unsigned int 
+unsigned int
 WimshCoordinatorStandard::currentCtrlSlotNcfg (double txtime)
 {
    const unsigned int C = phyMib_->controlSlots();

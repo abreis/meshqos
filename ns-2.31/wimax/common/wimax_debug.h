@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -42,7 +42,7 @@ class WimshBurst;
 //! Useful debug static class.
 /*!
   The 'format' functions return a single-line (non-'\n' terminated) sequence.
-  
+
   On the other hand, the 'print' functions print a longer description
   on a given output stream file. An optional argument allows the caller
   to specify a string that has to be added at the beginning of each line.

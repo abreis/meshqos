@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -49,7 +49,7 @@ WimaxReassemblyBuffer::addPdu (WimaxPdu* newpdu)
 	// or equal to the space size, in which case we just abort since
 	// this would cause overflow of the pdu_ vector.
 	if ( fsn >= WimaxFsh::fsnSize() ) abort ();
-	
+
 	// If this is a new fragment, let us store it for later.
 	if ( newpdu->fsh().state() == WimaxFsh::FIRST_FRAG ) {
 		// The stored PDU is dropped, if any.

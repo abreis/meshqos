@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -54,7 +54,7 @@ class WimshWeightManager {
 		//! List of neighbors to which we send (from which we receive) data.
 		/*!
 		  With single-path routing the list holds at most one element.
-		  
+
 		  Also, incomplete elements only have one element.
 		  */
 		NdxList ndx_;
@@ -83,7 +83,7 @@ class WimshWeightManager {
 		bool operator== (const FlowDesc& desc) {
 			return ( src_ == desc.src_ && dst_ == desc.dst_ &&
 					prio_ == desc.prio_ ) ? true : false; }
-		
+
 		//! Build an incomplete flow descriptor by default.
 		/*!
 		  Fields that are not meaningful for an incomplete flow descriptor

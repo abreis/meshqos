@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -174,7 +174,7 @@ WimshPhy::setMode (wimax::ChannelStatus s, WimshChannel* channel)
 	// note that the descriptor is not removed from the list, since it
 	// can still interfere with other bursts
 
-	if ( ( channel && channel != channel_ ) || 
+	if ( ( channel && channel != channel_ ) ||
 			( channel_->getMode (this) == wimax::RX && s == wimax::TX ) ) {
 		std::list<BurstDesc>::iterator it;
 		for ( it = rxBursts_.begin() ; it != rxBursts_.end() ; it++ ) {
@@ -247,7 +247,7 @@ WimshPhy::handle (WimshBurst* burst)
 	}
 
 	assert ( cur != rxBursts_.end() );
-	
+
 	// :XXX: this is debug code, remove it
 	/*
 	if ( cur->burst_ != burst ) {
@@ -303,7 +303,7 @@ WimshPhy::handle (WimshBurst* burst)
 				latestStart = it->start_;
 
 	}
-	
+
 	if ( latestStart < 0 ) {  // ie. no undispatched elements
 		rxBursts_.clear ();
 	} else {
@@ -360,4 +360,4 @@ WimshPhy::recvBurst (WimshBurst* burst)
 
 	// add the burst descriptor to the pending list
 	rxBursts_.push_back (desc);
-} 
+}

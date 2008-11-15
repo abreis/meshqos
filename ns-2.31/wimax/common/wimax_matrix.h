@@ -1,4 +1,4 @@
-/* 
+ /*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -63,7 +63,7 @@ protected:
 	//! Get the (linear) index of two-dimension coordinates, with n columns.
 	unsigned int index (unsigned int i, unsigned int j, unsigned int n) {
 		return j + n * i; }
-	
+
 private:
 	void operator= (const Matrix<T>&);
 };

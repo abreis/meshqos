@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -30,7 +30,7 @@ private:
 	  the initial network configuration (via MSH-NCFG messages). During
 	  normal operation, then, each node uses the mesh subheader + LinkID
 	  information to derive the destination NodeID.
-	  
+
 	  Since, we do not simulate network configuration, there is no point in
 	  using the LinkID, which only incurs additional simulation overhead
 	  due to the lookup of (LinkID, src-NodeID) -> dst-NodeID.
@@ -62,7 +62,7 @@ public:
 
 	//! Number of precedences (= four since the field has two bits).
 	enum { MAX_PREC = 4 };
-	
+
 	//! Build an empty MeshCID. Management by default.
 	WimaxMeshCid () {
 		dst_ = 0;

@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -157,7 +157,7 @@ WimshWeightManager::flow (
 
 	// demux the list based on the direction
 	DescList& list = ( dir == wimax::IN ) ? in_ : out_;
-	
+
 	for ( it = list.begin() ; it != list.end() ; ++it ) {
 		bool found = false;
 		// if there is already such a flow, then we just update its timestamp
@@ -236,7 +236,7 @@ WimshWeightManager::flow (unsigned int ndx, wimax::LinkDirection dir)
 
 	// demux the list based on the direction
 	DescList& list = ( dir == wimax::IN ) ? in_ : out_;
-	
+
 	// break from the loop as soon as an element associated to the
 	// same link (ie. ndx) is encountered
 	for ( it = list.begin() ; it != list.end() ; ++it ) {
