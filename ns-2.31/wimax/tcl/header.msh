@@ -244,7 +244,7 @@ proc init {} {
    # read configuration from the debug file, in needed
    if { $opt(debug) != "" } {
       # enable debug at startdebug time
-      $ns at $opt(startdebug) "$debug enable"
+      $ns at $opt(startdebug) "$debug enable $opt(debuglevel)"
 
       # try to open the debug file for reading debug configuration
       if { ! [file exists $opt(debug)] } {
@@ -260,6 +260,8 @@ proc init {} {
 
       # close the debug configuration file
       close $debugfile
+   } elseif { $opt(debuglevel) > 0 } {	;#; enable debug even if no config is supplied 
+      $ns at $opt(startdebug) "$debug enable $opt(debuglevel)"
    }
 
    set simtime [clock seconds]

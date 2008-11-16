@@ -87,10 +87,10 @@ protected:
 	//! Next slot to be served.
 	unsigned int lastSlot_;
 
-	//! turn on when able to tranmit service class scheduling message
+	//! turn on when able to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > startHorizon_;
 
-	//! store next frame opportunity to tranmit service class scheduling message
+	//! store next frame opportunity to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > nextFrame_;
 
 	std::vector< std::vector<unsigned int> > unDschState_;

@@ -46,10 +46,11 @@ WimaxDebug::command (int argc, const char*const* argv)
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[1], "enable") == 0 ) {
 		enabled_ = true;
-		debuglevel_ = 0;		// no debuglevel supplied, assume none intended
+		debuglevel_ = 9;		// no debuglevel supplied, assume maximum intended
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[1], "disable") == 0 ) {
-		enabled_ = false;
+		enabled_ = false;		// TODO: deprecate
+		debuglevel_ = 0;		// no debug
 		return TCL_OK;
 	} else if ( argc == 4 && strcmp (argv[1], "trace") == 0 ) {
 		bool status;
