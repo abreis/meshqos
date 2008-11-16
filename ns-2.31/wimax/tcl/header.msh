@@ -717,6 +717,7 @@ proc create_nodes {} {
          }
          $mac($i) bwmanager dd-timeout $opt(dd-timeout)
 			$mac($i) bwmanager min-grant $opt(min-grant)
+		        $mac($i) bwmanager nrtps-min-slots $opt(nrtps-min-slots)
 
 			# configure the weight manager of the bandwidth manager
          $mac($i) bwmanager wm weight-flow $opt(weight-flow)
