@@ -56,6 +56,8 @@ class WimaxDebug : public TclObject {
 	static unsigned int cur_;
 	//! True if debug is enabled.
 	static bool enabled_;
+	//! Stores debuglevel.
+	static unsigned int debuglevel_;
 	//! Map of function names to flag (true means this function is traced).
 	static std::map<std::string, bool> trace_;
 
@@ -96,6 +98,7 @@ public:
 
 	//! Get/set the enabled flag.
 	static bool& enabled () { return enabled_; }
+	static unsigned int& debuglevel () { return debuglevel_; }
 
 #ifdef WIMAX_DEBUG
 

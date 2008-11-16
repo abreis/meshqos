@@ -34,13 +34,19 @@ public:
 char WimaxDebug::buf_[NBUFS][BUFSIZE];
 unsigned int WimaxDebug::cur_ = 0;
 bool WimaxDebug::enabled_ = true;
+unsigned int WimaxDebug::debuglevel_ = 0;		// debug level from simulation
 std::map<std::string, bool> WimaxDebug::trace_;
 
 int
 WimaxDebug::command (int argc, const char*const* argv)
 {
-	if ( argc == 2 && strcmp (argv[1], "enable") == 0 ) {
+	if ( argc == 3 && strcmp (argv[1], "enable") == 0 ) {
 		enabled_ = true;
+		debuglevel_ = atoi( argv[2] );		// store debuglevel
+		return TCL_OK;
+	} else if ( argc == 2 && strcmp (argv[1], "enable") == 0 ) {
+		enabled_ = true;
+		debuglevel_ = 0;		// no debuglevel supplied, assume none intended
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[1], "disable") == 0 ) {
 		enabled_ = false;
