@@ -79,20 +79,20 @@ WimshPhyMib::command (int argc, const char*const* argv)
 void
 WimshPhyMib::dump (FILE* os)
 {
-	fprintf (os, "frame duration           = %f ms\n"
-			       "OFDM symbol duration     = %f us\n"
-					 "OFDM symbols per frame   = %d\n"
-					 "OFDM symbols per slot    = %d\n"
-					 "slots per frame          = %d\n"
-					 "control slots per frame  = %d\n"
-					 "MSH-NCFG frames interval = %d\n",
-					 1.0e3 * frameDuration(),
-					 1.0e6 * symDuration(),
-					 symPerFrame(),
-					 symPerSlot(),
-					 slotPerFrame(),
-					 controlSlots(),
-					 cfgInterval());
+	fprintf (os, 	"(PhyMib) frame duration           = %f ms\n"
+					"(PhyMib) OFDM symbol duration     = %f us\n"
+					"(PhyMib) OFDM symbols per frame   = %d\n"
+					"(PhyMib) OFDM symbols per slot    = %d\n"
+					"(PhyMib) slots per frame          = %d\n"
+					"(PhyMib) control slots per frame  = %d\n"
+					"(PhyMib) MSH-NCFG frames interval = %d\n",
+					1.0e3 * frameDuration(),
+					1.0e6 * symDuration(),
+					symPerFrame(),
+					symPerSlot(),
+					slotPerFrame(),
+					controlSlots(),
+					cfgInterval());
 }
 
 bool

@@ -697,7 +697,7 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 							it->frame_, it->persistence_, it->start_, it->range_, false);
 				}
 
-			// (cancel UGS service) applies to neighbours of the reiceiver
+			// (cancel UGS service) applies to neighbours of the receiver
 			} else if ( it->direction_ == WimshMshDsch::TX_AVL &&
 					mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
 
@@ -756,7 +756,7 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 							it->frame_, it->persistence_, it->start_, it->range_, false);
 				}
 
-			// applies to neighbours of the reiceiver
+			// applies to neighbours of the receiver
 			} else if ( it->direction_ == WimshMshDsch::TX_AVL &&
 					mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
 
@@ -1688,7 +1688,7 @@ void
 WimshBwManagerFairRR::cancel_Granter (unsigned int ndx,
 		unsigned char s)
 {
-	if ( WimaxDebug::enabled() ) fprintf (stderr,"granter vou cancelar o serviço UGS\n");
+	if ( WimaxDebug::enabled() ) fprintf (stderr,"granter vou cancelar o servico UGS\n");
 	WimaxNodeId src = mac_->ndx2neigh (ndx);
 	unsigned int fs = mac_->frame() + 10;	// !!
 	unsigned int F;

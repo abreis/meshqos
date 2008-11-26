@@ -100,6 +100,14 @@ public:
 	static bool& enabled () { return enabled_; }
 	static unsigned int& debuglevel () { return debuglevel_; }
 
+	//! Debug levels for each possible debug output.
+	/*! Can be modified to dynamically adjust debug level assignments.
+	  */
+	struct debuglevels {
+		static const unsigned bwmgr_handle_ = 8;
+		static const unsigned bwmgr_uncoordrange_ = 7;
+	} static const lvl;
+
 #ifdef WIMAX_DEBUG
 
 	//! Return true if this function is traced and debug is enabled.

@@ -122,16 +122,16 @@ WimshBwManager::handle ()
 			channel = channel_[F][lastSlot_];
 			start = lastSlot_;
 			range = 1;
-			if ( WimaxDebug::debuglevel() > 8 ) fprintf (stderr,
-					"[9]!1 status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status,
+			if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
+					"(BwMgr)!1 status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status,
 						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
 							undsch, lastSlot_ );
 
 		} else {
 			    new_status = grants_[F][lastSlot_];
 				new_undsch = uncoordsch_[F][lastSlot_];
-				if ( WimaxDebug::debuglevel() > 8 ) fprintf (stderr,
-						"[9]!  status %u dst %d service %d src %d channel %d undsch %d slot %d\n", new_status,
+				if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
+						"(BwMgr)!  status %u dst %d service %d src %d channel %d undsch %d slot %d\n", new_status,
 							dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
 								new_undsch, lastSlot_ );
 
@@ -149,8 +149,8 @@ WimshBwManager::handle ()
 		// create MSH-DSCH message on coordinator module and transmite at mac module
 		unsigned int ndx = mac_->neigh2ndx (undsch);
 		bool grant = ( unDschState_[ndx][F] == 1 ) ? true : false;
-		if ( WimaxDebug::enabled() ) fprintf (stderr,
-				"!!!uncoordinated MSH-DSCH message range %d dst %d gnt %d \n",range, undsch , grant );
+		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_uncoordrange_ ) fprintf (stderr,
+				"(UncrdRng)!!!uncoordinated MSH-DSCH message range %d dst %d gnt %d \n",range, undsch , grant );
 		mac_->uncoordinated_opportunity (undsch, grant);
 	} else if ( status == true && undsch == 999 ) {
 		// set transmit mode on channel 0 towards dst

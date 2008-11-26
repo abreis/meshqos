@@ -41,7 +41,7 @@ int
 WimaxDebug::command (int argc, const char*const* argv)
 {
 	if ( argc == 3 && strcmp (argv[1], "enable") == 0 ) {
-		enabled_ = true;
+		enabled_ = false;					// TODO: change to true when all debuglevels are implemented
 		debuglevel_ = atoi( argv[2] );		// store debuglevel
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[1], "enable") == 0 ) {

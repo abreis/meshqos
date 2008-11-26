@@ -716,14 +716,14 @@ proc create_nodes {} {
             $mac($i) bwmanager grant-fit channel random
          }
          $mac($i) bwmanager dd-timeout $opt(dd-timeout)
-			$mac($i) bwmanager min-grant $opt(min-grant)
-		        $mac($i) bwmanager nrtps-min-slots $opt(nrtps-min-slots)
+	 $mac($i) bwmanager min-grant $opt(min-grant)
+         $mac($i) bwmanager nrtps-min-slots $opt(nrtps-min-slots)
 
-			# configure the weight manager of the bandwidth manager
+	 # configure the weight manager of the bandwidth manager
          $mac($i) bwmanager wm weight-flow $opt(weight-flow)
-			for { set j 0 } { $j < [llength $opt(prio-weight)] } { incr j } {
-				$mac($i) bwmanager wm prio-weight $j [lindex $opt(prio-weight) $j]
-			}
+	 for { set j 0 } { $j < [llength $opt(prio-weight)] } { incr j } {
+ 	    $mac($i) bwmanager wm prio-weight $j [lindex $opt(prio-weight) $j]
+	 }
          if { $opt(weight-timeout) != "never" } {
             $mac($i) bwmanager wm weight-timeout $opt(weight-timeout)
          }
@@ -739,9 +739,9 @@ proc create_nodes {} {
          if { $opt(weight-timeout) != "never" } {
             $mac($i) scheduler weight-timeout $opt(weight-timeout)
          }
-			for { set j 0 } { $j < [llength $opt(prio-weight)] } { incr j } {
-				$mac($i) scheduler prio-weight $j [lindex $opt(prio-weight) $j]
-			}
+	 for { set j 0 } { $j < [llength $opt(prio-weight)] } { incr j } {
+	    $mac($i) scheduler prio-weight $j [lindex $opt(prio-weight) $j]
+	 }
       }
 
       # configure corruption of MSH-DSCH messages at the MAC layer
@@ -754,7 +754,7 @@ proc create_nodes {} {
 }
 
 #
-# definition of link profiles. Note: links are simmetric
+# definition of link profiles. Note: links are symmetric
 #
 proc create_profiles {} {
    global ns opt node map phymib
