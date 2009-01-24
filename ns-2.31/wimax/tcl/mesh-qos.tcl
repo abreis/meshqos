@@ -78,11 +78,13 @@ set opt(radio)          1      ;# number of radios
 set opt(chan-data-per)  0      ;# channel data PDU error rate
 set opt(chan-ctrl-per)  0      ;# channel control PDU error rate
 set opt(propagation)    4      ;# physical propagation, in us
-set opt(sym-duration)   20     ;# OFDM symbol duration, in us
-set opt(sym-perframe)   500    ;# number of OFDM symbols per frame
 set opt(bandwidth)      "10"   ;# in MHz, if set overrides the OFDM symbol
                                ;# duration and the number of OFDM symbols
                                ;# per frame (ie. the frame duration)
+set opt(sym-duration)   20     ;# OFDM symbol duration, in us
+set opt(sym-perframe)   500    ;# number of OFDM symbols per frame
+				;# typical frame durations are: 0.5ms, 1ms, 2ms
+				;# frame duration is given by sym-duration*sym-perframe
 set opt(cyclic-prefix)  "1/16" ;# cyclic prefix, only used if bandwidth is set
 set opt(control)        4      ;# number of MSH-DSCH opportunities per frame
 set opt(cfg-interval)   16     ;# number of MSH-DSCH frames between two

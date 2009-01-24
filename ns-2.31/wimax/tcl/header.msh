@@ -589,6 +589,7 @@ proc create_nodes {} {
    $phymib controlSlots $opt(control)
    $phymib cfg-interval $opt(cfg-interval)
    $phymib recompute
+   $phymib dump
 
    # create and initialize the MAC MIB
    set macmib [new WimshMacMib]
