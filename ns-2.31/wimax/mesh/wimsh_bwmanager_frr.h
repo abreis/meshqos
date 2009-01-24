@@ -476,11 +476,10 @@ private:
 	  */
 	WimshMshDsch::GntIE grantFit (unsigned int ndx, unsigned int bytes,
 		unsigned int frame,
-		bool& room, grantFitDesc& status,
+		bool& room, bool& frame_room, grantFitDesc& status, 
 		unsigned int serv_class, WimshMshDsch* dsch);
-
-	//void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,
-	void realGrantStart (unsigned int ndx,
+		
+	void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,
 		unsigned int gframe, unsigned char gstart,
 		unsigned char grange, unsigned char gchannel, WimshMshDsch::GntIE& gnt);
 

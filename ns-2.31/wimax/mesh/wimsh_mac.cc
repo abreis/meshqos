@@ -470,7 +470,7 @@ WimshMac::initialize ()
 
 	// listen to the control channel
 	setControlChannel (wimax::RX);
-
+	
 	// set this MAC as initialized
 	initialized_ = true;
 }
@@ -1083,8 +1083,8 @@ WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, u
 	// we account for the physical preamble that must be transmitted
 	unsigned int bytes = slots2bytes (ndx, range, true);
 
-	if ( WimaxDebug::enabled() ) fprintf (stderr,
-			"!!!! range %d bytes %d\n", range, bytes);
+	/* if ( WimaxDebug::enabled() ) fprintf (stderr,
+		"!!!! range %d bytes %d\n", range, bytes); */
 
 	// create a new burst into the fragmentation buffer
 	bool room = fragbuf_[ndx]->newBurst (profile_[ndx], bytes, service);

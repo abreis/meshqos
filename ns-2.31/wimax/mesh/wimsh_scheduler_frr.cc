@@ -165,8 +165,8 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	link_[ndx][s].size_ += pdu->size();  // per link
 	bufSize_ += pdu->size();          // shared
 
-	if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_addPdu link %i serv %d buffsize %d\n",ndx, s
-						, link_[ndx][s].size_ );
+	/* if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_addPdu link %i serv %d buffsize %d\n",ndx, s
+					, link_[ndx][s].size_ ); */
 
 	Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
 	Stat::put ("wimsh_bufsize_mac_d", mac_->index(), bufSize_ );
@@ -311,9 +311,9 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 
 		// add the PDU to the fragmentation buffer
 		spare = frag.addPdu (pdu, s);
-
-		if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_serve_spare link %i serv %d buffsize %d pdu-size %d spare %d\n",
-				ndx, s, link_[ndx][s].size_, pdu->size(), spare);
+		
+		/* if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_serve_spare link %i serv %d buffsize %d pdu-size %d spare %d\n", 
+			ndx, s, link_[ndx][s].size_, pdu->size(), spare); */
 	}
 
 	// if this round terminated because there is no more spare room

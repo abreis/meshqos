@@ -321,7 +321,7 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 		for ( it = gnt.begin() ; it != gnt.end() ; ++it ) {
 
 		// grant service class
-		unsigned int s = it->service_;
+			unsigned int s = it->service_;
 
 			//
 			// grant
@@ -674,6 +674,9 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 
 	// get the index of the neighbor that sent this MSH-DSCH message
 	unsigned int ndx = mac_->neigh2ndx (dsch->src());
+	unsigned int nrtPS_slots [mac_->nneighs()];
+	for (unsigned int i = 0; i < mac_->nneighs(); i++)
+		nrtPS_slots[i] = nrtpsMinSlots_;
 
 	std::list<WimshMshDsch::AvlIE>::iterator it;
 	for ( it = avl.begin() ; it != avl.end() ; ++it ) {
@@ -683,54 +686,55 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 		unsigned int frange;   // frame range
 		realPersistence (it->frame_, it->persistence_, fstart, frange);
 
-		if ( it->service_ == 3 ) {
-
+		if ( it->service_ == wimax::UGS ) { 
+		
 			// (cancel UGS service) applies to neigbours of the transmiter
-			if ( it->direction_ == WimshMshDsch::RX_AVL &&
-					mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
-
-				setSlots (self_rx_unavl_UGS_[it->channel_],
-						it->frame_, it->persistence_, it->start_, it->range_, false);
-
+			if ( it->direction_ == WimshMshDsch::RX_AVL && 
+				mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
+				
+				setSlots (self_rx_unavl_UGS_[it->channel_], 
+						  it->frame_, it->persistence_, it->start_, it->range_, false);
+				
 				for ( unsigned int ch = 0 ; ch < mac_->nchannels() ; ch++ ) {
 					setSlots (neigh_tx_unavl_UGS_[ndx][ch],
-							it->frame_, it->persistence_, it->start_, it->range_, false);
+							  it->frame_, it->persistence_, it->start_, it->range_, false);
 				}
-
+				
 			// (cancel UGS service) applies to neighbours of the receiver
-			} else if ( it->direction_ == WimshMshDsch::TX_AVL &&
-					mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
+			} else if ( it->direction_ == WimshMshDsch::TX_AVL && 
+					   mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
 
 				setSlots (self_tx_unavl_UGS_[it->channel_],
-						it->frame_, it->persistence_, it->start_, it->range_, false);
+						  it->frame_, it->persistence_, it->start_, it->range_, false);
 
 				for ( unsigned int ch = 0 ; ch < mac_->nchannels() ; ch++ ) {
 					setSlots (neigh_tx_unavl_UGS_[ndx][ch],
-							it->frame_, it->persistence_, it->start_, it->range_, false);
+							  it->frame_, it->persistence_, it->start_, it->range_, false);
 				}
-
+				
 				std::vector<WimaxNodeId> gntNeigh;  // array of the granter's neighbors
 				mac_->topology()->neighbors (dsch->src(), gntNeigh); // retrieve them
 				for ( unsigned int ngh = 0 ; ngh < gntNeigh.size() ; ngh++ ) {
-
+					
 					// skip the requester, which has been already managed,
 					// and nodes which are not our neighbors
 					if ( ! mac_->topology()->neighbors (gntNeigh[ngh], mac_->nodeId()) )
 						continue;
-
+					
 					// otherwise, set the granted slots as unavailable
 					const unsigned int n = mac_->neigh2ndx (gntNeigh[ngh]); // index
 
 					setSlots (neigh_tx_unavl_UGS_[n][it->channel_],
-							it->frame_, it->persistence_, it->start_, it->range_, false);
-				}
-
-			// turn unavailable a range of slots (standard case)
-			} else
+							  it->frame_, it->persistence_, it->start_, it->range_, false);
+				}							
+				
+				// turn unavailable a range of slots (standard case)
+			} else {
 				setSlots (neigh_tx_unavl_UGS_[ndx][it->channel_],
-						fstart, frange, it->start_, it->range_, true);
+						  fstart, frange, it->start_, it->range_, true);
 				setSlots (service_, fstart, frange,
-						it->start_, it->range_, it->service_);
+						  it->start_, it->range_, it->service_);
+			}
 
 		// for other services
 		} else {
@@ -741,8 +745,11 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 
 				setSlots (self_rx_unavl_[it->channel_],
 						it->frame_, it->persistence_, it->start_, it->range_, false);
-
-				setSlots (grants_, it->frame_, it->persistence_,
+				
+				setSlots (self_rx_unavl_UGS_[it->channel_], 
+						  it->frame_, it->persistence_, it->start_, it->range_, false);
+						
+				setSlots (grants_, it->frame_, it->persistence_, 
 						it->start_, it->range_, false);
 
 				setSlots (dst_, it->frame_, it->persistence_,
@@ -762,14 +769,23 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 
 				setSlots (self_tx_unavl_[it->channel_],
 						it->frame_, it->persistence_, it->start_, it->range_, false);
-
+				
+				setSlots (self_tx_unavl_UGS_[it->channel_], 
+						  it->frame_, it->persistence_, it->start_, it->range_, false);
+						
 				setSlots (busy_, it->frame_, it->persistence_,
 									it->start_, it->range_, false);
-
+				
+				setSlots (busy_UGS_, it->frame_, it->persistence_,
+						  it->start_, it->range_, false);
+									
 				setSlots (unconfirmedSlots_, it->frame_, it->persistence_,
 									it->start_, it->range_, true);
-
-				setSlots (service_, it->frame_, it->persistence_,
+				
+				setSlots (unconfirmedSlots_UGS_, it->frame_, it->persistence_,
+						  it->start_, it->range_, true);
+									
+				setSlots (service_, it->frame_, it->persistence_, 
 						it->start_, it->range_, it->service_);
 
 				setSlots (grants_, it->frame_, it->persistence_,
@@ -806,15 +822,23 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 			} else {
 				setSlots (neigh_tx_unavl_[ndx][it->channel_],
 						fstart, frange, it->start_, it->range_, true);
-				setSlots (service_, fstart, frange,
+				
+				setSlots (neigh_tx_unavl_UGS_[ndx][it->channel_], 
+						  fstart, frange, it->start_, it->range_, true);
+				
+				setSlots (service_, fstart, frange, 
 						it->start_, it->range_, it->service_);
 
-				if ( it->service_ == wimax::NRTPS ) {
-					unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
+				if ( it->service_ == wimax::NRTPS && nrtPS_slots[ndx] > 0 ) {
 
+					unsigned int slots = ( it->range_ > nrtPS_slots[ndx] ) ? nrtPS_slots[ndx] : it->range_;
+					
 					setSlots (neigh_tx_unavl_NRTPS_[ndx][it->channel_], fstart, frange,
 							it->start_, slots, true);
-					if ( WimaxDebug::enabled() ) fprintf (stderr,
+					
+					nrtPS_slots[ndx] = nrtPS_slots[ndx] - slots;
+					
+					if ( WimaxDebug::enabled() ) fprintf (stderr, 
 						"!!avl marquei com nrtpsMin_ a frame %d start %d slots %d\n",
 							it->frame_, it->start_, slots);
 				}
@@ -1155,7 +1179,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 		// number of pending bytes
 		unsigned int total_req = requested - granted;
 
-		// minislots request per frame
+		// minislots requested per frame
 		unsigned int req_now = mac_->slots2bytes (ndx, level, true);
 		unsigned int bytes_req = req_now;
 		int slots_req = level;
@@ -1168,12 +1192,13 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 		// grant until one of the following occurs:
 		// .....?!"?"...
 		//
-		bool room = true;
+		bool room = true, frame_room = true;
 		unsigned int minFrame = ( s == wimax::RTPS ) ? 2 : Hdst;
 		unsigned int maxHorizon;
 		if ( s == wimax::UGS ) maxHorizon = HORIZON;
 		else maxHorizon = (HORIZON / 4);
-
+		unsigned int nrtPS_slots = nrtpsMinSlots_;
+		
 		for ( unsigned int h = minFrame ; h < minFrame + 1 ; h++ ) {
 
 			// get a new grant information element
@@ -1184,6 +1209,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 					bytes_req,						// max number of bytes (slots * persistence)
 					mac_->frame() + h,				// first eligible frame
 					room,							// room for more grant entries
+					frame_room,
 					grantFitStatus[ndx],			// current grant status
 					s,								// traffic class
 					dsch);
@@ -1200,8 +1226,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 			//		"slots_req %d frame %d h %d\n", slots_req , mac_->frame() + h , h);
 			if ( gnt.range_ < level ) {
 				slots_req -= gnt.range_ - 1;
-				if ( s == wimax::NRTPS ) slots_req = nrtpsMinSlots_ -
-						(level - slots_req);
+				if ( s == wimax::NRTPS && !frame_room ) slots_req = nrtpsMinSlots_ - 
+						(level - slots_req);		
 				bytes_req = mac_->slots2bytes (ndx, slots_req, true);
 				if ( slots_req <= 1 ) {
 					slots_req = level;
@@ -1248,15 +1274,15 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				setSlots (busy_UGS_, gnt.frame_, gnt.persistence_,
 						gnt.start_, gnt.range_, true);
 			else {
-				if ( s == wimax::NRTPS ) {
-					unsigned int slots = ( gnt.range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : gnt.range_;
+				if ( s == wimax::NRTPS && nrtPS_slots > 0) {
+					unsigned int slots = ( gnt.range_ > nrtPS_slots ) ? nrtPS_slots : gnt.range_;
 
 					setSlots (busy_NRTPS_, gnt.frame_, gnt.persistence_,
 							gnt.start_, slots, true);
-					if ( WimaxDebug::enabled() ) fprintf (stderr,
-							"!!g marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-							gnt.frame_, gnt.start_, slots);
-				}
+					
+					nrtPS_slots = nrtPS_slots - gnt.range_;
+ 
+				} 
 
 				setSlots (busy_, gnt.frame_, gnt.persistence_,
 						gnt.start_, gnt.range_, true);
@@ -1266,8 +1292,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 					gnt.start_, gnt.range_, s);
 		}
 
-		if ( granted < total_req )
-			if ( WimaxDebug::enabled() ) fprintf (stderr, "!!nao garanti tudo\n");
+		//if ( granted < total_req )
+		//	if ( WimaxDebug::enabled() ) fprintf (stderr, "!!nao garanti tudo\n");
 
 		activeList_[s].erase();
 	}
@@ -1292,78 +1318,36 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 			// request for UGS service
 			if ( s == wimax::UGS &&
 					startHorizon_[ndx][3] && reqTraffic) {
-				/*
-				switch ( request_UGS_[ndx] ) {
-					case 0 :
-						// create a request IE
-						WimshMshDsch::ReqIE ie;
-						ie.nodeId_ = mac_->ndx2neigh (ndx);
 
-						nextFrame_[ndx][3] = mac_->frame() + 128;
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!nextFrame_[3] %d ndx %d\n", nextFrame_[ndx][3], ndx);
-						cbr = mac_->scheduler()->cbrQuocient (ndx, s);
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!cbr nodeId %d ndx %d cbr %d\n",
-							mac_->nodeId() , ndx, cbr);
-						req_bytes = ( cbr * 4e-3 ) / 8;
-						req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-						ie.level_ = req_slots + 6;									// Parametrizar
-						ie.persistence_ = 128;
-						startHorizon_[ndx][3] = false;
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!2 baixei o startHorizon_[3] %d nextFrame_[3] %d ndx %d\n",
-								startHorizon_[ndx][3], nextFrame_[ndx][3], ndx);
-						ie.service_ = 3;
-						request_UGS_[ndx]++;
+				// create a request IE
+				WimshMshDsch::ReqIE req;
+				req.nodeId_ = mac_->ndx2neigh (ndx);
+				
+				// make new request of badwidth
+				nextFrame_[ndx][3] = mac_->frame() + 10000;    //!!!
+				cbr = mac_->scheduler()->cbrQuocient (ndx, s);
+				//if ( WimaxDebug::enabled() ) fprintf (stderr,
+				//		"!!cbr nodeId %d ndx %d cbr %d\n",
+				//	mac_->nodeId() , ndx, cbr);
+				req_bytes = ( cbr * 4e-3 ) / 8;
+				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
+				req.level_ = req_slots + 3;
+				if (req.level_ > mac_->phyMib()->slotPerFrame()) req.level_ = mac_->phyMib()->slotPerFrame();
+				req.persistence_ = 128;
+				startHorizon_[ndx][3] = false;
+				req.service_ = 3;
+				//if ( WimaxDebug::enabled() ) fprintf (stderr,
+				//		"!!3 baixei o startHorizon_[3] %d nextFrame_[3] %d ndx %d\n",
+				//		startHorizon_[ndx][3], nextFrame_[ndx][3], ndx);
+				//request_UGS_[ndx] = 1;
+				
+				// insert the IE into the MSH-DSCH message
+				dsch->add (req);
+				
+				// update request out
+				neigh_[ndx][s].req_out_ = mac_->slots2bytes (ndx, req.level_, true) 
+						* req.persistence_;
 
-						// insert the IE into the MSH-DSCH message
-						dsch->add (ie);
-
-						// update request out
-						neigh_[ndx][s].req_out_ = mac_->slots2bytes (ndx, ie.level_, true)
-								* ie.persistence_;
-						break;
-					case 1 :
-						// create UGS cancel IE
-						cancel_Requester (ndx, s, dsch);
-
-						// hold on request of bandwidth to next opportunity
-						request_UGS_[ndx]++;
-						startHorizon_[ndx][3] = true;
-						break;
-					default:
-					*/
-						// create a request IE
-						WimshMshDsch::ReqIE req;
-						req.nodeId_ = mac_->ndx2neigh (ndx);
-
-						// make new request of badwidth
-						nextFrame_[ndx][3] = mac_->frame() + 10000;
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!nextFrame_[3] %d ndx %d\n", nextFrame_[ndx][3], ndx);
-						cbr = mac_->scheduler()->cbrQuocient (ndx, s);
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!cbr nodeId %d ndx %d cbr %d\n",
-							mac_->nodeId() , ndx, cbr);
-						req_bytes = ( cbr * 4e-3 ) / 8;
-						req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-						req.level_ = req_slots + 3;
-						req.persistence_ = 128;
-						startHorizon_[ndx][3] = false;
-						req.service_ = 3;
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!3 baixei o startHorizon_[3] %d nextFrame_[3] %d ndx %d\n",
-								startHorizon_[ndx][3], nextFrame_[ndx][3], ndx);
-						//request_UGS_[ndx] = 1;
-
-						// insert the IE into the MSH-DSCH message
-						dsch->add (req);
-
-						// update request out
-						neigh_[ndx][s].req_out_ = mac_->slots2bytes (ndx, req.level_, true)
-								* req.persistence_;
-				//}
 			// rtPS requestes
 			} else if ( s == wimax::RTPS &&
 					startHorizon_[ndx][2] && reqTraffic ) {
@@ -1373,14 +1357,15 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
 				cbr = mac_->scheduler()->cbrQuocient (ndx, s);
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!cbr nodeId %d ndx %d cbr %d\n",
-					mac_->nodeId() , ndx, cbr);
+				//if ( WimaxDebug::enabled() ) fprintf (stderr,
+				//		"!!cbr nodeId %d ndx %d cbr %d\n",
+				//	mac_->nodeId() , ndx, cbr);
 				req_bytes = ( cbr * 4e-3 ) / 8;
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 				ie.level_ = req_slots + 3;
-
-				ie.persistence_ = 32;
+				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
+				
+				ie.persistence_ = 32;	
 				ie.service_ = s;
 
 				// insert the IE into the MSH-DSCH message
@@ -1405,12 +1390,13 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
 				cbr = mac_->scheduler()->cbrQuocient (ndx, s);
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!cbr nodeId %d ndx %d cbr %d\n",
-							mac_->nodeId() , ndx, cbr);
+				//if ( WimaxDebug::enabled() ) fprintf (stderr,
+				//		"!!cbr nodeId %d ndx %d cbr %d\n",
+				//			mac_->nodeId() , ndx, cbr);
 				req_bytes = ( cbr * 4e-3 ) / 8;
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 				ie.level_ = req_slots + 3;
+				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
 				ie.persistence_ = 32;
 				ie.service_ = s;
 
@@ -1418,8 +1404,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				dsch->add (ie);
 
 				nextFrame_[ndx][1] = mac_->frame() + 32;
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!nextFrame_[3] %d ndx %d\n", nextFrame_[ndx][3], ndx);
+				//if ( WimaxDebug::enabled() ) fprintf (stderr,
+				//		"!!nextFrame_[3] %d ndx %d\n", nextFrame_[ndx][3], ndx);
 
 				startHorizon_[ndx][1] = false;
 
@@ -1436,12 +1422,13 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
 				cbr = mac_->scheduler()->cbrQuocient (ndx, s);
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!cbr nodeId %d ndx %d cbr %d\n",
-							mac_->nodeId() , ndx, cbr);
+				//if ( WimaxDebug::enabled() ) fprintf (stderr,
+				//		"!!cbr nodeId %d ndx %d cbr %d\n",
+				//			mac_->nodeId() , ndx, cbr);
 				req_bytes = ( cbr * 4e-3 ) / 8;
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 				ie.level_ = req_slots + 3;
+				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
 				ie.persistence_ = 32;
 				ie.service_ = s;
 
@@ -1449,8 +1436,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				dsch->add (ie);
 
 				nextFrame_[ndx][0] = mac_->frame() + 32;
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!nextFrame_[0] %d ndx %d\n", nextFrame_[ndx][0], ndx);
+				//if ( WimaxDebug::enabled() ) fprintf (stderr,
+				//		"!!nextFrame_[0] %d ndx %d\n", nextFrame_[ndx][0], ndx);
 
 				startHorizon_[ndx][0] = false;
 
@@ -1750,7 +1737,8 @@ WimshMshDsch::GntIE
 WimshBwManagerFairRR::grantFit (
 		unsigned int ndx, unsigned int bytes,
 		unsigned int frame,
-		bool& room, grantFitDesc& status,
+		bool& room, bool& frame_room,
+		grantFitDesc& status, 
 		unsigned int serv_class, WimshMshDsch* dsch)
 {
 	// new grant to be returned (and then added to the MSH-DSCH)
@@ -1767,9 +1755,8 @@ WimshBwManagerFairRR::grantFit (
 	// number of channels
 	unsigned int C = mac_->nchannels();
 
+	// number of request slots
 	unsigned int nSlots = mac_->bytes2slots (ndx, bytes, true);
-
-	//if ( WimaxDebug::enabled() ) fprintf (stderr, "bytes %d serv_class %d\n", bytes, serv_class);
 
 	// search the frame and first minislot avilable for grant
 	// set the actual frame number within the frame horizon
@@ -1778,22 +1765,25 @@ WimshBwManagerFairRR::grantFit (
 	// pick up a random channel, if required
 	unsigned int ch = 0;
 	if ( grantFitRandomChannel_ ) ch = grantFitRng.uniform ((int)C);
+	
+	// nrtps pending slots
+	unsigned int count = 0;
 
 	// for each channel
 	for ( unsigned int c = 0 ; c < C ; c++ ) {
 
 		// get a bitset which represents the grant unavailabilities	(1 == unavailable, 0 == available)
 		std::bitset<MAX_SLOTS> map =
-		  unconfirmedSlots_[F] | unconfirmedSlots_UGS_[F] |
-		  busy_[F] | busy_UGS_[F] |
-		  self_rx_unavl_[ch][F] | self_rx_unavl_UGS_[ch][F] |
-		  neigh_tx_unavl_[ndx][ch][F] | neigh_tx_unavl_UGS_[ndx][ch][F];
+		  unconfirmedSlots_[F] | unconfirmedSlots_UGS_[F] | unconfirmedSlots_NRTPS_[F] |
+		  busy_[F] | busy_UGS_[F] | busy_NRTPS_[F] |
+		  self_rx_unavl_[ch][F] | self_rx_unavl_UGS_[ch][F] | self_rx_unavl_NRTPS_[ch][F] |
+		neigh_tx_unavl_[ndx][ch][F] | neigh_tx_unavl_UGS_[ndx][ch][F] | neigh_tx_unavl_NRTPS_[ndx][ch][F];
 
 		// for each minislot in the current frame
 		for ( unsigned int s = 0 ; s < N ; s++ ) {
 			//if ( txBE_[F][s] == false ) fprintf (stderr, "!!txBE_ = 0 tarma %d slot %d\n", frame ,s  );
 
-			// as soon as a free minislot is found, start the grant allocation
+			// as soon as a free min islot is found, start the grant allocation
 			if ( map[s] == false ) {
 
 				gnt.service_ = serv_class;
@@ -1809,7 +1799,7 @@ WimshBwManagerFairRR::grantFit (
 
 				gnt.range_ = s - gnt.start_;
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, s, frame);
+				//		"gnt.range %d  %d-%d  frame .start_, s, frame);
 
 				// check the minimum number of OFDM symbols per grant
 				// unless the number of slots requested is smaller than that
@@ -1831,72 +1821,153 @@ WimshBwManagerFairRR::grantFit (
 					//if ( WimaxDebug::enabled() ) fprintf (stderr,
 					//		"!2 BE: frame totalmente ocupada %d ultimo s %d \n", frame, s);
 					return gnt;
+					
 				} else {
 
 					// for each minislot in the current frame
 					for ( unsigned int m = 0 ; m < N ; m++ ) {
-
+							
 						// barrow bandwidth of BE and nrtPS services
-						map[m] = ( service_[F][m] == wimax::BE ||
-								service_[F][m] == wimax::NRTPS ) ? false : map[m];
-
-						// atention to nrtps minumums reservations
-						if ( unconfirmedSlots_NRTPS_[F][m] |
-								busy_NRTPS_[F][m] | self_rx_unavl_NRTPS_[ch][F][m] |
-								neigh_tx_unavl_NRTPS_[ndx][ch][F][m] )
-							map[m] = true;
+						// but atention to nrtps minumum reservation
+						if ( service_[F][m] == 9 || service_[F][m] == wimax::BE || 
+								  (service_[F][m] == wimax::NRTPS && !(( unconfirmedSlots_NRTPS_[F][m] ||
+																		busy_NRTPS_[F][m] || self_rx_unavl_NRTPS_[ch][F][m] ||
+																		  neigh_tx_unavl_NRTPS_[ndx][ch][F][m]))) ) {
+							map[m] = false;
+							count++;
+						}
 					}
 
-					for ( unsigned int r = 0 ; r < N ; r++ ) {
+					if (count > 0)
+					{
+						for ( unsigned int r = 0 ; r < N ; r++ ) {
 
-						// as soon as a free minislot is found, start the grant allocation
-						if ( map[r] == false ) {
+							// as soon as a  service_[F][m] == 9 || ree minislot is found, start the grant allocation
+							if ( map[r] == false ) {
+							
+								gnt.service_ = serv_class;
+								gnt.frame_ = frame;
+								gnt.start_ = r;
+								gnt.persistence_ = persistence;
+								gnt.fromRequester_ = false;
+								gnt.channel_ = ch;
 
-							gnt.service_ = serv_class;
-							gnt.frame_ = frame;
-							gnt.start_ = r;
-							gnt.persistence_ = persistence;
-							gnt.fromRequester_ = false;
-							gnt.channel_ = ch;
+								// search for the largest minislot range
+								for ( ; r < N && map[r] == false &&
+									( r - gnt.start_ ) < nSlots ; r++ ) { }
 
-							// search for the largest minislot range
-							for ( ; r < N && map[r] == false &&
-								( r - gnt.start_ ) < nSlots ; r++ ) { }
+								gnt.range_ = r - gnt.start_;
+								if ( WimaxDebug::enabled() ) fprintf (stderr, 
+										"2gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, r, frame);
+								
+								unsigned int symbols =
+									gnt.range_ * mac_->phyMib()->symPerSlot()
+										- mac_->phyMib()->symShortPreamble();
 
-							gnt.range_ = r - gnt.start_;
-							if ( WimaxDebug::enabled() ) fprintf (stderr,
-									"2gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, r, frame);
-
-							unsigned int symbols =
-								gnt.range_ * mac_->phyMib()->symPerSlot()
-									- mac_->phyMib()->symShortPreamble();
-
-							if ( symbols < minGrant_ ) continue;
-
-							WimshMshDsch::AvlIE avl;
-							avl.frame_ = gnt.frame_;
-							avl.start_ = gnt.start_;
-							avl.direction_ = WimshMshDsch::TX_AVL;
-							avl.persistence_ = 128;
-							avl.channel_ = ch;
-							avl.service_ = (serv_class == wimax::UGS ) ? wimax::RTPS : serv_class;
-							avl.range_ = gnt.range_;
-
-							if ( dsch->remaining() > WimshMshDsch::AvlIE::size() +
-									WimshMshDsch::GntIE::size() )
-								dsch->add (avl);
-							else {
-								availabilities_[0].push_back (avl);
-								room = false;
+								if ( symbols < minGrant_ ) continue;
+								
+								WimshMshDsch::AvlIE avl;
+								avl.frame_ = gnt.frame_;	
+								avl.start_ = gnt.start_;	
+								avl.direction_ = WimshMshDsch::TX_AVL;	
+								avl.persistence_ = 128;	
+								avl.channel_ = ch;	
+								avl.service_ = (serv_class == wimax::UGS ) ? wimax::RTPS : serv_class;
+								avl.range_ = gnt.range_;
+								
+								if ( dsch->remaining() > WimshMshDsch::AvlIE::size() +
+										WimshMshDsch::GntIE::size() )
+									dsch->add (avl);									
+								else {
+									if (serv_class == wimax::NRTPS )
+										availabilities_[0].push_back (avl);
+									else 
+										availabilities_[1].push_back (avl);
+									
+									room = false;
+								}
+								
+								setSlots (dst_, frame, 128, gnt.start_, gnt.range_, 999);
+								setSlots (grants_, frame, 128, gnt.start_, gnt.range_, false);
+								setSlots (service_, frame, 128, gnt.start_, gnt.range_, 9);
+								setSlots (unconfirmedSlots_, frame, 128, gnt.start_, gnt.range_, false);
+								setSlots (busy_, frame, 128, gnt.start_, gnt.range_, false);
+								setSlots (self_rx_unavl_[ch], frame, 128, gnt.start_, gnt.range_, false);
+								setSlots (neigh_tx_unavl_[ndx][ch], frame, 128, gnt.start_, gnt.range_, false);
+								
+								//if ( WimaxDebug::enabled() ) fprintf (stderr, 
+								//		"2sai do grantFit  gnt.range %d frame %d\n", gnt.range_, frame);
+								return gnt;
 							}
-
-							setSlots (dst_, frame, 128, gnt.start_, gnt.range_, 999);
-							setSlots (grants_, frame, 128, gnt.start_, gnt.range_, false);
-
-							//if ( WimaxDebug::enabled() ) fprintf (stderr,
-							//		"2sai do grantFit  gnt.range %d frame %d\n", gnt.range_, frame);
-							return gnt;
+					} 
+					} else {
+						if (serv_class == wimax::NRTPS || serv_class == wimax::RTPS) {
+							
+							if (serv_class == wimax::NRTPS && nSlots > nrtpsMinSlots_ ) nSlots = nrtpsMinSlots_;
+							frame_room = false;
+						
+							for ( unsigned int r = 0 ; r < N ; r++ ) {
+								
+								// as soon as a free minislot is found, start the grant allocation
+								if ( service_[F][r] == wimax::UGS) {
+									
+									gnt.service_ = serv_class;
+									gnt.frame_ = frame;
+									gnt.start_ = r;
+									gnt.persistence_ = persistence;
+									gnt.fromRequester_ = false;
+									gnt.channel_ = ch;
+									
+									// search for the largest minislot range
+									for ( ; r < N && service_[F][r] == wimax::UGS &&
+										 ( r - gnt.start_ ) < nSlots ; r++ ) { }
+									
+									gnt.range_ = r - gnt.start_;
+									if ( WimaxDebug::enabled() ) fprintf (stderr, 
+										"2gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, r, frame);
+									
+									unsigned int symbols =
+									gnt.range_ * mac_->phyMib()->symPerSlot()
+									- mac_->phyMib()->symShortPreamble();
+									
+									if ( symbols < minGrant_ ) continue;
+									
+									WimshMshDsch::AvlIE avl;
+									avl.frame_ = gnt.frame_;	
+									avl.start_ = gnt.start_;	
+									avl.direction_ = WimshMshDsch::TX_AVL;	
+									avl.persistence_ = 128;	
+									avl.channel_ = ch;	
+									avl.service_ = serv_class;
+									avl.range_ = gnt.range_;
+									
+									if ( dsch->remaining() > WimshMshDsch::AvlIE::size() +
+										WimshMshDsch::GntIE::size() )
+										dsch->add (avl);									
+									else {
+										if (serv_class == wimax::NRTPS )
+											availabilities_[0].push_back (avl);
+										else 
+											availabilities_[1].push_back (avl);
+										
+										room = false;
+									}
+									
+									setSlots (dst_, frame, 128, gnt.start_, gnt.range_, 999);
+									setSlots (grants_, frame, 128, gnt.start_, gnt.range_, false);
+									setSlots (service_, frame, 128, gnt.start_, gnt.range_, 9);
+									setSlots (unconfirmedSlots_UGS_, frame, 128, gnt.start_, gnt.range_, false);
+									setSlots (busy_UGS_, frame, 128, gnt.start_, gnt.range_, false);
+									setSlots (self_rx_unavl_UGS_[ch], frame, 128, gnt.start_, gnt.range_, false);
+									setSlots (neigh_tx_unavl_UGS_[ndx][ch], frame, 128, gnt.start_, gnt.range_, false);
+									
+									//if ( WimaxDebug::enabled() ) fprintf (stderr, 
+									//		"2sai do grantFit  gnt.range %d frame %d\n", gnt.range_, frame);
+									return gnt;
+								}
 						}
+					
+					}
 					}
 				}
 			}

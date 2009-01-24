@@ -65,14 +65,13 @@ public:
 	struct ReqIE {
 		//! Destination NodeID (IRL, LinkID - 8 bits).
 		WimaxNodeId nodeId_;
-		//! Demand level (8 bits).
+		//! Demand level (7 bits).				!!! set max slots per frame = 128;  -1bit
 		unsigned char level_;
-		//! Demand persistence (3 bits).  		!!! +5bits
+		//! Demand persistence (3 bits).
 		unsigned char persistence_;
 		//! Service Class (2 bits).             !!! +2bits
 		unsigned char service_;
-
-		bool reserved_;
+		//bool reserved_;						!!! -1bit
 
 		//! Return the size (in bytes) of this IE.
 		static unsigned int size () { return 3; }
@@ -88,7 +87,7 @@ public:
 		unsigned char range_;
 		//! Direction (2 bits).
 		Direction direction_;
-		//! Persistence (3 bits).    	 !!! +5bits
+		//! Persistence (3 bits).  
 		unsigned char persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
@@ -111,7 +110,7 @@ public:
 		unsigned char range_;
 		//! Direction (1 bit). True = from requester to granter. Otherwise, false.
 		bool fromRequester_;
-		//! Persistence (8 bits).			!!! +5bits
+		//! Persistence (8 bits).
 		unsigned char persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
