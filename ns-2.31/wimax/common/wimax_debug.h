@@ -102,6 +102,8 @@ public:
 
 	//! Debug levels for each possible debug output.
 	/*! Can be modified to dynamically adjust debug level assignments.
+	    Remember: all debugs are 'greater than' (>), thus a value of '5' will 
+	    cause the debug message to be shown with debuglevel set to > 5.
 	  */
 	struct debuglevels {
 		static const unsigned bwmgr_handle_ = 8;
