@@ -17,26 +17,26 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimsh_mac.h>
-#include <wimax_defs.h>
-#include <wimsh_packet.h>
-#include <wimsh_phy.h>
-#include <wimsh_channel.h>
-#include <wimax_buffers.h>
-#include <wimsh_buffers.h>
-#include <wimsh_topology.h>
-#include <wimsh_forwarding.h>
-#include <wimsh_bwmanager.h>
-#include <wimsh_bwmanager_frr.h>
-#include <wimsh_coordinator.h>
-#include <wimsh_coordinator_std.h>
-#include <wimsh_scheduler.h>
-#include <wimsh_scheduler_frr.h>
+#include "wimsh_mac.h"
+#include "wimax_defs.h"
+#include "wimsh_packet.h"
+#include "wimsh_phy.h"
+#include "wimsh_channel.h"
+#include "wimax_buffers.h"
+#include "wimsh_buffers.h"
+#include "wimsh_topology.h"
+#include "wimsh_forwarding.h"
+#include "wimsh_bwmanager.h"
+#include "wimsh_bwmanager_frr.h"
+#include "wimsh_coordinator.h"
+#include "wimsh_coordinator_std.h"
+#include "wimsh_scheduler.h"
+#include "wimsh_scheduler_frr.h"
 
-#include <ll.h>
-#include <packet.h>
-#include <ip.h>
-#include <stat.h>
+#include "ll.h"
+#include "packet.h"
+#include "ip.h"
+#include "stat.h"
 
 #include <iostream>
 
@@ -470,7 +470,7 @@ WimshMac::initialize ()
 
 	// listen to the control channel
 	setControlChannel (wimax::RX);
-
+	
 	// set this MAC as initialized
 	initialized_ = true;
 }
@@ -1083,8 +1083,8 @@ WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, u
 	// we account for the physical preamble that must be transmitted
 	unsigned int bytes = slots2bytes (ndx, range, true);
 	
-	if ( WimaxDebug::enabled() ) fprintf (stderr,
-			"!!!! range %d bytes %d\n", range, bytes);
+	/* if ( WimaxDebug::enabled() ) fprintf (stderr,
+		"!!!! range %d bytes %d\n", range, bytes); */
 
 	// create a new burst into the fragmentation buffer
 	bool room = fragbuf_[ndx]->newBurst (profile_[ndx], bytes, service);

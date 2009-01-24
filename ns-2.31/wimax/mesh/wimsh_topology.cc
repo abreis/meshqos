@@ -17,8 +17,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimsh_topology.h>
-#include <wimax_defs.h>
+#include "wimsh_topology.h"
+#include "wimax_defs.h"
 
 //#include <stdio.h>
 #include <math.h>

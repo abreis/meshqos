@@ -23,11 +23,11 @@
 #include <map>
 #include <deque>
 
-#include <wimax_common.h>
-#include <t_timers.h>
+#include "wimax_common.h"
+#include "t_timers.h"
 
-#include <scheduler.h>
-#include <rng.h>
+#include "scheduler.h"
+#include "rng.h"
 
 class WimshPhy;
 class WimshBurst;

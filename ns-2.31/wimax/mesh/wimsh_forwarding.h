@@ -20,8 +20,8 @@
 #ifndef __NS2_WIMSH_FORWARDING_H
 #define __NS2_WIMSH_FORWARDING_H
 
-#include <wimax_common.h>
-#include <wimsh_packet.h>
+#include "wimax_common.h"
+#include "wimsh_packet.h"
 
 class WimaxSdu;
 class WimshMac;

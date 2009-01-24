@@ -17,11 +17,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimax_debug.h>
-#include <wimsh_packet.h>   // :MESH:
+#include "wimax_debug.h"
+#include "wimsh_packet.h"   // :MESH:
 
-#include <packet.h>
-#include <ip.h>
+#include "packet.h"
+#include "ip.h"
 
 static class WimaxDebugClass : public TclClass {
 public:

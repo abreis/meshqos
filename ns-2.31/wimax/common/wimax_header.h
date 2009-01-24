@@ -20,10 +20,10 @@
 #ifndef __NS2_WIMAX_HEADER_H
 #define __NS2_WIMAX_HEADER_H
 
-#include <packet.h>
-#include <wimax_defs.h>
+#include "packet.h"
+#include "wimax_defs.h"
 
-#include <wimsh_header.h>        // :MESH:
+#include "wimsh_header.h"        // :MESH:
 
 //! Fragmentation subheader.
 struct WimaxFsh {

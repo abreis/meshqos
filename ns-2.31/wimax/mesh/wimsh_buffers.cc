@@ -17,9 +17,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimsh_buffers.h>
+#include "wimsh_buffers.h"
 
-#include <ip.h>
+#include "ip.h"
 
 /*
  *

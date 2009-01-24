@@ -20,7 +20,7 @@
 #ifndef __NS2_WIMSH_SCHEDULER_FRR_H
 #define __NS2_WIMSH_SCHEDULER_FRR_H
 
-#include <wimsh_scheduler.h>
+#include "wimsh_scheduler.h"
 
 //! FairRR packet scheduler.
 /*!

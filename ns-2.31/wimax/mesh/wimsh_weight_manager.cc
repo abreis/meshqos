@@ -17,7 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimsh_weight_manager.h>
+#include "wimsh_weight_manager.h"
 
 WimshWeightManager::WimshWeightManager (WimshMac* m) : mac_(m), timer_ (this)
 {

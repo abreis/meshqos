@@ -24,9 +24,9 @@
 #include <list>
 #include <map>
 
-#include <wimax_debug.h>
-#include <wimax_circular.h>
-#include <wimax_matrix.h>
-#include <wimax_utilities.h>
+#include "wimax_debug.h"
+#include "wimax_circular.h"
+#include "wimax_matrix.h"
+#include "wimax_utilities.h"
 
 #endif // __NS2_WIMAX_COMMON_H

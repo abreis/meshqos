@@ -20,12 +20,12 @@
 #ifndef __NS2_WIMSH_BW_MANAGER_FRR_H
 #define __NS2_WIMSH_BW_MANAGER_FRR_H
 
-#include <wimsh_weight_manager.h>
-#include <wimsh_bwmanager.h>
-#include <wimsh_packet.h>
-#include <wimsh_mac.h>
+#include "wimsh_weight_manager.h"
+#include "wimsh_bwmanager.h"
+#include "wimsh_packet.h"
+#include "wimsh_mac.h"
 
-#include <rng.h>
+#include "rng.h"
 #include <math.h>
 
 //! Fair round robin bandwidth manager for 802.16. Single-radio only.
@@ -476,11 +476,10 @@ private:
 	  */
 	WimshMshDsch::GntIE grantFit (unsigned int ndx, unsigned int bytes,
 		unsigned int frame,
-		bool& room, grantFitDesc& status, 
+		bool& room, bool& frame_room, grantFitDesc& status, 
 		unsigned int serv_class, WimshMshDsch* dsch);
-
-	//void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,		
-	void realGrantStart (unsigned int ndx,
+		
+	void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,
 		unsigned int gframe, unsigned char gstart,
 		unsigned char grange, unsigned char gchannel, WimshMshDsch::GntIE& gnt);
 

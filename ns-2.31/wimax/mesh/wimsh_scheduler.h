@@ -20,9 +20,9 @@
 #ifndef __NS2_WIMSH_SCHEDULER_H
 #define __NS2_WIMSH_SCHEDULER_H
 
-#include <wimax_common.h>
-#include <wimsh_buffers.h>
-#include <t_timers.h>
+#include "wimax_common.h"
+#include "wimsh_buffers.h"
+#include "t_timers.h"
 
 class WimshMac;
 

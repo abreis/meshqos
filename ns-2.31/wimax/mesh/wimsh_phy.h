@@ -20,8 +20,8 @@
 #ifndef __NS2_WIMSH_PHY_H
 #define __NS2_WIMSH_PHY_H
 
-#include <wimax_common.h>
-#include <t_timers.h>
+#include "wimax_common.h"
+#include "t_timers.h"
 
 #include <list>
 

@@ -20,10 +20,10 @@
 #ifndef __NS2_WIMSH_MAC_H
 #define __NS2_WIMSH_MAC_H
 
-#include <wimax_common.h>
-#include <t_timers.h>
-#include <wimsh_phy.h>
-#include <rng.h>
+#include "wimax_common.h"
+#include "t_timers.h"
+#include "wimsh_phy.h"
+#include "rng.h"
 
 #include <vector>
 #include <map>

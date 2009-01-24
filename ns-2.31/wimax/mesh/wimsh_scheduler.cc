@@ -17,14 +17,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimsh_scheduler.h>
+#include "wimsh_scheduler.h"
 
-#include <wimsh_mac.h>
-#include <wimsh_packet.h>
-#include <wimsh_bwmanager.h>
+#include "wimsh_mac.h"
+#include "wimsh_packet.h"
+#include "wimsh_bwmanager.h"
 
-#include <stat.h>
-#include <ip.h>
+#include "stat.h"
+#include "ip.h"
 
 /*
  *
@@ -42,7 +42,7 @@ int
 WimshScheduler::command (int argc, const char * const* argv)
 {
 	if ( argc == 2 && strcmp(argv[0], "size") == 0 ) {
-		maxBufSize_ = atoi (argv[1]);
+		maxBufSize_ = atoi (argv[1])/4;    //!!! 4 buffers with 1/4 of total buffer size
 		if ( maxBufSize_ < 0 ) {
 			fprintf (stderr, "invalid buffer size '%d'\n", maxBufSize_);
 			return TCL_ERROR;

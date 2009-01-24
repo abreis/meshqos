@@ -17,7 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimax_buffers.h>
+#include "wimax_buffers.h"
 
 /*
  *

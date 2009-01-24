@@ -17,10 +17,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include <wimsh_bwmanager.h>
+#include "wimsh_bwmanager.h"
 
-#include <wimsh_mac.h>
-#include <wimsh_packet.h>
+#include "wimsh_mac.h"
+#include "wimsh_packet.h"
 
 /*
  *
@@ -122,18 +122,18 @@ WimshBwManager::handle ()
 			channel = channel_[F][lastSlot_];
 			start = lastSlot_;
 			range = 1;
-			if ( WimaxDebug::enabled() ) fprintf (stderr,
+			/* if ( WimaxDebug::enabled() ) fprintf (stderr,
 					"!1 status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status, 
 						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_], 
-							undsch, lastSlot_ );
+							undsch, lastSlot_ ); */
 
 		} else {
 			    new_status = grants_[F][lastSlot_];
 				new_undsch = uncoordsch_[F][lastSlot_];
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!  status %u dst %d service %d src %d channel %d undsch %d slot %d\n", new_status,
-							dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_], 
-								new_undsch, lastSlot_ );
+				/* if ( WimaxDebug::enabled() ) fprintf (stderr,
+					"!  status %u dst %d service %d src %d channel %d undsch %d slot %d\n", new_status,
+						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_], 
+							new_undsch, lastSlot_ ); */
 
 			if ( channel_[F][lastSlot_] == channel && uncoordsch_[F][lastSlot_] == undsch &&
 				  grants_[F][lastSlot_] == status && 

@@ -20,8 +20,8 @@
 #ifndef __NS2_WIMSH_BW_MANAGER_H
 #define __NS2_WIMSH_BW_MANAGER_H
 
-#include <wimax_common.h>
-#include <t_timers.h>
+#include "wimax_common.h"
+#include "t_timers.h"
 
 #include <bitset>
 #include <vector>
