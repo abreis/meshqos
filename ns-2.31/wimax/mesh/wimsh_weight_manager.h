@@ -20,8 +20,8 @@
 #ifndef __NS2_WIMSH_WEIGHT_MANAGER_H
 #define __NS2_WIMSH_WEIGHT_MANAGER_H
 
-#include "wimsh_packet.h"
-#include "wimsh_mac.h"
+#include <wimsh_packet.h>
+#include <wimsh_mac.h>
 
 #include <vector>
 

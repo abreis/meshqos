@@ -17,12 +17,12 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include "wimsh_forwarding.h"
-#include "wimsh_topology.h"
-#include "wimsh_mac.h"
+#include <wimsh_forwarding.h>
+#include <wimsh_topology.h>
+#include <wimsh_mac.h>
 
-#include "packet.h"
-#include "ip.h"
+#include <packet.h>
+#include <ip.h>
 
 /*
  *

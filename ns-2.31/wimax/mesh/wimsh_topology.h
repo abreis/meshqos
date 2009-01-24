@@ -20,9 +20,9 @@
 #ifndef __NS2_WIMSH_TOPOLOGY_H
 #define __NS2_WIMSH_TOPOLOGY_H
 
-#include "wimax_common.h"
+#include <wimax_common.h>
 
-#include "rng.h"
+#include <rng.h>
 
 #include <vector>
 

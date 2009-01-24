@@ -22,7 +22,7 @@
 
 #include <list>
 
-#include "wimax_packet.h"
+#include <wimax_packet.h>
 
 //! MSH-DSCH control message. We assume coordinated message scheduling.
 /*!

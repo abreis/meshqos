@@ -20,7 +20,7 @@
 #ifndef __NS2_WIMAX_DEFS_H
 #define __NS2_WIMAX_DEFS_H
 
-#include "object.h"
+#include <object.h>
 #include <stdio.h>
 
 //! For WiMAX NodeID we use an unsigned int (not an int as for ns2 node IDs).

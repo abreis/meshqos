@@ -20,8 +20,8 @@
 #ifndef __NS2_WIMSH_BUFFERS_H
 #define __NS2_WIMSH_BUFFERS_H
 
-#include "wimax_common.h"
-#include "wimsh_packet.h"
+#include <wimax_common.h>
+#include <wimsh_packet.h>
 
 #include <vector>
 

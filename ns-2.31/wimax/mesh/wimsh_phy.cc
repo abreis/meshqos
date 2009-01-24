@@ -19,11 +19,11 @@
 
 #include <math.h>
 
-#include "wimsh_phy.h"
-#include "wimsh_packet.h"
-#include "wimsh_channel.h"
-#include "wimsh_mac.h"
-#include "wimsh_topology.h"
+#include <wimsh_phy.h>
+#include <wimsh_packet.h>
+#include <wimsh_channel.h>
+#include <wimsh_mac.h>
+#include <wimsh_topology.h>
 
 /*
  *

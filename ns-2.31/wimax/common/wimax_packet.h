@@ -23,8 +23,8 @@
 #include <list>
 #include <map>
 
-#include "wimax_header.h"
-#include "ip.h"
+#include <wimax_header.h>
+#include <ip.h>
 
 //! Wimax Service Data Unit (SDU). It is an ns2 packet + traversed hops.
 /*!

@@ -20,9 +20,9 @@
 #ifndef __NS2_WIMSH_COORDINATOR_H
 #define __NS2_WIMSH_COORDINATOR_H
 
-#include "wimax_common.h"
-#include "t_timers.h"
-#include "wimax_defs.h"
+#include <wimax_common.h>
+#include <t_timers.h>
+#include <wimax_defs.h>
 
 class WimshMac;
 class WimshMshDsch;

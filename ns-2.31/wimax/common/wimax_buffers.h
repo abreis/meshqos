@@ -20,8 +20,8 @@
 #ifndef __NS2_WIMAX_BUFFERS_H
 #define __NS2_WIMAX_BUFFERS_H
 
-#include "wimax_common.h"
-#include "wimax_packet.h"
+#include <wimax_common.h>
+#include <wimax_packet.h>
 
 #include <vector>
 

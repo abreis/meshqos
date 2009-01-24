@@ -17,12 +17,12 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include "wimsh_channel.h"
-#include "wimsh_topology.h"
-#include "wimsh_phy.h"
-#include "wimsh_packet.h"
+#include <wimsh_channel.h>
+#include <wimsh_topology.h>
+#include <wimsh_phy.h>
+#include <wimsh_packet.h>
 
-#include "stat.h"
+#include <stat.h>
 
 static class WimshChannelClass : public TclClass {
 public:

@@ -20,10 +20,10 @@
 #ifndef __NS2_WIMAX_DEBUG_H
 #define __NS2_WIMAX_DEBUG_H
 
-#include "wimax_packet.h"
-#include "wimax_circular.h"
-#include "wimax_matrix.h"
-#include "wimax_defs.h"
+#include <wimax_packet.h>
+#include <wimax_circular.h>
+#include <wimax_matrix.h>
+#include <wimax_defs.h>
 
 #include <stdio.h>
 #include <string>

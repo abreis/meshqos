@@ -17,14 +17,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include "wimsh_scheduler.h"
+#include <wimsh_scheduler.h>
 
-#include "wimsh_mac.h"
-#include "wimsh_packet.h"
-#include "wimsh_bwmanager.h"
+#include <wimsh_mac.h>
+#include <wimsh_packet.h>
+#include <wimsh_bwmanager.h>
 
-#include "stat.h"
-#include "ip.h"
+#include <stat.h>
+#include <ip.h>
 
 /*
  *

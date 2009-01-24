@@ -17,16 +17,16 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA, USA
  */
 
-#include "wimsh_bwmanager_frr.h"
+#include <wimsh_bwmanager_frr.h>
 
-#include "wimsh_mac.h"
-#include "wimsh_topology.h"
-#include "wimsh_packet.h"
-#include "wimsh_scheduler.h"
+#include <wimsh_mac.h>
+#include <wimsh_topology.h>
+#include <wimsh_packet.h>
+#include <wimsh_scheduler.h>
 
 #include <math.h>
-#include "random.h"
-#include "stat.h"
+#include <random.h>
+#include <stat.h>
 
 WimshBwManagerFairRR::WimshBwManagerFairRR (WimshMac* m) :
 	WimshBwManager (m), wm_ (m)
