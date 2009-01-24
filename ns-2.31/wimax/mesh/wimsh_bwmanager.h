@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -80,23 +80,23 @@ protected:
 	//! Array of vectors representing the channel identifiers.
 	std::vector< std::vector<unsigned int> > channel_;
 	//! Array of vectors representing the service class for each burst traffic.
-	std::vector< std::vector<unsigned char> > service_;	
+	std::vector< std::vector<unsigned char> > service_;
 	//! Two-dimension bitmap stores uncoordinated MSH-DSCH single slot tx opportunity
-	std::vector< std::vector<unsigned int> > uncoordsch_;	
+	std::vector< std::vector<unsigned int> > uncoordsch_;
 
 	//! Next slot to be served.
 	unsigned int lastSlot_;
-	
-	//! turn on when able to tranmit service class scheduling message
+
+	//! turn on when able to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > startHorizon_;
-	
-	//! store next frame opportunity to tranmit service class scheduling message
+
+	//! store next frame opportunity to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > nextFrame_;
-	
+
 	std::vector< std::vector<unsigned int> > unDschState_;
-	
+
 	std::vector<unsigned int> rtpsDschFrame_;
-	
+
 public:
 	//! Create an empty bandwidth manager.
 	WimshBwManager (WimshMac* m);
@@ -134,9 +134,9 @@ public:
 
 	//! Tcl interface from the MAC layer.
 	virtual int command (int argc, const char*const* argv) = 0;
-	
+
 	virtual void search_tx_slot (unsigned int ndx, unsigned int reqState) = 0;
-		
+
 	unsigned int nextFrame_rtPS (unsigned int ndx) { return nextFrame_[ndx][2]; }
 
 protected:
@@ -164,7 +164,7 @@ WimshBwManager::setSlots (
    // for each frame
    for ( unsigned int f = 0 ; f < frange ; f++ ) {
       unsigned int F = ( fstart + f ) % HORIZON;
-		
+
       // for each minislot
       for ( unsigned int s = 0 ; s < mrange ; s++ ) {
          unsigned int S = mstart + s;
@@ -232,9 +232,9 @@ public:
 
 	//! Tcl interface from the MAC layer.
 	int command (int argc, const char*const* argv);
-	
+
 	void search_tx_slot (unsigned int ndx, unsigned int reqState) { }
-	
+
 	void computecbr () { }
 
 protected:

@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -63,7 +63,7 @@ WimshCoordinator::handle ()
 			NOW, mac_->nodeId(),
 			curslot, mac_->frame(), nextDschSlot_, nextDschFrame_,
 			nextNcfgSlot_, nextNcfgFrame_, nextNentSlot_, nextNentFrame_);
-	
+
 	// this same handler is used for different even types
 	// thus, we have to check what happened that triggered this event
 	// 1. it is time to transmit an MSH-DSCH message
@@ -129,7 +129,7 @@ WimshCoordinator::handle ()
 		mac_->opportunity (nent);
 
 	// 4. the control frame ended
-	} else  if ( curslot == C ) {                                        
+	} else  if ( curslot == C ) {
 		// set the timer to expire at the beginning of the next frame
 		timer_.start (
 				  phyMib->frameDuration()

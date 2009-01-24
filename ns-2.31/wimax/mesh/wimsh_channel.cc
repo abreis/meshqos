@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -76,7 +76,7 @@ WimshChannel::command(int argc, const char*const* argv)
 					"Choose either 'data' or 'control'\n", argv[2]);
 			return TCL_ERROR;
 		}
-			
+
 		return TCL_OK;
 	}
 	return TCL_ERROR;
@@ -97,7 +97,7 @@ WimshChannel::recvBurst (WimshBurst* burst)
 	// corrupt the burst according to the uniform r.v.'s and settings
 	if ( (
 				( burst->type() == wimax::MSHDSCH  ||
-				  burst->type() == wimax::MSHNCFG  || 
+				  burst->type() == wimax::MSHNCFG  ||
 				  burst->type() == wimax::MSHNENT ) &&
 			rngErrorCtrl_ &&
 			rngErrorCtrl_->uniform() < errorCtrl_ ) ||

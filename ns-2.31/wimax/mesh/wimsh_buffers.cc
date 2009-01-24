@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -89,7 +89,7 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size, un
 
 		// return immediately if there is not enough space to send a fragment
 		if ( fragsize < 1 ) return false;
-		
+
 		// create a new PDU to be added to the burst
 		// note: the IP datagram is copied!
 		WimaxPdu* newpdu = new WimaxPdu (*lastPdu_[s]);

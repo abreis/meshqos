@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -42,7 +42,7 @@ class WimshBurst;
 //! Useful debug static class.
 /*!
   The 'format' functions return a single-line (non-'\n' terminated) sequence.
-  
+
   On the other hand, the 'print' functions print a longer description
   on a given output stream file. An optional argument allows the caller
   to specify a string that has to be added at the beginning of each line.
@@ -56,6 +56,8 @@ class WimaxDebug : public TclObject {
 	static unsigned int cur_;
 	//! True if debug is enabled.
 	static bool enabled_;
+	//! Stores debuglevel.
+	static unsigned int debuglevel_;
 	//! Map of function names to flag (true means this function is traced).
 	static std::map<std::string, bool> trace_;
 
@@ -96,6 +98,15 @@ public:
 
 	//! Get/set the enabled flag.
 	static bool& enabled () { return enabled_; }
+	static unsigned int& debuglevel () { return debuglevel_; }
+
+	//! Debug levels for each possible debug output.
+	/*! Can be modified to dynamically adjust debug level assignments.
+	  */
+	struct debuglevels {
+		static const unsigned bwmgr_handle_ = 8;
+		static const unsigned bwmgr_uncoordrange_ = 7;
+	} static const lvl;
 
 #ifdef WIMAX_DEBUG
 

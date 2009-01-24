@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -74,7 +74,7 @@ public:
 	  */
 	bool newBurst (wimax::BurstProfile p, unsigned int size, unsigned int s);
 	/*
-	//! Add a MSH-DSCH_rtPS, if possible. True if entirely added.	
+	//! Add a MSH-DSCH_rtPS, if possible. True if entirely added.
 	//bool addDsch (WimshMshDsch* dsch);
 	//! Add a PDU, if possible. True if the PDU is entirely added.
 	*/

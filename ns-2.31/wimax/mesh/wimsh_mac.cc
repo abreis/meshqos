@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -146,15 +146,15 @@ WimshMacMib::getBurstProfile ( WimaxNodeId src, WimaxNodeId dst )
 	return it->profile_;
 }
 
-void 
-WimshMacMib::updateBurstProfile(WimaxNodeId src, 
+void
+WimshMacMib::updateBurstProfile(WimaxNodeId src,
 								WimaxNodeId dst, wimax::BurstProfile p)
 {
 	std::list< Link >::iterator it;
 	for ( it = linkList_.begin(); it != linkList_.end(); ++it ){
 		if ( ( it->src_ == src ) && ( it->dst_ == dst )  )
 			it->profile_ = p;
-	}	
+	}
 	// if not present, insert
 	linkList_.push_back ( Link( src, dst, p ) );
 }
@@ -377,7 +377,7 @@ WimshMac::command (int argc, const char*const* argv)
 						nodeId_, neigh);
 				return TCL_ERROR;
 			}
-			
+
 			// get the neighbor index
 			unsigned int ndx = neigh2ndx_[neigh];
 
@@ -456,8 +456,8 @@ WimshMac::initialize ()
 		hNeighLast_[i] = 0;
 		mshDschLinkQuality_[i].frames_ =
 			geometric (mshDschRngGood_, 1/mshDschAvgGood_);
-		
-		macMib_->updateBurstProfile ( nodeId(), neighbors[i], 
+
+		macMib_->updateBurstProfile ( nodeId(), neighbors[i],
 											wimax::QPSK_1_2 );
 	}
 
@@ -518,7 +518,7 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 
 		// retrieve the flow ID of the IP datagram
 		int fid = HDR_IP(ip)->flowid();
-		
+
 		// retrieve the priority (ToS) of the IP datagram
 //		int prio = HDR_IP(ip)->prio();
 		int prio = macMib_->flow2prio (fid);
@@ -561,7 +561,7 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 			case 3:
 				pdu->hdr().meshCid().priority() = 3;
 				pdu->hdr().meshCid().drop() = 2;
-				pdu->hdr().meshCid().reliability() = 1;	
+				pdu->hdr().meshCid().reliability() = 1;
 				break;
 			case 4:
 				pdu->hdr().meshCid().priority() = 4;
@@ -589,11 +589,11 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 						 WimaxMeshCid::MAX_PRIO);
 				break;
 		}
-/*		
+/*
 //		pdu->hdr().meshCid().priority() = macMib_->flow2prio (fid);
 //		pdu->hdr().meshCid().drop() = macMib_->flow2drop (fid);
-//				fprintf (stderr, "flowID %d, prio %d  CID-> reliability %d, priority %d, drop precedence %d,\n", 
-//					     fid, prio, pdu->hdr().meshCid().reliability(), pdu->hdr().meshCid().priority(), 
+//				fprintf (stderr, "flowID %d, prio %d  CID-> reliability %d, priority %d, drop precedence %d,\n",
+//					     fid, prio, pdu->hdr().meshCid().reliability(), pdu->hdr().meshCid().priority(),
 //						 pdu->hdr().meshCid().drop());
 */
 		pdu->hdr().meshCid().dst() = forwarding_->nextHop (sdu);
@@ -611,10 +611,10 @@ WimshMac::recvMshDsch (WimshMshDsch* dsch, double txtime)
 
 	if ( WimaxDebug::trace("WMAC::recvMshDsch") ) fprintf (stderr,
 			"%.9f WMAC::recvMshDsch[%d]\n", NOW, nodeId_);
-	
+
 	// normal dsch message
 	if ( dsch->reserved() == 0 ) {
-	
+
 		// update the H value of this neighbor
 		WimaxNodeId snode = dsch->myself().nodeId_;
 		unsigned int ndx  = neigh2ndx_[snode];
@@ -634,7 +634,7 @@ WimshMac::recvMshDsch (WimshMshDsch* dsch, double txtime)
 			// while I believe it is ok to get separate statistics (commented line
 			// below). However, the latter makes scripts more difficult, thus
 			// for now I will stick to the easy & dirty way.
-			// 
+			//
 			// Stat::put ("wimsh_dsch_h_error", snode, diff);
 			Stat::put ("wimsh_dsch_h_error", index_, diff);
 		}
@@ -643,7 +643,7 @@ WimshMac::recvMshDsch (WimshMshDsch* dsch, double txtime)
 		coordinator_->recvMshDsch (dsch, txtime);
 		bwmanager_->recvMshDsch (dsch);
 		forwarding_->recvMshDsch (dsch);
-		
+
 	// dsch message dedicate to rtPS service class
 	} else
 		bwmanager_->recvMshDsch (dsch);
@@ -656,7 +656,7 @@ WimshMac::recvMshNcfg (WimshMshNcfg* ncfg, double txtime)
 
 	if ( WimaxDebug::trace("WMAC::recvMshNcfg") ) fprintf (stderr,
 			"%.9f WMAC::recvMshNcfg[%d]\n", NOW, nodeId_);
-	
+
 	coordinator_->recvMshNcfg (ncfg, txtime);
 
 	if ( scanMode_ ) {
@@ -686,7 +686,7 @@ WimshMac::recvMshNcfg (WimshMshNcfg* ncfg, double txtime)
 		// fprintf (stderr, "%.9f node %d LE_SEND_RESPONSE from node %d\n",
 		//		NOW, nodeId_, ncfg->src());
 		linkEstState_ = LE_SEND_ACK;
-	} 
+	}
 }
 
 void
@@ -714,7 +714,7 @@ WimshMac::opportunity (WimshMshDsch* dsch)
 
 	if ( WimaxDebug::trace ("WMAC::opportunity") ) fprintf (stderr,
 			"%.9f WMAC::opportunity[%d] MSH-DSCH dsch->reserved() %d\n", NOW, nodeId_,dsch->reserved());
-	
+
 	// let the bandwidth manager fill the remaining field of the MSH-DSCH message
 	bwmanager_->schedule (dsch, 0);
 
@@ -749,36 +749,36 @@ WimshMac::uncoordinated_opportunity (unsigned int dst, bool grant)
 
 	if ( WimaxDebug::trace ("WMAC::opportunity") ) fprintf (stderr,
 			"%.9f WMAC::uncoorDSCH [%d] MSH-DSCH   frame%d\n", NOW, nodeId_,frame());
-			
+
 	unsigned int ndx = neigh2ndx (dst);
-	
+
 	// create a new (empty) MSH-DSCH message
 	WimshMshDsch* dsch = new WimshMshDsch;
-	
+
 	// fill the MAC header and meshsubheader fields
 	dsch->src() = nodeId();
 	dsch->hdr().crc() = true;
 	// dsch->hdr().fragmentation() is false by default
 	// dsch->hdr().length() is automatically computed
 	// dsch->hdr().meshCid() is set to management, no ARQ, by default
-	
+
 	// fill the neighbor information about myself
 	dsch->myself().nodeId_ = nodeId();
-	
+
 	dsch->myself().nextXmtTimeSec_ = 0;
     dsch->myself().nextXmtTime_ = 0;
     dsch->myself().nextXmtMx_ = 0;
     dsch->myself().xmtHoldoffExponent_ = 0;
-	
+
 	dsch->reserved() = true;
 	dsch->grant() = ( grant ) ? true : false;
-	
+
 	// let the bandwidth manager fill the remaining field of the MSH-DSCH message
 	bwmanager_->schedule (dsch, ndx);
 
 	WimshBurst* burst = new WimshBurst;
 	burst->addMshDsch (dsch);
-	
+
 	if ( WimaxDebug::trace ("WMAC::opportunity") )
 		WimaxDebug::print (dsch, stderr);
 	/*
@@ -985,7 +985,7 @@ WimshMac::recvBurst (WimshBurst* burst)
 
 		// remove PDUs one by one from the burst
 		for ( WimaxPdu* pdu = burst->pdu() ; pdu != 0 ; pdu = burst->pdu() ) {
-			/* 
+			/*
 			se o pdu contiver uma menssagem MSH-DSCH rtPS envia-a para recvMshDsch..
 			if ( ! burst->error() && ! pdu->error() && pdu->hdr().reserved == 1 ) {
 				Stat::put ("wimsh_dsch_error", index_, 0.0);
@@ -995,16 +995,16 @@ WimshMac::recvBurst (WimshBurst* burst)
 			}
 			-atenção que o ->ip() é do tipo packet e o rcvMshDsch tem de receber um ponteiro do tipo MshDsch
 			tem de se resolver a conversão, ou entao criar mm um campo MshDsch dentro do Pdu!
-			-garantir que os pdus normais não têm o campo reserved==1			
-			*/		
-			
+			-garantir que os pdus normais não têm o campo reserved==1
+			*/
+
 			// if the PDU does not contain errors, then we check for the
 			// destination NodeID in the CID in the MAC header
 			// if the PDU is directed to this node, we pass it to the
 			// appropriate reassembly buffer
 			if ( ! burst->error() && ! pdu->error() &&
 					pdu->hdr().meshCid().dst() == nodeId_ ) {
-				
+
 				Stat::put ("wimsh_mac_tpt", index_, pdu->size());
 				WimaxSdu* sdu = reasbuf_[neigh2ndx_[pdu->nodeId()]]->addPdu (pdu);
 				// if a full SDU is reassembled, then reschedule it to recvSDU
@@ -1082,7 +1082,7 @@ WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, u
 	// compute the amount of bytes that fit into the range towards dst
 	// we account for the physical preamble that must be transmitted
 	unsigned int bytes = slots2bytes (ndx, range, true);
-	
+
 	/* if ( WimaxDebug::enabled() ) fprintf (stderr,
 		"!!!! range %d bytes %d\n", range, bytes); */
 
@@ -1103,7 +1103,7 @@ WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, u
 	// this means that some capacity could not be used => new backlog
 	// should be requested
 
-	const unsigned int spare = 
+	const unsigned int spare =
 		( fragbuf_[ndx]->getBurst()->npdus() > 0 )
 		? bytes - fragbuf_[ndx]->getBurst()->size()
 		: bytes;

@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -48,10 +48,10 @@ WimshBwManager::WimshBwManager (WimshMac* m) : mac_ (m), timer_ (this)
 		service_[i].resize (MAX_SLOTS);
 		src_[i].resize (MAX_SLOTS);
 		uncoordsch_[i].resize (MAX_SLOTS);
-			
+
 		// set all channels to 0
 		for ( unsigned int j = 0 ; j < MAX_SLOTS ; j++ ) {
-			channel_[i][j]		= 0; 
+			channel_[i][j]		= 0;
 			service_[i][j]		= 9;
 			dst_[i][j]			= 999;
 			src_[i][j]			= 999;
@@ -72,12 +72,12 @@ WimshBwManager::handle ()
 	if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
 			"%.9f WBWM::handle     [%d] frame %d lastSlot_ %d\n",
 			NOW, mac_->nodeId(), mac_->frame() % HORIZON, lastSlot_);
-	
-	const unsigned int F = mac_->frame() % HORIZON;        // alias		
+
+	const unsigned int F = mac_->frame() % HORIZON;        // alias
 	const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
 
 	bool status = true;				// tx = true, rx = false
-	bool new_status = true;												// REMOVE	
+	bool new_status = true;												// REMOVE
 	WimaxNodeId  dst = 999;			// only meaningful with tx
 	unsigned int channel = 0;		// channel identifier
 	unsigned int service = 9;		// traffic service class
@@ -85,24 +85,24 @@ WimshBwManager::handle ()
 	unsigned int new_undsch = 999;										// REMOVE
 	unsigned int start;				// start minislot index of the next event
 	unsigned int range = 0;			// minislot range of the next event
-	
+
 	// search for next frame to transmit requests (turn on bwmanager_frr flags)
 	// these frames are assigned at end of request procedure in bwmanager_frr
 	for ( unsigned int ngh = 0 ; ngh < mac_->nneighs() ; ngh++ ) {
 		for ( unsigned int s = 0 ; s < wimax::N_SERV_CALSS ; s++ ) {
 			if ( s == 2 ) continue;
-			if ( mac_->frame() == nextFrame_[ngh][s] ) { 
-					startHorizon_[ngh][s] = true; 
+			if ( mac_->frame() == nextFrame_[ngh][s] ) {
+					startHorizon_[ngh][s] = true;
 			}
 		}
-			
+
 		if ( mac_->frame() == nextFrame_[ngh][2] && mac_->frame() > 0 && lastSlot_ == 0) {
 			search_tx_slot (ngh, 0);
 			startHorizon_[ngh][2] = true;
 			unDschState_[ngh][F] = 0;
 		}
-		
-		if ( mac_->frame() == rtpsDschFrame_[ngh] && mac_->frame() > 0 && lastSlot_ == 0) {			
+
+		if ( mac_->frame() == rtpsDschFrame_[ngh] && mac_->frame() > 0 && lastSlot_ == 0) {
 			unsigned int state = unDschState_[ngh][F];
 			search_tx_slot (ngh, state);
 		}
@@ -116,28 +116,28 @@ WimshBwManager::handle ()
 		if ( range == 0 ) {
 			status = grants_[F][lastSlot_];
 			undsch = uncoordsch_[F][lastSlot_];
-			if ( status == true ) { 
-				dst = dst_[F][lastSlot_]; 
+			if ( status == true ) {
+				dst = dst_[F][lastSlot_];
 				service = service_[F][lastSlot_]; }
 			channel = channel_[F][lastSlot_];
 			start = lastSlot_;
 			range = 1;
-			/* if ( WimaxDebug::enabled() ) fprintf (stderr,
-					"!1 status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status, 
-						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_], 
-							undsch, lastSlot_ ); */
+			if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
+					"(BwMgr)!1 status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status,
+						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
+							undsch, lastSlot_ );
 
 		} else {
 			    new_status = grants_[F][lastSlot_];
 				new_undsch = uncoordsch_[F][lastSlot_];
-				/* if ( WimaxDebug::enabled() ) fprintf (stderr,
-					"!  status %u dst %d service %d src %d channel %d undsch %d slot %d\n", new_status,
-						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_], 
-							new_undsch, lastSlot_ ); */
+				if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
+						"(BwMgr)!  status %u dst %d service %d src %d channel %d undsch %d slot %d\n", new_status,
+							dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
+								new_undsch, lastSlot_ );
 
 			if ( channel_[F][lastSlot_] == channel && uncoordsch_[F][lastSlot_] == undsch &&
-				  grants_[F][lastSlot_] == status && 
-				  ( ( status == true && dst_[F][lastSlot_] == dst && 
+				  grants_[F][lastSlot_] == status &&
+				  ( ( status == true && dst_[F][lastSlot_] == dst &&
 						service_[F][lastSlot_] == service ) ||
 							( status == false ) )
 				) ++range;
@@ -149,8 +149,8 @@ WimshBwManager::handle ()
 		// create MSH-DSCH message on coordinator module and transmite at mac module
 		unsigned int ndx = mac_->neigh2ndx (undsch);
 		bool grant = ( unDschState_[ndx][F] == 1 ) ? true : false;
-		if ( WimaxDebug::enabled() ) fprintf (stderr,
-				"!!!uncoordinated MSH-DSCH message range %d dst %d gnt %d \n",range, undsch , grant );
+		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_uncoordrange_ ) fprintf (stderr,
+				"(UncrdRng)!!!uncoordinated MSH-DSCH message range %d dst %d gnt %d \n",range, undsch , grant );
 		mac_->uncoordinated_opportunity (undsch, grant);
 	} else if ( status == true && undsch == 999 ) {
 		// set transmit mode on channel 0 towards dst
@@ -184,7 +184,7 @@ WimshBwManager::handle ()
 
 void
 WimshBwManager::invalidate (unsigned int F)
-{	
+{
 	for ( unsigned int i = 0 ; i < MAX_SLOTS ; i++ ) {
 		if ( service_[F][i] == 3 ) { }
 		else {

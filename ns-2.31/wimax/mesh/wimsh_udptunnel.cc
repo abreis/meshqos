@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -46,7 +46,7 @@ WimshUdpTunnel::WimshUdpTunnel(packet_t type) : Agent(type)
 	tunnelType_ = SPONSOR;
 }
 
-// put in timestamp and sequence number, even though UDP doesn't usually 
+// put in timestamp and sequence number, even though UDP doesn't usually
 // have one.
 void WimshUdpTunnel::sendmsg(int nbytes, AppData* data, const char* flags)
 {

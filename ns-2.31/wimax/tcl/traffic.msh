@@ -104,7 +104,7 @@ proc create_vod { src dst prio fid start stop } {
 
 	$macmib crc $fid crc
 	$macmib priority $fid $prio
-	$macmib precedence $fid 0
+#	$macmib precedence $fid 0
 
 	$ns attach-agent $node($src) $agtsrc
 	$ns attach-agent $node($dst) $agtdst
@@ -139,7 +139,7 @@ proc create_udptunnel { src dst prio fid start stop } {
 
 	$macmib crc $fid crc
 	$macmib priority $fid $prio
-	$macmib precedence $fid 0
+#	$macmib precedence $fid 0
 
 	$agtsrc set class_ $fid
 	$agtdst set class_ $fid
@@ -192,7 +192,7 @@ proc create_ftp { src dst prio fid start stop } {
 
 	$macmib crc $fid crc
 	$macmib priority $fid $prio
-	$macmib precedence $fid 0
+#	$macmib precedence $fid 0
 
 	$ns attach-agent $node($src) $agtsrc
 	$ns attach-agent $node($dst) $agtdst
@@ -211,7 +211,7 @@ proc create_ftp { src dst prio fid start stop } {
 #
 # create a CBR traffic flow between two nodes, agents included
 #
-proc create_cbr { src dst prio fid start stop } {
+proc create_cbr { src dst rate prio fid start stop } {
 	global macmib opt ns node
 	if { $opt(debug) != "" } {
 		puts "create_cbr $src $dst $prio $fid $start $stop"
@@ -220,7 +220,7 @@ proc create_cbr { src dst prio fid start stop } {
 	set app [new Application/Traffic/CBR]
 	$app set random_ $opt(cbr-rnd)
 	$app set packetSize_ $opt(cbr-pkt)
-	$app set rate_ $opt(cbr-rate)
+	$app set rate_ $rate
 
 	set agtsrc [new Agent/UDP]
 	set agtdst [new Agent/UDP]
@@ -234,7 +234,7 @@ proc create_cbr { src dst prio fid start stop } {
 
 	$macmib crc $fid crc
 	$macmib priority $fid $prio
-	$macmib precedence $fid 0
+#	$macmib precedence $fid 0
 
 	$ns attach-agent $node($src) $agtsrc
 	$ns attach-agent $node($dst) $agtdst
@@ -280,7 +280,7 @@ proc create_bwa { src dst prio fid start stop } {
 
 	$macmib crc $fid crc
 	$macmib priority $fid $prio
-	$macmib precedence $fid 0
+#	$macmib precedence $fid 0
 
 	$ns attach-agent $node($src) $agtsrc
 	$ns attach-agent $node($dst) $agtdst
@@ -330,12 +330,12 @@ proc create_voip { src dst prio fid start stop } {
 
 	set agtsrc [new Agent/UDP]
 	set agtdst [new Agent/UDP]
-
 	$agtsrc set class_ $fid
+#	$agtsrc set prio_ $prio
 
 	$macmib crc $fid crc
 	$macmib priority $fid $prio
-	$macmib precedence $fid 0
+#	$macmib precedence $fid 0
 
 	$ns attach-agent $node($src) $agtsrc
 	$ns attach-agent $node($dst) $agtdst

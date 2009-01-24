@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -63,17 +63,17 @@ int WimshTopologySimple::command (int argc, const char*const* argv)
 	}
 	/*
     * dump all the matrices to stderr
-    */	 
+    */
 	else if ( argc == 2 && strcmp (argv[1], "dump") == 0 ) {
 		dump (stderr);
 		return TCL_OK;
 	}
 	/*
     * return the distance between two nodes
-    */	 
+    */
 	else if ( argc == 4 && strcmp (argv[1], "distance") == 0 ) {
 
-		
+
 		// path matrix
 		Matrix<unsigned int> path;
 		// distance matrix
@@ -88,7 +88,7 @@ int WimshTopologySimple::command (int argc, const char*const* argv)
 	}
 	/*
     * dump all the matrices to stderr
-    */	 
+    */
 	else if ( argc == 2 && strcmp (argv[1], "initialize") == 0 ) {
 		recompute ();
 		return TCL_OK;
@@ -110,29 +110,29 @@ void WimshTopologySimple::recompute ()
 
 	// reset the links vector
 	links_.clear();
-	
 
-	
+
+
 	// fill the link vector
 	for ( unsigned int src = 0 ; src < N ; src++ ) {
 		for ( unsigned int dst = 0 ; dst <N ; dst++ ) {
 				if ( M.at( src, dst ) > 0) links_.push_back( Link( src, dst ) );
-				
+
 		}
 	}
-	
+
 	unsigned int num=links_.size();
 	unsigned int linkssrc_[num];
 	unsigned int linksdst_[num];
-	
-	
+
+
 	for ( unsigned int src = 0 ; src < num ; src++ ) {
 	    linkssrc_[src]=0;
 	    linksdst_[src]=0;
 	    }
 	for ( unsigned int src = 0 ; src < N ; src++ ) {
-		for ( unsigned int dst = 0 ; dst <N ; dst++ ) {	
-				if ( M.at( src, dst ) > 0){	
+		for ( unsigned int dst = 0 ; dst <N ; dst++ ) {
+				if ( M.at( src, dst ) > 0){
 				    linkssrc_[M.at(src,dst)-1]=src;
 				    linksdst_[M.at(src,dst)-1]=dst;
 				}
@@ -160,7 +160,7 @@ void WimshTopologySimple::recompute ()
 	}
 
 
-	
+
 	// path matrix
 	Matrix<unsigned int> path;
 	// distance matrix
@@ -182,7 +182,7 @@ void WimshTopologySimple::recompute ()
 		}
 		NM[i] = nhops_neigh;
 		nhops_neigh.clear();
-	} 
+	}
 
 	// compute the groups through coloring graph algorithm
 	// computeGroupsOpt (); // XXX
@@ -258,12 +258,12 @@ WimshTopologySimple::interfere (
 
 
 void
-WimshTopologySimple::neighbors (WimaxNodeId x, 
+WimshTopologySimple::neighbors (WimaxNodeId x,
 		std::vector<WimaxNodeId>& neigh, unsigned int nhops)
 {
 	NhopsNeighborsMap::iterator it = nHopsNeighbors_.find(x);
 	std::map< unsigned int, std::vector<WimaxNodeId> >::iterator it2;
-	
+
 	// find all the nhops neighbors at once
 	if ( it != nHopsNeighbors_.end() )
 		if ( (it2 = it->second.find( nhops ) ) != it->second.end() )
@@ -307,7 +307,7 @@ WimshTopologySimple::getDestinationVect ( WimaxNodeId src,  WimaxNodeId dst )
 	// derive the new shortest path matrix
 	for ( unsigned int i = 0 ; i < C.getRows() ; i++ ) {
 		for ( unsigned int j = 0 ; j < C.getRows() ; j++ ) {
-			nextHop.at(i, j) = 
+			nextHop.at(i, j) =
 				( i == j ) ? 0 :
 				( C.at(i, j) > 0 ) ? j :
 				getNextHop (i, j, path);
@@ -428,7 +428,7 @@ WimshTopologySimple::dump (FILE* os)
 	}
 	fprintf (os, "** link naming **\n");
 	for ( unsigned int i = 0; i < links_.size(); i++ ) {
-		fprintf (os, "Link ID: %d => src: %d, dst: %d", 
+		fprintf (os, "Link ID: %d => src: %d, dst: %d",
 			 i , links_.at( i ).src_, links_.at( i ).dst_ );
 		fprintf (os, "\n");
 	}

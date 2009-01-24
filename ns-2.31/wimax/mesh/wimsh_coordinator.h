@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -152,7 +152,7 @@ class WimshCoordinatorDummy : public WimshCoordinator {
 public:
 	//! Create the coordinator.
 	WimshCoordinatorDummy (WimshMac* m, WimshPhyMib* p);
-		
+
 	//! Ignore MSH-DSCH message from the MAC.
 	void recvMshDsch (WimshMshDsch* dsch, double txtime = 0) { }
 	//! Ignore MSH-NCFG message from the MAC.
@@ -179,7 +179,7 @@ protected:
 	void electionNcfg () {};
 	//! Election procedure called by handle().
 	void electionNent () {};
-		
+
 	//! Fill the IE about myself with junk information.
 	void fillSelf (WimshMshDsch* dsch);
 

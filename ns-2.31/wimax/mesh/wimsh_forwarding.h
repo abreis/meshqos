@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -47,7 +47,7 @@ public:
 		mac_ (m), topology_ (t) { }
 	//! Do nothing.
 	virtual ~WimshForwarding () { }
-	
+
 	//! Get the next-hop of an SDU.
 	virtual WimaxNodeId nextHop (WimaxSdu* sdu) = 0;
 
@@ -56,7 +56,7 @@ public:
 
 	//! Initialize the data structures
 	virtual void initialize () = 0;
-	
+
 	//! Receive the control message
 	virtual void recvMshDsch (WimshMshDsch* dsch) = 0;
 
@@ -75,7 +75,7 @@ class WimshForwardingSpf : public WimshForwarding {
 
 public:
 	//! Create the object
-	WimshForwardingSpf( WimshMac* m, WimshTopology* t ) : 
+	WimshForwardingSpf( WimshMac* m, WimshTopology* t ) :
 	  WimshForwarding (m, t) { }
     //! Do nothing
     ~WimshForwardingSpf () { };

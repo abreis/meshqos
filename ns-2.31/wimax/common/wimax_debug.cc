@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
  *  http://info.iet.unipi.it/~cng/ns2mesh80216/
  *
@@ -34,16 +34,23 @@ public:
 char WimaxDebug::buf_[NBUFS][BUFSIZE];
 unsigned int WimaxDebug::cur_ = 0;
 bool WimaxDebug::enabled_ = true;
+unsigned int WimaxDebug::debuglevel_ = 0;		// debug level from simulation
 std::map<std::string, bool> WimaxDebug::trace_;
 
-int 
+int
 WimaxDebug::command (int argc, const char*const* argv)
 {
-	if ( argc == 2 && strcmp (argv[1], "enable") == 0 ) {
+	if ( argc == 3 && strcmp (argv[1], "enable") == 0 ) {
+		enabled_ = false;					// TODO: change to true when all debuglevels are implemented
+		debuglevel_ = atoi( argv[2] );		// store debuglevel
+		return TCL_OK;
+	} else if ( argc == 2 && strcmp (argv[1], "enable") == 0 ) {
 		enabled_ = true;
+		debuglevel_ = 9;		// no debuglevel supplied, assume maximum intended
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[1], "disable") == 0 ) {
-		enabled_ = false;
+		enabled_ = false;		// TODO: deprecate
+		debuglevel_ = 0;		// no debug
 		return TCL_OK;
 	} else if ( argc == 4 && strcmp (argv[1], "trace") == 0 ) {
 		bool status;
@@ -141,7 +148,7 @@ WimaxDebug::format (wimax::BurstProfile bp)
 			( bp == wimax::QAM16_1_2 ) ? "16QAM-1/2" :
 			( bp == wimax::QAM16_3_4 ) ? "16QAM-3/4" :
 			( bp == wimax::QAM64_2_3 ) ? "64QAM-2/3" :
-			( bp == wimax::QAM64_3_4 ) ? "64QAM-3/4" : 
+			( bp == wimax::QAM64_3_4 ) ? "64QAM-3/4" :
 			"UNKNOWN" );
 
 	return b;
@@ -202,7 +209,7 @@ WimaxDebug::print (WimshMshDsch* dsch, FILE* os, const char* hdr)
 	// coordination
 	std::list<WimshMshDsch::NghIE>& ngh = dsch->ngh();
 	std::list<WimshMshDsch::NghIE>::iterator nghIt;
-	fprintf (os, "%sCOORDINATION (%d)\n"
+	fprintf (os, "%sCOORDINATION (%zd)\n"
 			"%snode  %3d mx %3d exp %3d (this node)\n",
 			hdr, ngh.size(), hdr, dsch->myself().nodeId_,
 			dsch->myself().nextXmtMx_, dsch->myself().xmtHoldoffExponent_);
@@ -213,7 +220,7 @@ WimaxDebug::print (WimshMshDsch* dsch, FILE* os, const char* hdr)
 	// availabilities
 	std::list<WimshMshDsch::AvlIE>& avl = dsch->avl();
 	std::list<WimshMshDsch::AvlIE>::iterator avlIt;
-	fprintf (os, "%sAVAILABILITIES (%d)\n", hdr, avl.size());
+	fprintf (os, "%sAVAILABILITIES (%zd)\n", hdr, avl.size());
 	for ( avlIt = avl.begin() ; avlIt != avl.end() ; avlIt++ )
 		fprintf (os,"%sframe %3d start %3d range %3d dir %s pers %3d chan %2d serv %d\n",
 				hdr, avlIt->frame_, avlIt->start_, avlIt->range_,
@@ -226,15 +233,15 @@ WimaxDebug::print (WimshMshDsch* dsch, FILE* os, const char* hdr)
 	// requests
 	std::list<WimshMshDsch::ReqIE>& req = dsch->req();
 	std::list<WimshMshDsch::ReqIE>::iterator reqIt;
-	fprintf (os, "%sREQUESTS (%d)\n", hdr, req.size());
+	fprintf (os, "%sREQUESTS (%zd)\n", hdr, req.size());
 	for ( reqIt = req.begin() ; reqIt != req.end() ; reqIt++ )
 		fprintf (os, "%snode  %3d level %3d pers %3d serv %d\n",
 				hdr, reqIt->nodeId_, reqIt->level_, reqIt->persistence_, reqIt->service_);
-						
+
 	// grants
 	std::list<WimshMshDsch::GntIE>& gnt = dsch->gnt();
 	std::list<WimshMshDsch::GntIE>::iterator gntIt;
-	fprintf (os, "%sGRANTS/CONFIRMATIONS (%d)\n", hdr, gnt.size());
+	fprintf (os, "%sGRANTS/CONFIRMATIONS (%zd)\n", hdr, gnt.size());
 	for ( gntIt = gnt.begin() ; gntIt != gnt.end() ; gntIt++ ) {
 		fprintf (os, "%snode  %3d frame %3d start %3d range %3d dir %s "
 				"pers %3d chan %2d serv %d \n",
