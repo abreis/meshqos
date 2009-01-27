@@ -140,30 +140,30 @@ WimshMshDsch::allocationType_ = WimshMshDsch::BASIC;
 void
 WimshMshDsch::slots2level (
 		unsigned int N, unsigned int minislots,
-		unsigned char& level, unsigned char& persistence)
+		unsigned char& level, Persistence& persistence)
 {
-   if ( minislots <= N ) {
-      level = minislots;
-      persistence = 1;
-   } else if ( minislots <= 2 * N ) {
-      level = 1 + ( minislots - 1 ) / 2;
-      persistence = 2;
-   } else if ( minislots <= 4 * N ) {
-      level = 1 + ( minislots - 1 ) / 4;
-      persistence = 4;
-   } else if ( minislots <= 8 * N ) {
-      level = 1 + ( minislots - 1 ) / 8;
-      persistence = 8;
-   } else if ( minislots <= 32 * N ) {
-      level = 1 + ( minislots - 1 ) / 32;
-      persistence = 32;
-   } else if ( minislots <= 128 * N ) {
-      level = 1 + ( minislots - 1 ) / 128;
-      persistence = 128;
-   } else {
-      level = N;
-      persistence = 128;
-   }
+	   if ( minislots <= N ) {
+	      level = minislots;
+	      persistence = WimshMshDsch::FRAME1;
+	   } else if ( minislots <= 2 * N ) {
+	      level = 1 + ( minislots - 1 ) / 2;
+	      persistence = WimshMshDsch::FRAME2;
+	   } else if ( minislots <= 4 * N ) {
+	      level = 1 + ( minislots - 1 ) / 4;
+	      persistence = WimshMshDsch::FRAME4;
+	   } else if ( minislots <= 8 * N ) {
+	      level = 1 + ( minislots - 1 ) / 8;
+	      persistence = WimshMshDsch::FRAME8;
+	   } else if ( minislots <= 32 * N ) {
+	      level = 1 + ( minislots - 1 ) / 32;
+	      persistence = WimshMshDsch::FRAME32;
+	   } else if ( minislots <= 128 * N ) {
+	      level = 1 + ( minislots - 1 ) / 128;
+	      persistence = WimshMshDsch::FRAME128;
+	   } else {
+	      level = N;
+	      persistence = WimshMshDsch::FRAME128;
+	   }
 }
 
 void
@@ -193,7 +193,7 @@ WimshMshDsch::addContiguous (GntIE& x)
 			}
 		}
 
-		// chek identical requests in contiguous frames
+		// check for identical requests in contiguous frames
 		if ( x.nodeId_ == it->nodeId_ &&
 				x.frame_ == (it->frame_ + it->persistence_) &&
 				x.start_ == it->start_ &&
@@ -202,7 +202,7 @@ WimshMshDsch::addContiguous (GntIE& x)
 				x.channel_ == it->channel_ &&
 				x.service_ == it->service_ ) {
 
-			it->persistence_++;
+			it->persistence_++; // TODO: bloody hell?!
 			break;
 		}
 	}
@@ -229,7 +229,7 @@ WimshMshDsch::compactGntList ()
 				last->channel_ == it->channel_ &&
 				last->service_ == it->service_ ) {
 
-			it->persistence_ = 2;
+			it->persistence_ = FRAME2;
 			hdr_.length() -= GntIE::size();
 			gnt_.erase(last);
 			break;
@@ -248,7 +248,7 @@ WimshMshDsch::compactGntList ()
 				last->channel_ == it->channel_ &&
 				last->service_ == it->service_ ) {
 
-			it->persistence_ = 4;
+			it->persistence_ = FRAME4;
 			hdr_.length() -= GntIE::size();
 			gnt_.erase(last);
 			break;
@@ -267,7 +267,7 @@ WimshMshDsch::compactGntList ()
 				last->channel_ == it->channel_ &&
 				last->service_ == it->service_ ) {
 
-			it->persistence_ = 8;
+			it->persistence_ = FRAME8;
 			hdr_.length() -= GntIE::size();
 			gnt_.erase(last);
 			break;
@@ -287,7 +287,7 @@ WimshMshDsch::compactGntList ()
 				last->channel_ == it->channel_ &&
 				last->service_ == it->service_ ) {
 
-			it->persistence_ = 32;
+			it->persistence_ = FRAME32;
 			hdr_.length() -= GntIE::size();
 			gnt_.erase(last);
 
@@ -327,7 +327,7 @@ WimshMshDsch::addContiguous (AvlIE& x)
 			}
 		}
 
-		// chek identical requests in contiguous frames
+		// check for identical requests in contiguous frames
 		if ( x.frame_ == (it->frame_ + it->persistence_) &&
 				x.start_ == it->start_ &&
 				x.range_ == it->range_ &&

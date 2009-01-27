@@ -470,7 +470,7 @@ WimshMac::initialize ()
 
 	// listen to the control channel
 	setControlChannel (wimax::RX);
-	
+
 	// set this MAC as initialized
 	initialized_ = true;
 }
@@ -513,7 +513,7 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 	// buffered by the packet scheduler
 	} else {
 
-		// this is the IP packet incapsulated into the SDU
+		// this is the IP packet encapsulated into the SDU
 		Packet* ip = sdu->ip();
 
 		// retrieve the flow ID of the IP datagram
@@ -755,7 +755,7 @@ WimshMac::uncoordinated_opportunity (unsigned int dst, bool grant)
 	// create a new (empty) MSH-DSCH message
 	WimshMshDsch* dsch = new WimshMshDsch;
 
-	// fill the MAC header and meshsubheader fields
+	// fill in the MAC header and meshsubheader fields
 	dsch->src() = nodeId();
 	dsch->hdr().crc() = true;
 	// dsch->hdr().fragmentation() is false by default
@@ -986,17 +986,19 @@ WimshMac::recvBurst (WimshBurst* burst)
 		// remove PDUs one by one from the burst
 		for ( WimaxPdu* pdu = burst->pdu() ; pdu != 0 ; pdu = burst->pdu() ) {
 			/*
-			se o pdu contiver uma menssagem MSH-DSCH rtPS envia-a para recvMshDsch..
+			// if the PDU contains an MSH-DSCH rtPS, send it to recvMshDsch
 			if ( ! burst->error() && ! pdu->error() && pdu->hdr().reserved == 1 ) {
 				Stat::put ("wimsh_dsch_error", index_, 0.0);
 				recvMshDsch (pdu->sdu->ip(), burst->txtime());
 			} else {
 				Stat::put ("wimsh_dsch_error", index_, 1.0);
 			}
-			-atenção que o ->ip() é do tipo packet e o rcvMshDsch tem de receber um ponteiro do tipo MshDsch
-			tem de se resolver a conversão, ou entao criar mm um campo MshDsch dentro do Pdu!
-			-garantir que os pdus normais não têm o campo reserved==1
-			*/
+			 */
+
+			/* ->ip() is of type 'packet' and rcvMshDsch needs a *MshDsch
+			 * type conversion is required, or an MshDsch field could be created inside the PDU
+			 * make sure that normal PDUs have (reserved != 1)
+			 */
 
 			// if the PDU does not contain errors, then we check for the
 			// destination NodeID in the CID in the MAC header

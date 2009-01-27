@@ -51,9 +51,9 @@ public:
 	enum { MAX_SIZE = 96 };
 
 	//! Persistence level of availabilities/requests/grants.
-	//enum Persistence {
-	//	CANCEL = 0, FRAME1, FRAME2, FRAME4,
-	//	FRAME8, FRAME32, FRAME128, FOREVER };
+	enum Persistence {
+		CANCEL = 0, FRAME1 = 1, FRAME2 = 2, FRAME4 = 4,
+		FRAME8 = 8, FRAME32 = 32, FRAME128 = 128, FOREVER = 255}; // TODO: suitable value for FOREVER
 
 	//! Direction for availabilities IEs.
 	enum Direction { UNAVAILABLE = 0, TX_AVL, RX_AVL, AVAILABLE };
@@ -68,7 +68,7 @@ public:
 		//! Demand level (7 bits).				!!! set max slots per frame = 128;  -1bit
 		unsigned char level_;
 		//! Demand persistence (3 bits).
-		unsigned char persistence_;
+		Persistence persistence_;
 		//! Service Class (2 bits).             !!! +2bits
 		unsigned char service_;
 		//bool reserved_;						!!! -1bit
@@ -87,8 +87,8 @@ public:
 		unsigned char range_;
 		//! Direction (2 bits).
 		Direction direction_;
-		//! Persistence (3 bits).  
-		unsigned char persistence_;
+		//! Persistence (3 bits).
+		Persistence persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
 		//! Service Class (2 bits).	  	 !!! +2bits
@@ -111,7 +111,7 @@ public:
 		//! Direction (1 bit). True = from requester to granter. Otherwise, false.
 		bool fromRequester_;
 		//! Persistence (8 bits).
-		unsigned char persistence_;
+		Persistence persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
 		//! Service Class (2 bits).			!!! +2bits
@@ -245,12 +245,12 @@ public:
 
 	//! Convert a number of minislots into a pair <level, persistence> for req.
 	static void slots2level (unsigned int N, unsigned int minislots,
-			unsigned char& level, unsigned char& persistence);
+			unsigned char& level, Persistence& persistence);
 
 	//! Get/set the allocation type.
 	static AllocationType& allocationType () { return allocationType_; }
 
-	/*
+
 	//! Convert the persistence into a number of frames (except FOREVER).
 	static unsigned int pers2frames (Persistence p) {
 		return ( p == CANCEL ) ? 0 :
@@ -260,7 +260,7 @@ public:
 			( p == FRAME8 ) ? 8 :
 			( p == FRAME32 ) ? 32 :
 			( p == FRAME128 ) ? 128 : UINT_MAX; }
-	*/
+
 protected:
 	//! Add a grant IE with contiguous allocation.
 	void addContiguous (GntIE& x);
