@@ -202,7 +202,8 @@ WimshMshDsch::addContiguous (GntIE& x)
 				x.channel_ == it->channel_ &&
 				x.service_ == it->service_ ) {
 
-			it->persistence_++; // TODO: bloody hell?!
+			//it->persistence_++;
+			it->persistence_ = nextPersistence(it->persistence_);
 			break;
 		}
 	}
@@ -335,7 +336,8 @@ WimshMshDsch::addContiguous (AvlIE& x)
 				x.channel_ == it->channel_ &&
 				x.service_ == it->service_ ) {
 
-			it->persistence_++;
+			//it->persistence_++;
+			it->persistence_ = nextPersistence(it->persistence_);
 			//if ( x.last_ ) it->last_ = true;
 			break;
 		}

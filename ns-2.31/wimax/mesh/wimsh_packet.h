@@ -250,7 +250,6 @@ public:
 	//! Get/set the allocation type.
 	static AllocationType& allocationType () { return allocationType_; }
 
-
 	//! Convert the persistence into a number of frames (except FOREVER).
 	static unsigned int pers2frames (Persistence p) {
 		return ( p == CANCEL ) ? 0 :
@@ -260,6 +259,15 @@ public:
 			( p == FRAME8 ) ? 8 :
 			( p == FRAME32 ) ? 32 :
 			( p == FRAME128 ) ? 128 : UINT_MAX; }
+
+	//! Get the next persistence (Persistence++)
+	static Persistence nextPersistence(Persistence p) {
+		return ( p == CANCEL ) ? FRAME1 :
+			( p == FRAME1 ) ? FRAME2 :
+			( p == FRAME2 ) ? FRAME4 :
+			( p == FRAME4 ) ? FRAME8 :
+			( p == FRAME8 ) ? FRAME32 :
+			( p == FRAME32 ) ? FRAME128 : FRAME128; }
 
 protected:
 	//! Add a grant IE with contiguous allocation.
