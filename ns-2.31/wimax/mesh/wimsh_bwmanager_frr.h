@@ -457,7 +457,7 @@ private:
 	  do not want to update frames in the past, because we would overwrite
 	  information that will be used in the future (in a circular manner).
 	  */
-	void realPersistence (unsigned int start, unsigned char pers,
+	void realPersistence (unsigned int start, WimshMshDsch::Persistence pers,
 			unsigned int& realStart, unsigned int& range);
 
 	//! First-fit to grant bandwidth to a neighbor.
@@ -476,9 +476,9 @@ private:
 	  */
 	WimshMshDsch::GntIE grantFit (unsigned int ndx, unsigned int bytes,
 		unsigned int frame,
-		bool& room, bool& frame_room, grantFitDesc& status, 
+		bool& room, bool& frame_room, grantFitDesc& status,
 		unsigned int serv_class, WimshMshDsch* dsch);
-		
+
 	void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,
 		unsigned int gframe, unsigned char gstart,
 		unsigned char grange, unsigned char gchannel, WimshMshDsch::GntIE& gnt);

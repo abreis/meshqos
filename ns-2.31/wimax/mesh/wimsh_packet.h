@@ -95,6 +95,7 @@ public:
 		unsigned char service_;
 
 		//! Return the size (in bytes) of this IE.
+		// TODO: with service field size exceeds 4 bytes
 		static unsigned int size () { return 4; }
 	};
 
@@ -201,9 +202,9 @@ public:
 	WimaxMacHeader hdr () { return hdr_; }
 	//! Return the transmitter NodeID (in the mesh subheader).
 	WimaxNodeId& src () { return src_; }
-	//! Get/set the QoS service type.
+	//! Return the Reserved flag
 	bool& reserved () { return reserved_; }
-
+	//! Return the Grant / Request flag
 	bool& grant () { return grant_; }
 
 	//! Add an availabilities IE. Return the available space (in bytes).
@@ -260,7 +261,20 @@ public:
 			( p == FRAME32 ) ? 32 :
 			( p == FRAME128 ) ? 128 : UINT_MAX; }
 
+	//! Convert a number of frames into type Persistance.
+	// TODO: round up to nearest persistance if value is non-standard
+	// Persistance value for FOREVER
+	static Persistence frames2pers (unsigned int n) {
+		return ( n == 0 ) ? CANCEL :
+			( n == 1 ) ? FRAME1 :
+			( n == 2 ) ? FRAME2 :
+			( n == 4 ) ? FRAME4 :
+			( n == 8 ) ? FRAME8 :
+			( n == 32 ) ? FRAME32 :
+			( n == 128 ) ? FRAME128 : FRAME128; }
+
 	//! Get the next persistence (Persistence++)
+	// NOTE: Should FRAME128 increment to FOREVER?
 	static Persistence nextPersistence(Persistence p) {
 		return ( p == CANCEL ) ? FRAME1 :
 			( p == FRAME1 ) ? FRAME2 :
