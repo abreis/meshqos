@@ -311,8 +311,8 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 
 		// add the PDU to the fragmentation buffer
 		spare = frag.addPdu (pdu, s);
-		
-		/* if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_serve_spare link %i serv %d buffsize %d pdu-size %d spare %d\n", 
+
+		/* if ( WimaxDebug::enabled() ) fprintf (stderr, "!!scheduler_serve_spare link %i serv %d buffsize %d pdu-size %d spare %d\n",
 			ndx, s, link_[ndx][s].size_, pdu->size(), spare); */
 	}
 
@@ -368,28 +368,29 @@ WimshSchedulerFairRR::recomputecbr (unsigned int ndx, unsigned char s, unsigned 
 	if ( cbr_[ndx][s].pkt_ == 0 ) {
 		cbr_[ndx][s].startime_ = NOW;
 
-		if ( WimaxDebug::enabled() ) fprintf (stderr,"0 recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f\n",
-		 mac_->nodeId(), ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_,
-									cbr_[ndx][s].startime_);
+		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.recomputecbr_start_ )
+			fprintf (stderr,"[reCBRstart] recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f\n",
+		 mac_->nodeId(), ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_);
 
 	} else {
-		cbr_[ndx][s].quocient_ = (unsigned int) ( cbr_[ndx][s].bytes_ * 8 /
-							(NOW - cbr_[ndx][s].startime_ ) );
+		if ( NOW - cbr_[ndx][s].startime_ != 0 ) { // Prevent a divide by zero
+			// quocient = (bytes*8 / elapsed time) [bps]
+			cbr_[ndx][s].quocient_ = (unsigned int) ( cbr_[ndx][s].bytes_ * 8 / (NOW - cbr_[ndx][s].startime_ ) );
+		} else { cbr_[ndx][s].quocient_ = 0; };
 
-		// error of division by zero
-		if ( NOW - cbr_[ndx][s].startime_ == 0 ) cbr_[ndx][s].quocient_ = 0;
-
-		if ( WimaxDebug::enabled() ) fprintf (stderr,"recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f endtime %.9f quocient %d frame %d\n",
-		mac_->nodeId(),ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_,
-		cbr_[ndx][s].startime_, NOW, cbr_[ndx][s].quocient_, mac_->frame());
+		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.recomputecbr_ )
+			fprintf (stderr,"[reCBR] recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f endtime %.9f quocient %d frame %d\n",
+		mac_->nodeId(),ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_, NOW, cbr_[ndx][s].quocient_, mac_->frame());
 	}
 
-	cbr_[ndx][s].pkt_ ++;
-	cbr_[ndx][s].bytes_ += bytes;
+	cbr_[ndx][s].pkt_++; // Increase packet count
+	cbr_[ndx][s].bytes_ += bytes; // Update byte count
 
-	if (cbr_[ndx][s].pkt_ == 100) {
+	if (cbr_[ndx][s].pkt_ >= 100) { // Reset counts every 100 packets
 		cbr_[ndx][s].pkt_ = 0;
 		cbr_[ndx][s].bytes_ = 0;
+		cbr_[ndx][s].quocient_ = 0;
+		//cbr_[ndx][s].starttime is reset on the next iteration due to (pkt_ = 0)
 	}
 }
 

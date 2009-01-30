@@ -119,7 +119,7 @@ WimshSchedulerFifo::addPdu (WimaxPdu* pdu)
 			(WimaxNodeId) HDR_IP(pdu->sdu()->ip())->daddr(),  // dst node
 			pdu->hdr().meshCid().priority(),                  // priority
 
-//***aqui não tem os campos drop nem reliability...
+// NOTE: (david)***aqui nao tem os campos drop nem reliability...
 
 			pdu->hdr().meshCid().dst(),                       // next hop
 		   pdu->size());                                     // bytes

@@ -56,18 +56,17 @@ protected:
 	//! Maximum buffer size (in bytes). Set by the MAC via Tcl command.
 	unsigned int maxBufSize_;
 
-	//! Stores the information of outgoing traffic flows rate
+	//! Stores rate statistics of outgoing traffic flows
 	struct Cbr {
-
-		unsigned int pkt_;
-		unsigned int bytes_;
-		double startime_;
-		double endtime_;
-		unsigned int quocient_;
-
+		unsigned int pkt_; // Packet count
+		unsigned int bytes_; // Byte count
+		double startime_; // Time of flow initialization
+		double endtime_; // Unused
+		unsigned int quocient_; // Data rate in bits per second
 		Cbr () { pkt_ = 0; bytes_ = 0; startime_ = 0.0; endtime_ = 0.0;  quocient_ = 0; }
 	};
 
+	//! 2D Vector cbr_[ndx][service] of traffic flows
 	std::vector< std::vector< Cbr > > cbr_;
 
 public:
