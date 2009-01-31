@@ -1691,8 +1691,7 @@ WimshBwManagerFairRR::cancel_Granter (unsigned int ndx,
 				avl.frame_ = f;
 				avl.start_ = i;
 				avl.direction_ = WimshMshDsch::TX_AVL;
-				avl.persistence_ =
-					1;
+				avl.persistence_ = 1;
 				avl.channel_ = channel_[F][i];
 				avl.service_ = s;
 

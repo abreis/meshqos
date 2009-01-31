@@ -52,8 +52,8 @@ public:
 
 	//! Persistence level of availabilities/requests/grants.
 	enum Persistence {
-		CANCEL = 0, FRAME1 = 1, FRAME2 = 2, FRAME4 = 4,
-		FRAME8 = 8, FRAME32 = 32, FRAME128 = 128, FOREVER = 255}; // TODO: suitable value for FOREVER
+		CANCEL, FRAME1, FRAME2, FRAME4,
+		FRAME8, FRAME32, FRAME128, FOREVER};
 
 	//! Direction for availabilities IEs.
 	enum Direction { UNAVAILABLE = 0, TX_AVL, RX_AVL, AVAILABLE };
@@ -111,7 +111,7 @@ public:
 		unsigned char range_;
 		//! Direction (1 bit). True = from requester to granter. Otherwise, false.
 		bool fromRequester_;
-		//! Persistence (8 bits).
+		//! Persistence (3 bits).
 		unsigned char persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
@@ -263,7 +263,7 @@ public:
 
 	//! Convert a number of frames into type Persistance.
 	// TODO: round up to nearest persistance if value is non-standard
-	// Persistance value for FOREVER
+	// Decide on a suitable default
 	static Persistence frames2pers (unsigned int n) {
 		return ( n == 0 ) ? CANCEL :
 			( n == 1 ) ? FRAME1 :
@@ -271,7 +271,8 @@ public:
 			( n == 4 ) ? FRAME4 :
 			( n == 8 ) ? FRAME8 :
 			( n == 32 ) ? FRAME32 :
-			( n == 128 ) ? FRAME128 : FRAME128; }
+			( n == 128 ) ? FRAME128 :
+			( n > 128 ) ? FOREVER : FRAME32; }
 
 	//! Get the next persistence (Persistence++)
 	// NOTE: Should FRAME128 increment to FOREVER?
