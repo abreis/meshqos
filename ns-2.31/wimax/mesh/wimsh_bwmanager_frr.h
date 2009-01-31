@@ -263,7 +263,7 @@ protected:
 	//! Maximum deficit, in bytes. Set via Tcl command. Zero means no maximum.
 	unsigned int maxDeficit_;
 
-	//! Minumim slots per frame granted to rtPS service
+	//! Minimum number of slots per frame granted to an nrtPS service
 	unsigned int nrtpsMinSlots_;
 
 	//! Maximum backlog, in bytes. Set via Tcl command. Zero means no maximum.

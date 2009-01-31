@@ -135,6 +135,7 @@ public:
 	//! Tcl interface from the MAC layer.
 	virtual int command (int argc, const char*const* argv) = 0;
 
+	//! TODO: Documentation
 	virtual void search_tx_slot (unsigned int ndx, unsigned int reqState) = 0;
 
 	unsigned int nextFrame_rtPS (unsigned int ndx) { return nextFrame_[ndx][2]; }

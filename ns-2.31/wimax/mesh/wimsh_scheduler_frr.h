@@ -108,7 +108,7 @@ protected:
 	//! Round-robin duration, in bytes. Set via Tcl.
 	unsigned int roundDuration_;
 
-	//! Array of link descriptors, one for each neighbor. Initialized by the MAC.
+	//! 2D array of link descriptors, one for each neighbor/service pair. Initialized by the MAC.
 	std::vector< std::vector< LinkDesc > > link_;
 
 	//! True if there is a pending DRR round.
@@ -141,7 +141,7 @@ public:
 	void addPdu (WimaxPdu* pdu);
 
 	//! Schedule a new data burst to a neighbor.
-	void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst, unsigned int service);
+	void schedule (WimshFragmentationBuffer& frag, WimaxNodeId dst, unsigned int s);
 
 	//! Return the size, in bytes, of the queue to a neighbor (by index).
 	unsigned int neighbor (unsigned ndx, unsigned int service) { return link_[ndx][service].size_; }

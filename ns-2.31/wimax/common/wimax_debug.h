@@ -110,6 +110,8 @@ public:
 		static const unsigned bwmgr_uncoordrange_ = 7;
 		static const unsigned recomputecbr_start_ = 7;
 		static const unsigned recomputecbr_ = 8;
+		static const unsigned scheduler_addpdu_ = 8;
+		static const unsigned scheduler_serve_ = 7;
 	} static const lvl;
 
 #ifdef WIMAX_DEBUG
