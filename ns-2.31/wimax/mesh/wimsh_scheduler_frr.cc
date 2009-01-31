@@ -409,15 +409,10 @@ WimshSchedulerFairRR::handle ()
 	if ( interval_ <= 0 ) return;
 
 	// remove stale flows
-/*
-	std::vector<LinkDesc>::iterator link;
-	for ( link = link_.begin() ; link != link_.end() ; ++link ) {
-		for ( unsigned int s = 0 ; s < 4 ; s++ ) {
-			CircularList<FlowDesc>& rr = link_[s].rr_;
-*/
-	for ( unsigned int n = 0 ; n < mac_->nneighs() ; n++ ) {
-		for ( unsigned int s = 0 ; n < 4 ; s++ ) { // TODO: shouldn't it be 's < 4' ?!
-			CircularList<FlowDesc>& rr = link_[n][s].rr_;
+	std::vector< std::vector< LinkDesc > >::iterator link; // 2D iterator
+	for ( link = link_.begin() ; link != link_.end() ; ++link ) { // go through every link w/ iterator
+		for ( int s = 0 ; s < 4 ; s++ ) { // go through every service in each link
+			CircularList<FlowDesc>& rr = link[0][s].rr_; // since we're incrementing link itself, always refer to link[0]
 
 			bool changed = false;
 
