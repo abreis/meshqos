@@ -457,7 +457,7 @@ private:
 	  do not want to update frames in the past, because we would overwrite
 	  information that will be used in the future (in a circular manner).
 	  */
-	void realPersistence (unsigned int start, WimshMshDsch::Persistence pers,
+	void realPersistence (unsigned int start, unsigned char pers,
 			unsigned int& realStart, unsigned int& range);
 
 	//! First-fit to grant bandwidth to a neighbor.

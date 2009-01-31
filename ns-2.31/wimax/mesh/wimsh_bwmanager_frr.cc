@@ -1333,7 +1333,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 				req.level_ = req_slots + 3;
 				if (req.level_ > mac_->phyMib()->slotPerFrame()) req.level_ = mac_->phyMib()->slotPerFrame();
-				req.persistence_ = WimshMshDsch::FRAME128;
+				req.persistence_ = 128;
 				startHorizon_[ndx][3] = false;
 				req.service_ = 3;
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
@@ -1365,7 +1365,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				ie.level_ = req_slots + 3;
 				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
 
-				ie.persistence_ = WimshMshDsch::FRAME32;
+				ie.persistence_ = 32;
 				ie.service_ = s;
 
 				// insert the IE into the MSH-DSCH message
@@ -1397,7 +1397,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 				ie.level_ = req_slots + 3;
 				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
-				ie.persistence_ = WimshMshDsch::FRAME32;
+				ie.persistence_ = 32;
 				ie.service_ = s;
 
 				// insert the IE into the MSH-DSCH message
@@ -1429,7 +1429,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 				ie.level_ = req_slots + 3;
 				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
-				ie.persistence_ = WimshMshDsch::FRAME32;
+				ie.persistence_ = 32;
 				ie.service_ = s;
 
 				// insert the IE into the MSH-DSCH message
@@ -1624,7 +1624,7 @@ WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 	WimshMshDsch::ReqIE req;
 	req.nodeId_ = dst;
 	req.level_ = 0;
-	req.persistence_ = WimshMshDsch::CANCEL;
+	req.persistence_ = 0;
 	req.service_ = s;
 	dsch->add (req);
 
@@ -1639,7 +1639,7 @@ WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 				avl.frame_ = f;
 				avl.start_ = i;
 				avl.direction_ = WimshMshDsch::RX_AVL;	// distinguish from the granter AvlIE
-				avl.persistence_ = WimshMshDsch::FRAME1;
+				avl.persistence_ = 1;
 				avl.channel_ = channel_[F][i];
 				avl.service_ = s;
 
@@ -1691,7 +1691,8 @@ WimshBwManagerFairRR::cancel_Granter (unsigned int ndx,
 				avl.frame_ = f;
 				avl.start_ = i;
 				avl.direction_ = WimshMshDsch::TX_AVL;
-				avl.persistence_ = WimshMshDsch::FRAME1;
+				avl.persistence_ =
+					1;
 				avl.channel_ = channel_[F][i];
 				avl.service_ = s;
 
@@ -1718,10 +1719,10 @@ WimshBwManagerFairRR::cancel_Granter (unsigned int ndx,
 
 void
 WimshBwManagerFairRR::realPersistence (
-		unsigned int start, WimshMshDsch::Persistence pers,
+		unsigned int start, unsigned char pers,
 		unsigned int& realStart, unsigned int& range)
 {
-	range = WimshMshDsch::pers2frames(pers);
+	range = pers;
 
 	// if the start frame of the grant is smaller than the
 	// current frame number, then some (or all) the information is stale
@@ -1745,9 +1746,9 @@ WimshBwManagerFairRR::grantFit (
 	WimshMshDsch::GntIE gnt;
 	gnt.nodeId_ = mac_->ndx2neigh (ndx);
 
-	WimshMshDsch::Persistence persistence;
-	if ( serv_class == wimax::UGS ) persistence = WimshMshDsch::frames2pers(HORIZON);
-	else persistence = WimshMshDsch::frames2pers(HORIZON / 4);
+	unsigned char persistence;
+	if ( serv_class == wimax::UGS ) persistence = HORIZON;
+	else persistence = (HORIZON / 4);
 
 	// number of minislots per frame
 	unsigned int N = mac_->phyMib()->slotPerFrame();
@@ -1870,7 +1871,7 @@ WimshBwManagerFairRR::grantFit (
 								avl.frame_ = gnt.frame_;
 								avl.start_ = gnt.start_;
 								avl.direction_ = WimshMshDsch::TX_AVL;
-								avl.persistence_ = WimshMshDsch::FRAME128;
+								avl.persistence_ = 128;
 								avl.channel_ = ch;
 								avl.service_ = (serv_class == wimax::UGS ) ? wimax::RTPS : serv_class;
 								avl.range_ = gnt.range_;
@@ -1936,7 +1937,7 @@ WimshBwManagerFairRR::grantFit (
 									avl.frame_ = gnt.frame_;
 									avl.start_ = gnt.start_;
 									avl.direction_ = WimshMshDsch::TX_AVL;
-									avl.persistence_ = WimshMshDsch::FRAME128;
+									avl.persistence_ = 128;
 									avl.channel_ = ch;
 									avl.service_ = serv_class;
 									avl.range_ = gnt.range_;
@@ -2023,9 +2024,9 @@ WimshBwManagerFairRR::confFit (
 		unsigned int mrange, WimshMshDsch::GntIE& gnt, bool& room,
 		unsigned int serv_class, WimshMshDsch* dsch)
 {
-	WimshMshDsch::Persistence persistence;
-	if ( serv_class == wimax::UGS ) persistence = WimshMshDsch::frames2pers(HORIZON);
-	else persistence = WimshMshDsch::frames2pers(HORIZON / 4);
+	unsigned char persistence;
+	if ( serv_class == wimax::UGS ) persistence = HORIZON;
+	else persistence = (HORIZON / 4);
 
 	unsigned int F = (f + 10) % HORIZON;
 
@@ -2086,7 +2087,7 @@ WimshBwManagerFairRR::confFit (
 					avl.frame_ = gnt.frame_;
 					avl.start_ = gnt.start_;
 					avl.direction_ = WimshMshDsch::RX_AVL;
-					avl.persistence_ = WimshMshDsch::FRAME32;
+					avl.persistence_ = 32;
 					avl.channel_ = gnt.channel_;
 					avl.service_ = (serv_class == wimax::UGS ) ? wimax::RTPS : serv_class;
 					avl.range_ = gnt.range_;

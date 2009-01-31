@@ -68,7 +68,7 @@ public:
 		//! Demand level (7 bits).				!!! set max slots per frame = 128;  -1bit
 		unsigned char level_;
 		//! Demand persistence (3 bits).
-		Persistence persistence_;
+		unsigned char persistence_;
 		//! Service Class (2 bits).             !!! +2bits
 		unsigned char service_;
 		//bool reserved_;						!!! -1bit
@@ -88,7 +88,7 @@ public:
 		//! Direction (2 bits).
 		Direction direction_;
 		//! Persistence (3 bits).
-		Persistence persistence_;
+		unsigned char persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
 		//! Service Class (2 bits).	  	 !!! +2bits
@@ -112,7 +112,7 @@ public:
 		//! Direction (1 bit). True = from requester to granter. Otherwise, false.
 		bool fromRequester_;
 		//! Persistence (8 bits).
-		Persistence persistence_;
+		unsigned char persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
 		//! Service Class (2 bits).			!!! +2bits
