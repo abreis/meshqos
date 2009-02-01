@@ -56,17 +56,17 @@ public:
 		FRAME8, FRAME32, FRAME128, FOREVER};
 
 	//! Direction for availabilities IEs.
-	enum Direction { UNAVAILABLE = 0, TX_AVL, RX_AVL, AVAILABLE };
+	enum Direction { UNAVAILABLE, TX_AVL, RX_AVL, AVAILABLE };
 
 	//! QoS MSH-DSCH service type.
-	// TODO: this is non-standard with wimax::ServiceType
-	enum ServiceType { UGS, RTPS, NRTPS, BE , N_SERVICE_CALSS };
+	// refer to wimax::ServiceClass
 
 	//! Request data structure (3 bytes).
 	struct ReqIE {
 		//! Destination NodeID (IRL, LinkID - 8 bits).
 		WimaxNodeId nodeId_;
-		//! Demand level (7 bits).				!!! set max slots per frame = 128;  -1bit
+		//! Demand level (7 bits).		// Reduced demand level to 7 bits, or 128 minislots
+										// TODO: restore 8 bits of demand
 		unsigned char level_;
 		//! Demand persistence (3 bits).
 		Persistence persistence_;
@@ -291,7 +291,7 @@ protected:
 	void addContiguous (GntIE& x);
 	//! Add an availability IE with contiguous allocation.
 	void addContiguous (AvlIE& x);
-
+	//! TODO: Document this routine
 	void compactGntList ();
 };
 
