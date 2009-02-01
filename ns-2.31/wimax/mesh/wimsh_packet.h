@@ -216,10 +216,6 @@ public:
 			hdr_.length() += AvlIE::size(); avl_.push_front(x);
 		} else if ( allocationType_ == CONTIGUOUS ) addContiguous (x);
 		return remaining(); }
-
-	unsigned int rmAvl () {
-		avl_.pop_front(); hdr_.length() -= AvlIE::size();
-		return remaining(); }
 	//! Add a request IE. Return the available space (in bytes).
 	unsigned int add (ReqIE x) {
 		hdr_.length() += ReqIE::size(); req_.push_front(x); return remaining(); }
@@ -229,9 +225,6 @@ public:
 			hdr_.length() += GntIE::size(); gnt_.push_front(x);
 		} else if ( allocationType_ == CONTIGUOUS ) addContiguous (x);
 		return remaining(); }
-
-	unsigned int gntCompact () {
-		compactGntList (); return remaining(); }
 	//! Add a neighbors IE. Return the available space (in bytes).
 	unsigned int add (NghIE x) {
 		hdr_.length() += NghIE::size(); ngh_.push_front(x); return remaining(); }
