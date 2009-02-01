@@ -144,25 +144,25 @@ WimshMshDsch::slots2level (
 {
 	   if ( minislots <= N ) {
 	      level = minislots;
-	      persistence = WimshMshDsch::FRAME1;
+	      persistence = FRAME1;
 	   } else if ( minislots <= 2 * N ) {
 	      level = 1 + ( minislots - 1 ) / 2;
-	      persistence = WimshMshDsch::FRAME2;
+	      persistence = FRAME2;
 	   } else if ( minislots <= 4 * N ) {
 	      level = 1 + ( minislots - 1 ) / 4;
-	      persistence = WimshMshDsch::FRAME4;
+	      persistence = FRAME4;
 	   } else if ( minislots <= 8 * N ) {
 	      level = 1 + ( minislots - 1 ) / 8;
-	      persistence = WimshMshDsch::FRAME8;
+	      persistence = FRAME8;
 	   } else if ( minislots <= 32 * N ) {
 	      level = 1 + ( minislots - 1 ) / 32;
-	      persistence = WimshMshDsch::FRAME32;
+	      persistence = FRAME32;
 	   } else if ( minislots <= 128 * N ) {
 	      level = 1 + ( minislots - 1 ) / 128;
-	      persistence = WimshMshDsch::FRAME128;
+	      persistence = FRAME128;
 	   } else {
 	      level = N;
-	      persistence = WimshMshDsch::FRAME128;
+	      persistence = FRAME128;
 	   }
 }
 
@@ -195,13 +195,13 @@ WimshMshDsch::addContiguous (GntIE& x)
 
 		// check for identical requests in contiguous frames
 		if ( x.nodeId_ == it->nodeId_ &&
-				x.frame_ == (it->frame_ + it->persistence_) &&
+				x.frame_ == (it->frame_ + pers2frames(it->persistence_) ) &&
 				x.start_ == it->start_ &&
 				x.range_ == it->range_ &&
 				x.fromRequester_ == it->fromRequester_ &&
 				x.channel_ == it->channel_ &&
 				x.service_ == it->service_ ) {
-
+			// NOTE: Why the increment?
 			//it->persistence_++;
 			it->persistence_ = nextPersistence(it->persistence_);
 			break;
@@ -244,7 +244,7 @@ WimshMshDsch::compactGntList ()
 				last->frame_ == (it->frame_ + 2) &&
 				last->start_ == it->start_ &&
 				last->range_ == it->range_ &&
-				last->persistence_ == 2 && it->persistence_ == 2 &&
+				last->persistence_ == FRAME2 && it->persistence_ == FRAME2 &&
 				last->fromRequester_ == it->fromRequester_ &&
 				last->channel_ == it->channel_ &&
 				last->service_ == it->service_ ) {
@@ -263,7 +263,7 @@ WimshMshDsch::compactGntList ()
 				last->frame_ == (it->frame_ + 4) &&
 				last->start_ == it->start_ &&
 				last->range_ == it->range_ &&
-				last->persistence_ == 4 && it->persistence_ == 4 &&
+				last->persistence_ == FRAME4 && it->persistence_ == FRAME4 &&
 				last->fromRequester_ == it->fromRequester_ &&
 				last->channel_ == it->channel_ &&
 				last->service_ == it->service_ ) {
@@ -283,7 +283,7 @@ WimshMshDsch::compactGntList ()
 				last->frame_ == (it->frame_ + 24) &&
 				last->start_ == it->start_ &&
 				last->range_ == it->range_ &&
-				last->persistence_ == 8 && it->persistence_ == 8 &&
+				last->persistence_ == FRAME8 && it->persistence_ == FRAME8 &&
 				last->fromRequester_ == it->fromRequester_ &&
 				last->channel_ == it->channel_ &&
 				last->service_ == it->service_ ) {
@@ -329,7 +329,7 @@ WimshMshDsch::addContiguous (AvlIE& x)
 		}
 
 		// check for identical requests in contiguous frames
-		if ( x.frame_ == (it->frame_ + it->persistence_) &&
+		if ( x.frame_ == (it->frame_ + pers2frames(it->persistence_) ) &&
 				x.start_ == it->start_ &&
 				x.range_ == it->range_ &&
 				x.direction_ == it->direction_ &&

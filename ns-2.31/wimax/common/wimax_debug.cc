@@ -222,7 +222,7 @@ WimaxDebug::print (WimshMshDsch* dsch, FILE* os, const char* hdr)
 	std::list<WimshMshDsch::AvlIE>::iterator avlIt;
 	fprintf (os, "%sAVAILABILITIES (%zd)\n", hdr, avl.size());
 	for ( avlIt = avl.begin() ; avlIt != avl.end() ; avlIt++ )
-		fprintf (os,"%sframe %3d start %3d range %3d dir %s pers %3d chan %2d serv %d\n",
+		fprintf (os,"%sframe %3d start %3d range %3d dir %s pers %1d chan %2d serv %d\n",
 				hdr, avlIt->frame_, avlIt->start_, avlIt->range_,
 				( avlIt->direction_ == 0 ) ? "NO" :
 				( avlIt->direction_ == 1 ) ? "TX" :
@@ -235,7 +235,7 @@ WimaxDebug::print (WimshMshDsch* dsch, FILE* os, const char* hdr)
 	std::list<WimshMshDsch::ReqIE>::iterator reqIt;
 	fprintf (os, "%sREQUESTS (%zd)\n", hdr, req.size());
 	for ( reqIt = req.begin() ; reqIt != req.end() ; reqIt++ )
-		fprintf (os, "%snode  %3d level %3d pers %3d serv %d\n",
+		fprintf (os, "%snode  %3d level %3d pers %1d serv %d\n",
 				hdr, reqIt->nodeId_, reqIt->level_, reqIt->persistence_, reqIt->service_);
 
 	// grants
@@ -244,7 +244,7 @@ WimaxDebug::print (WimshMshDsch* dsch, FILE* os, const char* hdr)
 	fprintf (os, "%sGRANTS/CONFIRMATIONS (%zd)\n", hdr, gnt.size());
 	for ( gntIt = gnt.begin() ; gntIt != gnt.end() ; gntIt++ ) {
 		fprintf (os, "%snode  %3d frame %3d start %3d range %3d dir %s "
-				"pers %3d chan %2d serv %d \n",
+				"pers %1d chan %2d serv %d \n",
 				hdr, gntIt->nodeId_, gntIt->frame_,
 				gntIt->start_, gntIt->range_,
 				( gntIt->fromRequester_ == true ) ? "CNF" : "GNT",

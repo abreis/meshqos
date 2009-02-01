@@ -96,7 +96,7 @@ protected:
 
 		// TODO: properly document these three
 		//! persistence of request received
-		unsigned char pers_in_;
+		WimshMshDsch::Persistence pers_in_;
 
 		//! level of request received (slots/frame)
 		unsigned int level_in_;
@@ -116,7 +116,7 @@ protected:
 			backlog_ = 0;
 			def_in_  = 0;
 			def_out_ = 0;
-			pers_in_ = 1;
+			pers_in_ = WimshMshDsch::FRAME1;
 			level_in_ = 0;
 			lastCnf_ = false;
 		}
@@ -449,7 +449,7 @@ private:
 	  do not want to update frames in the past, because we would overwrite
 	  information that will be used in the future (in a circular manner).
 	  */
-	void realPersistence (unsigned int start, unsigned char pers,
+	void realPersistence (unsigned int start, WimshMshDsch::Persistence pers,
 			unsigned int& realStart, unsigned int& range);
 
 	//! First-fit to grant bandwidth to a neighbor.

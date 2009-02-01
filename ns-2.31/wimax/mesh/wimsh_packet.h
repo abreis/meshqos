@@ -68,9 +68,11 @@ public:
 		//! Demand level (7 bits).				!!! set max slots per frame = 128;  -1bit
 		unsigned char level_;
 		//! Demand persistence (3 bits).
-		unsigned char persistence_;
+		Persistence persistence_;
 		//! Service Class (2 bits).             !!! +2bits
+		// TODO: change to enum var
 		unsigned char service_;
+		//! Reserved field (1 bit)
 		//bool reserved_;						!!! -1bit
 
 		//! Return the size (in bytes) of this IE.
@@ -88,7 +90,7 @@ public:
 		//! Direction (2 bits).
 		Direction direction_;
 		//! Persistence (3 bits).
-		unsigned char persistence_;
+		Persistence persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
 		//! Service Class (2 bits).	  	 !!! +2bits
@@ -112,7 +114,7 @@ public:
 		//! Direction (1 bit). True = from requester to granter. Otherwise, false.
 		bool fromRequester_;
 		//! Persistence (3 bits).
-		unsigned char persistence_;
+		Persistence persistence_;
 		//! Channel number (4 bits).
 		unsigned char channel_;
 		//! Service Class (2 bits).			!!! +2bits

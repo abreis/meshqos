@@ -243,7 +243,7 @@ WimshBwManagerDummy::recvMshDsch (WimshMshDsch* dsch)
 
 			// for each frame in the persistence
 			for ( unsigned int f = 0 ;
-					f < it->persistence_ ; f++ ) {
+					f < WimshMshDsch::pers2frames (it->persistence_) ; f++ ) {
 				unsigned int F = ( it->frame_ + f ) % HORIZON;
 
 				// for each minislot into the range
@@ -278,7 +278,7 @@ WimshBwManagerDummy::schedule (WimshMshDsch* dsch, unsigned int dst)
 		gnt.start_ = it->start_;
 		gnt.range_ = it->range_;
 		gnt.fromRequester_ = false;
-		gnt.persistence_ = 1;
+		gnt.persistence_ = WimshMshDsch::FRAME1;
 		gnt.channel_ = 0;
 
 		dsch->add (gnt);
