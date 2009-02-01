@@ -59,6 +59,7 @@ public:
 	enum Direction { UNAVAILABLE = 0, TX_AVL, RX_AVL, AVAILABLE };
 
 	//! QoS MSH-DSCH service type.
+	// TODO: this is non-standard with wimax::ServiceType
 	enum ServiceType { UGS, RTPS, NRTPS, BE , N_SERVICE_CALSS };
 
 	//! Request data structure (3 bytes).
@@ -264,17 +265,16 @@ public:
 			( p == FRAME128 ) ? 128 : UINT_MAX; }
 
 	//! Convert a number of frames into type Persistance.
-	// TODO: round up to nearest persistance if value is non-standard
-	// Decide on a suitable default
+	//! Non-standard values are rounded-up to the next persistence
+	// NOTE: will degrade into a UGS if n>128 (pers FOREVER)
 	static Persistence frames2pers (unsigned int n) {
 		return ( n == 0 ) ? CANCEL :
 			( n == 1 ) ? FRAME1 :
 			( n == 2 ) ? FRAME2 :
-			( n == 4 ) ? FRAME4 :
-			( n == 8 ) ? FRAME8 :
-			( n == 32 ) ? FRAME32 :
-			( n == 128 ) ? FRAME128 :
-			( n > 128 ) ? FOREVER : FRAME32; }
+			( n <= 4 ) ? FRAME4 :
+			( n <= 8 ) ? FRAME8 :
+			( n <= 32 ) ? FRAME32 :
+			( n <= 128 ) ? FRAME128 : FOREVER; }
 
 	//! Get the next persistence (Persistence++)
 	// NOTE: Should FRAME128 increment to FOREVER?
