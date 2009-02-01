@@ -51,36 +51,20 @@ protected:
 
 	//! Descriptor of neighbor information for bandwidth requesting/granting.
 	struct NeighDesc {
-		//! Cumulative size, in bytes, of the bandwidth requests received.
 		/*!
-		  This data structure is used when granting bandwidth to neighbors.
+		  These data structure are used when granting bandwidth to neighbors.
 		  */
+		//! Cumulative size, in bytes, of the bandwidth requests received.
 		unsigned int req_in_;
 		//! Cumulative size, in bytes, of the bandwidth grants sent.
-		/*!
-		  This data structure is used when granting bandwidth to neighbors.
-		  */
 		unsigned int gnt_in_;
 		//! Cumulative size, in bytes, of the bandwidth confirmations received.
-		/*!
-		  This data structure is used when granting bandwidth to neighbors.
-		  */
 		unsigned int cnf_in_;
-
 		//! Cumulative size, in bytes, of the bandwidth requests sent.
-		/*!
-		  :TODO: documentation
-		  */
 		unsigned int req_out_;
 		//! Cumulative size, in bytes, of the bandwidth grants received.
-		/*!
-		  :TODO: documentation
-		  */
 		unsigned int gnt_out_;
 		//! Cumulative size, in bytes, of the bandwidth confirmations sent.
-		/*!
-		  :TODO: documentation
-		  */
 		unsigned int cnf_out_;
 
 		//! True if we received a conf. from a node before we sent it a grant.
@@ -110,7 +94,8 @@ protected:
 		  */
 		unsigned int def_out_;
 
-		//! persistence of requste received
+		// TODO: properly document these three
+		//! persistence of request received
 		unsigned char pers_in_;
 
 		//! level of request received (slots/frame)
@@ -140,6 +125,11 @@ protected:
 	//! Array of neighbor descriptors for bandwidth requesting/granting.
 	std::vector< std::vector< NeighDesc > > neigh_;
 
+	/*
+	//! Active-list of neighbors descriptors for bandwidth regranting.
+	CircularList<unsigned int> regntActiveList_;
+	*/
+
 	//! Active-list of neighbor descriptors for bandwidth granting/requesting.
 	CircularList<wimax::LinkId> activeList_[wimax::N_SERV_CALSS];
 
@@ -150,7 +140,7 @@ protected:
 	  The first dimension is the neighbor index.
 	  The second dimension is the channel index.
 	  The third dimension is the frame index (modulo HORIZON).
-	  The four dimension is the slot index within a frame.
+	  The fourth dimension is the slot index within a frame.
 
 	  The last two dimensions are embedded into the Bitmap type,
 	  which is a vector of bitsets.
@@ -194,7 +184,7 @@ protected:
 	std::vector< Bitmap > self_tx_unavl_UGS_;
 	std::vector< Bitmap > self_tx_unavl_NRTPS_;
 
-	//! Two-dimension bitmap representing this node unavailabilities.
+	//! Two-dimension bitmap representing this node's unavailabilities.
 	/*!
 	  The bit busy_[F][S] is set (ie. true) if this node cannot
 	  receive/transmit in the minislot S of frame F.
@@ -222,7 +212,6 @@ protected:
 	  at the end of each frame.
 	  */
 	Bitmap unconfirmedSlots_;
-
 	Bitmap unconfirmedSlots_UGS_;
 	Bitmap unconfirmedSlots_NRTPS_;
 
@@ -230,8 +219,8 @@ protected:
 	//std::list<WimshMshDsch::GntIE> unconfirmed_;
 	std::vector< std::list<WimshMshDsch::GntIE> > unconfirmed_[2];
 
-	//! List of grants wating for sending
-	std::list<WimshMshDsch::GntIE> grantWating_[2];
+	//! List of grants waiting to be sent.
+	std::list<WimshMshDsch::GntIE> grantWaiting_[2];
 
 	//! List of pending availabilities to send out.
 	std::list<WimshMshDsch::AvlIE> availabilities_[2];
@@ -239,6 +228,7 @@ protected:
 	//! True if availabilities have to be advertised. Configured via Tcl.
 	bool avlAdvertise_;
 
+	// TODO: Document this
 	std::vector<bool> send_rtps_together_;
 
 	//! Regrant horizon offset, in frames. Set via Tcl. Default = 1.
@@ -287,6 +277,7 @@ protected:
 	//! Random number generator to pick up channel/frame/slot when granting.
 	RNG grantFitRng;
 
+	// TODO: Document this
 	RNG frameSpacing;
 
 	//! True if the starting channel is picked up randomly when granting.
@@ -304,6 +295,7 @@ protected:
 	//! Minimum grant size, in OFDM symbols, preamble not included. Default = 1.
 	unsigned int minGrant_;
 
+	// TODO: Document this
 	std::vector<unsigned int> request_UGS_;
 
 public:

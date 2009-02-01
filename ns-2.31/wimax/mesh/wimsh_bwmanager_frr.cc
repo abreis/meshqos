@@ -1024,14 +1024,14 @@ WimshBwManagerFairRR::availabilities (WimshMshDsch* dsch, unsigned int s)
 		}
 	}
 
-	// add old grants stored in grantWanting queue
-	while ( ! grantWating_[0].empty() ) {
+	// add old grants stored in grantWaiting_ queue
+	while ( ! grantWaiting_[0].empty() ) {
 		// if there is not enough space to add a pendig grant
 		if ( dsch->remaining() < WimshMshDsch::GntIE::size() ) break;
 
 		// get the first pendig grant
-		WimshMshDsch::GntIE gnt = grantWating_[0].front();
-		grantWating_[0].pop_front();
+		WimshMshDsch::GntIE gnt = grantWaiting_[0].front();
+		grantWaiting_[0].pop_front();
 
 		// add the grant to the MSH-DSCH message
 		dsch->add (gnt);
@@ -1262,12 +1262,12 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 			realGrantStart (ndx, gnt.frame_, gnt.start_, gnt.range_, gnt.channel_, gnt);
 
 			// add the grant to the MSH-DSCH message, if no room save it
-			// in grantWating_ list and transmit it on next opportunity
+			// in grantWaiting_ list and transmit it on next opportunity
 			if ( dsch->remaining() > WimshMshDsch::GntIE::size() &&
 					room == true)
 				dsch->add (gnt);
 			else
-				grantWating_[0].push_back (gnt);
+				grantWaiting_[0].push_back (gnt);
 
 			// set the granted slots as unavailable for reception
 			if ( s == wimax::UGS )
@@ -1518,14 +1518,13 @@ WimshBwManagerFairRR::confirm (WimshMshDsch* dsch, unsigned int n, unsigned int 
 			// collect the average confirmed grant size, in minislots
 			Stat::put ("wimsh_cnf_size", mac_->index(), gnt.range_);
 
-			// schedule the grant as a confirmation
-			// if no room save it
-			// in grantWating_ list and transmit it on next opportunity
+			// schedule the grant as a confirmation, if no room save it
+			// in grantWaiting_ list and transmit it on next opportunity
 			if ( dsch->remaining() > WimshMshDsch::GntIE::size() &&
 					room == true)
 				dsch->add (gnt);
 			else
-				grantWating_[0].push_back (gnt);
+				grantWaiting_[0].push_back (gnt);
 
 			// convert to the actual values of <frame, range>
 			unsigned int fs;  // frame start
