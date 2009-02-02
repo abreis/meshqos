@@ -53,9 +53,9 @@ WimshBwManager::WimshBwManager (WimshMac* m) : mac_ (m), timer_ (this)
 		for ( unsigned int j = 0 ; j < MAX_SLOTS ; j++ ) {
 			channel_[i][j]		= 0;
 			service_[i][j]		= 9;
-			dst_[i][j]			= 999;
-			src_[i][j]			= 999;
-			uncoordsch_[i][j]	= 999;
+			dst_[i][j]			= UINT_MAX;
+			src_[i][j]			= UINT_MAX;
+			uncoordsch_[i][j]	= UINT_MAX;
 		}
 	}
 
@@ -78,11 +78,11 @@ WimshBwManager::handle ()
 
 	bool status = true;				// tx = true, rx = false
 	bool new_status = true;												// REMOVE
-	WimaxNodeId  dst = 999;			// only meaningful with tx
+	WimaxNodeId  dst = UINT_MAX;			// only meaningful with tx
 	unsigned int channel = 0;		// channel identifier
 	unsigned int service = 9;		// traffic service class
-	unsigned int undsch = 999;
-	unsigned int new_undsch = 999;										// REMOVE
+	unsigned int undsch = UINT_MAX;
+	unsigned int new_undsch = UINT_MAX;										// REMOVE
 	unsigned int start;				// start minislot index of the next event
 	unsigned int range = 0;			// minislot range of the next event
 
@@ -145,14 +145,14 @@ WimshBwManager::handle ()
 		}
 	}
 
-	if ( undsch != 999 ) {
+	if ( undsch != UINT_MAX ) {
 		// create MSH-DSCH message on coordinator module and transmite at mac module
 		unsigned int ndx = mac_->neigh2ndx (undsch);
 		bool grant = ( unDschState_[ndx][F] == 1 ) ? true : false;
 		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_uncoordrange_ ) fprintf (stderr,
 				"(UncrdRng)!!!uncoordinated MSH-DSCH message range %d dst %d gnt %d \n",range, undsch , grant );
 		mac_->uncoordinated_opportunity (undsch, grant);
-	} else if ( status == true && undsch == 999 ) {
+	} else if ( status == true && undsch == UINT_MAX ) {
 		// set transmit mode on channel 0 towards dst
 		mac_->transmit (range, dst, channel, service);
 	} else {
@@ -191,10 +191,10 @@ WimshBwManager::invalidate (unsigned int F)
 			channel_[F][i] = 0;
 			grants_[F][i]  = 0;
 			service_[F][i] = 9;
-			dst_[F][i]     = 999;
-			src_[F][i]     = 999;
+			dst_[F][i]     = UINT_MAX;
+			src_[F][i]     = UINT_MAX;
 		}
-		uncoordsch_[F][i] = 999;
+		uncoordsch_[F][i] = UINT_MAX;
 	}
 }
 
