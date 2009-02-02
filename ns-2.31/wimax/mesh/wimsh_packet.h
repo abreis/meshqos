@@ -71,7 +71,7 @@ public:
 		//! Demand persistence (3 bits).
 		Persistence persistence_;
 		//! Service Class (2 bits).             !!! +2bits
-		// TODO: change to enum var
+		// TODO: change to wimax::ServiceClass
 		unsigned char service_;
 		//! Reserved field (1 bit)
 		//bool reserved_;						!!! -1bit

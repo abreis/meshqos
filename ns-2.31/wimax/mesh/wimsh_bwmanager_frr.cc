@@ -211,7 +211,7 @@ WimshBwManagerFairRR::initialize ()
 	for ( unsigned int ngh = 0 ; ngh < neighbors ; ngh++ ) {
 		neigh_[ngh].resize (4);
 		startHorizon_[ngh].resize (4);
-		nextFrame_[ngh].resize (4);
+		nextFrame_[ngh].resize (wimax::N_SERV_CALSS);
 		send_rtps_together_[ngh] = false;
 		for ( unsigned int i = 0 ; i < wimax::N_SERV_CALSS ; i++ ) {
 			startHorizon_[ngh][i] = true;
@@ -1317,14 +1317,14 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 			// request for UGS service
 			if ( s == wimax::UGS &&
-					startHorizon_[ndx][3] && reqTraffic) {
+					startHorizon_[ndx][wimax::UGS] && reqTraffic) {
 
 				// create a request IE
 				WimshMshDsch::ReqIE req;
 				req.nodeId_ = mac_->ndx2neigh (ndx);
 
-				// make new request of badwidth
-				nextFrame_[ndx][3] = mac_->frame() + 10000;    //!!!
+				// make new request of bandwidth
+				nextFrame_[ndx][wimax::UGS] = mac_->frame() + 10000;    //!!!
 				cbr = mac_->scheduler()->cbrQuocient (ndx, s);
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
 				//		"!!cbr nodeId %d ndx %d cbr %d\n",
@@ -1334,7 +1334,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				req.level_ = req_slots + 3;
 				if (req.level_ > mac_->phyMib()->slotPerFrame()) req.level_ = mac_->phyMib()->slotPerFrame();
 				req.persistence_ = WimshMshDsch::FRAME128;
-				startHorizon_[ndx][3] = false;
+				startHorizon_[ndx][wimax::UGS] = false;
 				req.service_ = 3;
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
 				//		"!!3 baixei o startHorizon_[3] %d nextFrame_[3] %d ndx %d\n",
@@ -1348,9 +1348,9 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				neigh_[ndx][s].req_out_ = mac_->slots2bytes (ndx, req.level_, true)
 						* WimshMshDsch::pers2frames(req.persistence_);
 
-			// rtPS requestes
+			// rtPS request
 			} else if ( s == wimax::RTPS &&
-					startHorizon_[ndx][2] && reqTraffic ) {
+					startHorizon_[ndx][wimax::RTPS] && reqTraffic ) {
 
 				// create a request IE
 				WimshMshDsch::ReqIE ie;
@@ -1371,19 +1371,19 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				// insert the IE into the MSH-DSCH message
 				dsch->add (ie);
 
-				nextFrame_[ndx][2] = mac_->frame() + 32;
+				nextFrame_[ndx][wimax::RTPS] = mac_->frame() + 32;
 				if ( WimaxDebug::enabled() ) fprintf (stderr,
 						"!!baixei o nextFrame_[2] %d ndx %d\n",
-							nextFrame_[ndx][2], ndx);
-				startHorizon_[ndx][2] = false;
+							nextFrame_[ndx][wimax::RTPS], ndx);
+				startHorizon_[ndx][wimax::RTPS] = false;
 
 				// update request out
 				neigh_[ndx][s].req_out_ = mac_->slots2bytes (ndx, ie.level_, true)
 						* WimshMshDsch::pers2frames(ie.persistence_);
 
-			// nrtPS requestes
+			// nrtPS request
 			} else if ( s == wimax::NRTPS &&
-					startHorizon_[ndx][1] && reqTraffic )  {
+					startHorizon_[ndx][wimax::NRTPS] && reqTraffic )  {
 
 				// create a request IE
 				WimshMshDsch::ReqIE ie;
@@ -1403,19 +1403,19 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				// insert the IE into the MSH-DSCH message
 				dsch->add (ie);
 
-				nextFrame_[ndx][1] = mac_->frame() + 32;
+				nextFrame_[ndx][wimax::NRTPS] = mac_->frame() + 32;
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
 				//		"!!nextFrame_[3] %d ndx %d\n", nextFrame_[ndx][3], ndx);
 
-				startHorizon_[ndx][1] = false;
+				startHorizon_[ndx][wimax::NRTPS] = false;
 
 				// update request out
 				neigh_[ndx][s].req_out_ = mac_->slots2bytes (ndx, ie.level_, true)
 						* WimshMshDsch::pers2frames(ie.persistence_);
 
-			// BE requestes
+			// BE request
 			} else if ( s == wimax::BE &&
-					startHorizon_[ndx][0] && reqTraffic) {
+					startHorizon_[ndx][wimax::BE] && reqTraffic) {
 
 				// create a request IE
 				WimshMshDsch::ReqIE ie;
@@ -1435,11 +1435,11 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				// insert the IE into the MSH-DSCH message
 				dsch->add (ie);
 
-				nextFrame_[ndx][0] = mac_->frame() + 32;
+				nextFrame_[ndx][wimax::BE] = mac_->frame() + 32;
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
 				//		"!!nextFrame_[0] %d ndx %d\n", nextFrame_[ndx][0], ndx);
 
-				startHorizon_[ndx][0] = false;
+				startHorizon_[ndx][wimax::BE] = false;
 
 				// update request out
 				neigh_[ndx][s].req_out_ = mac_->slots2bytes (ndx, ie.level_, true)

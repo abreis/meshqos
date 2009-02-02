@@ -60,7 +60,7 @@ protected:
 
 	  Note that there is the following (bad) trick. The elements in
 	  the channel_ array are initialized to 'zero' and those in the
-	  grants_ array to 'receive'(rx). Therefore, whenever a node does not
+	  grants_ array to 'receive'. Therefore, whenever a node does not
 	  send a confirmation (ie. it does not use that slot for transmission)
 	  and does not receive a confirmation addressed to itself (ie. it does
 	  not receive from a neighbor in that slot) then the slot is
@@ -76,25 +76,27 @@ protected:
 	std::vector< std::bitset<MAX_SLOTS> > grants_;
 	//! Array of vectors representing the grants' destinations.
 	std::vector< std::vector<WimaxNodeId> > dst_;
+	//! Array of vectors representing the grants' sources.
 	std::vector< std::vector<WimaxNodeId> > src_;
 	//! Array of vectors representing the channel identifiers.
 	std::vector< std::vector<unsigned int> > channel_;
 	//! Array of vectors representing the service class for each burst traffic.
 	std::vector< std::vector<unsigned char> > service_;
-	//! Two-dimension bitmap stores uncoordinated MSH-DSCH single slot tx opportunity
+	//! Array of vectors representing tx opportunities for uncoordinated MSH-DSCH.
+	// NOTE: couldn't this be a bitset?
 	std::vector< std::vector<unsigned int> > uncoordsch_;
 
 	//! Next slot to be served.
 	unsigned int lastSlot_;
 
+	// TODO: document the following four
 	//! turn on when able to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > startHorizon_;
-
 	//! store next frame opportunity to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > nextFrame_;
-
+	//! TODO: document
 	std::vector< std::vector<unsigned int> > unDschState_;
-
+	//!
 	std::vector<unsigned int> rtpsDschFrame_;
 
 public:
@@ -137,8 +139,9 @@ public:
 
 	//! TODO: Documentation
 	virtual void search_tx_slot (unsigned int ndx, unsigned int reqState) = 0;
-
-	unsigned int nextFrame_rtPS (unsigned int ndx) { return nextFrame_[ndx][2]; }
+	//!
+	unsigned int nextFrame_rtPS (unsigned int ndx)
+		{ return nextFrame_[ndx][wimax::RTPS]; }
 
 protected:
 	//! Invalidate any data structure of frame F (modulo HORIZON).
@@ -223,7 +226,7 @@ public:
 	//! Do nothing.
 	void backlog (WimaxNodeId, WimaxNodeId, unsigned char,
 			WimaxNodeId, unsigned int) { }
-	//! Do nothing.LinkId
+	//! Do nothing.
 	void backlog (WimaxNodeId nexthop, unsigned int bytes, unsigned int service ) { }
 	//! Do nothing.
 	void received (WimaxNodeId src, WimaxNodeId dst, unsigned char,
