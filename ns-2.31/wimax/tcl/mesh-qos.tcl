@@ -255,7 +255,7 @@ proc create_connections {} {
 	set cyclestop [expr $cyclestart + [lindex $opt(nflow) $flowid] ]
 
 	if { $opt(debuglevel) > 2 } {
-		puts "[3](cycle) flowid $flowid, service $servicename, start $cyclestart, stop $cyclestop"
+		puts "\[3\](cycle) flowid $flowid, service $servicename, start $cyclestart, stop $cyclestop"
 	}
 
 	for { set i $cyclestart } { $i < $cyclestop } { incr i } {
@@ -315,8 +315,8 @@ proc create_connections {} {
                 
 		# print some debug info about this flow
 		if { $opt(debuglevel) > 1 } {
-			puts "[2](flow) * creating flow $i ($src -> $dst) with priority $prio"
-			puts "[2](flow)   traffic = $traffic, sources = $nsources, service = $servicename"
+			puts "\[2\](flow) * creating flow $i ($src -> $dst) with priority $prio"
+			puts "\[2\](flow)   traffic = $traffic, sources = $nsources, service = $servicename"
 		}
 
       for { set j 0 } { $j < $nsources } { incr j } {
@@ -349,23 +349,23 @@ proc create_connections {} {
 getopt $argc $argv
 
 if { $opt(debuglevel) > 0 } {
-	puts "[1](info) run: $opt(run)"
-	puts "[1](info) duration: $opt(duration)"
-	puts "[1](info) warm: $opt(warm)"
-	puts "[1](info) statistics: $opt(out)"
-	puts "[1](info) topology: $opt(topology)"
-	puts "[1](info) nodes: $opt(n)"
+	puts "\[1\](info) run: $opt(run)"
+	puts "\[1\](info) duration: $opt(duration)"
+	puts "\[1\](info) warm: $opt(warm)"
+	puts "\[1\](info) statistics: $opt(out)"
+	puts "\[1\](info) topology: $opt(topology)"
+	puts "\[1\](info) nodes: $opt(n)"
 	if { $opt(topology) == "star" || $opt(topology) == "multiring" } {
-		puts "[1](info) branches: $opt(branches)"
+		puts "\[1\](info) branches: $opt(branches)"
 	}
 	if { $opt(channel) > 1 } {
-		puts "[1](info) channels: $opt(channel)"
+		puts "\[1\](info) channels: $opt(channel)"
 	}
-	puts "[1](info) bit_modelation: $opt(prfall)"
-	puts "[1](info) [lindex $opt(nflow) 0] UGS flow(s)"
-	puts "[1](info) [lindex $opt(nflow) 1] rtPS flow(s)"
-	puts "[1](info) [lindex $opt(nflow) 2] nrtPS flow(s)"
-	puts "[1](info) [lindex $opt(nflow) 3] BE flow(s)"
+	puts "\[1\](info) bit_modelation: $opt(prfall)"
+	puts "\[1\](info) [lindex $opt(nflow) 0] UGS flow(s)"
+	puts "\[1\](info) [lindex $opt(nflow) 1] rtPS flow(s)"
+	puts "\[1\](info) [lindex $opt(nflow) 2] nrtPS flow(s)"
+	puts "\[1\](info) [lindex $opt(nflow) 3] BE flow(s)"
 	#puts "cbr_rate:$opt(cbr-rate)" 
 }
 
