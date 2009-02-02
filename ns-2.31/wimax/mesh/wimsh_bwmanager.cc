@@ -76,15 +76,13 @@ WimshBwManager::handle ()
 	const unsigned int F = mac_->frame() % HORIZON;        // alias
 	const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
 
-	bool status = true;				// tx = true, rx = false
-	bool new_status = true;												// REMOVE
-	WimaxNodeId  dst = UINT_MAX;			// only meaningful with tx
-	unsigned int channel = 0;		// channel identifier
-	unsigned int service = 9;		// traffic service class
+	bool status = true;       // tx = true, rx = false
+	WimaxNodeId  dst = UINT_MAX;     // only meaningful with tx
+	unsigned int channel = 0; // channel identifier
+	unsigned int start;       // start minislot index of the next event
+	unsigned int range = 0;   // minislot range of the next event
+	unsigned int service = wimax::N_SERV_CALSS;		// traffic service class
 	unsigned int undsch = UINT_MAX;
-	unsigned int new_undsch = UINT_MAX;										// REMOVE
-	unsigned int start;				// start minislot index of the next event
-	unsigned int range = 0;			// minislot range of the next event
 
 	// search for next frame to transmit requests (turn on bwmanager_frr flags)
 	// these frames are assigned at end of request procedure in bwmanager_frr
@@ -128,12 +126,10 @@ WimshBwManager::handle ()
 							undsch, lastSlot_ );
 
 		} else {
-			    new_status = grants_[F][lastSlot_];
-				new_undsch = uncoordsch_[F][lastSlot_];
 				if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
-						"(BwMgr)!  status %u dst %d service %d src %d channel %d undsch %d slot %d\n", new_status,
+						"(BwMgr)!  status %u dst %d service %d src %d channel %d undsch %u slot %d\n", (bool)grants_[F][lastSlot_],
 							dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
-								new_undsch, lastSlot_ );
+							(unsigned int)uncoordsch_[F][lastSlot_], lastSlot_ );
 
 			if ( channel_[F][lastSlot_] == channel && uncoordsch_[F][lastSlot_] == undsch &&
 				  grants_[F][lastSlot_] == status &&
