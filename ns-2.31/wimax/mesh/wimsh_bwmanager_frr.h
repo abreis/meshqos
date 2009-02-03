@@ -229,6 +229,8 @@ protected:
 	bool avlAdvertise_;
 
 	// TODO: Document this
+	// AFAIK, this is a vector of length 'ndx', where positions are marked as True when
+	// a search_tx_slot() fails to reserve slots for an uncoord-DSCH to destination 'ndx'
 	std::vector<bool> send_rtps_together_;
 
 	//! Regrant horizon offset, in frames. Set via Tcl. Default = 1.
@@ -358,6 +360,13 @@ public:
 		 */
 	int command (int argc, const char*const* argv);
 
+	/*!
+	 * This routine tries to allocate minislots for the transmission of uncoordinated
+	 * MSH-DSCH messages, required for the low latency of rtPS flows. Internally, the
+	 * number of slots to attempt to reserve and the number of frames to look ahead
+	 * for reservation are configurable.
+	 * reqState: '0' => Grant ; '1' => Grant_Confirmation // TODO: Confirm this
+	 */
 	void search_tx_slot (unsigned int ndx, unsigned int reqState);
 
 protected:
