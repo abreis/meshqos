@@ -201,7 +201,7 @@ protected:
 
 	//! Two-dimension bitmap representing the slots unconfirmed by this node.
 	/*!
-	  Updated when a granted addressed to this node is received.
+	  Updated when a grant addressed to this node is received.
 	  Used to confirm only minislots that have not been reserved
 	  by other nodes. As soon as slot is confirmed, it is marked as
 	  busy (ie. the corresponding bit in busy_ is set to true) so that
@@ -278,9 +278,6 @@ protected:
 
 	//! Random number generator to pick up channel/frame/slot when granting.
 	RNG grantFitRng;
-
-	// TODO: Document this
-	RNG frameSpacing;
 
 	//! True if the starting channel is picked up randomly when granting.
 	bool grantFitRandomChannel_;
@@ -365,7 +362,7 @@ public:
 	 * MSH-DSCH messages, required for the low latency of rtPS flows. Internally, the
 	 * number of slots to attempt to reserve and the number of frames to look ahead
 	 * for reservation are configurable.
-	 * reqState: '0' => Grant ; '1' => Grant_Confirmation // TODO: Confirm this
+	 * reqState: '0' => Request ; '1' => Grant_Confirmation // TODO: Confirm this
 	 */
 	void search_tx_slot (unsigned int ndx, unsigned int reqState);
 
