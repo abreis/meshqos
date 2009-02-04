@@ -294,9 +294,6 @@ protected:
 	//! Minimum grant size, in OFDM symbols, preamble not included. Default = 1.
 	unsigned int minGrant_;
 
-	// TODO: Document this
-	std::vector<unsigned int> request_UGS_;
-
 public:
 	//! Create an empty bandwidth manager.
 	WimshBwManagerFairRR (WimshMac* m);
