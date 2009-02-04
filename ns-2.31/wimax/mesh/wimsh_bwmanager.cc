@@ -88,67 +88,83 @@ WimshBwManager::handle ()
 	// these frames are assigned at end of request procedure in bwmanager_frr
 	for ( unsigned int ngh = 0 ; ngh < mac_->nneighs() ; ngh++ ) {
 		for ( unsigned int s = 0 ; s < wimax::N_SERV_CALSS ; s++ ) {
-			if ( s == 2 ) continue;
+			// skip this cycle for rtPS
+			if ( s == wimax::RTPS ) continue;
+			/*
+			 * If this frame is marked in nextFrame_ as a frame to transmit requests
+			 * for service 's', set the corresponding bit in startHorizon_ as true
+			 */
 			if ( mac_->frame() == nextFrame_[ngh][s] ) {
 					startHorizon_[ngh][s] = true;
 			}
 		}
 
-		if ( mac_->frame() == nextFrame_[ngh][2] && mac_->frame() > 0 && lastSlot_ == 0) {
+		// TODO: Document
+		/*
+		 * If this frame is for rtPS requests, ...
+		 * Search for an opportunity to send an uncoordinated DSCH Request IE to node 'ngh'
+		 * Mark this neighbour as able to transmit a scheduling message
+		 * unDschState_?
+		 */
+		if ( mac_->frame() == nextFrame_[ngh][wimax::RTPS] && mac_->frame() > 0 && lastSlot_ == 0) {
 			search_tx_slot (ngh, 0);
-			startHorizon_[ngh][2] = true;
+			startHorizon_[ngh][wimax::RTPS] = true;
 			unDschState_[ngh][F] = 0;
 		}
 
+		// TODO: Document
 		if ( mac_->frame() == rtpsDschFrame_[ngh] && mac_->frame() > 0 && lastSlot_ == 0) {
-			unsigned int state = unDschState_[ngh][F];
-			search_tx_slot (ngh, state);
+			search_tx_slot (ngh, unDschState_[ngh][F]);
 		}
 	}
 
-	// the loop below starts from the next available slot from the last call
-	// and goes on until either the data subframe ends, or there is a
-	// change in the mode (tx/rx) or destination node (if tx) or channel
-
+	/*
+	 * The loop below starts from the next available slot from the last call
+	 * and goes on until either the data subframe ends, or there is a
+	 * change in the mode (tx/rx) or destination node (if tx) or channel.
+	 * When it's finished, 'range' represents a range of slots
+	 * [lastSlot_ - range, lastSlot_] with the same characteristics
+	 */
 	for ( ; lastSlot_ < N ; lastSlot_++ ) {
-		if ( range == 0 ) {
-			status = grants_[F][lastSlot_];
-			undsch = uncoordsch_[F][lastSlot_];
-			if ( status == true ) {
-				dst = dst_[F][lastSlot_];
-				service = service_[F][lastSlot_]; }
-			channel = channel_[F][lastSlot_];
+		if ( range == 0 ) { // first run
+			status = grants_[F][lastSlot_]; 		// get this slot's direction (tx/rx)
+			undsch = uncoordsch_[F][lastSlot_];		// get uncoordDSCH reservation
+			if ( status == true ) { 				// if (tx)
+				dst = dst_[F][lastSlot_]; 				// get destination of slot
+				service = service_[F][lastSlot_]; } 	// get service for slot
+			channel = channel_[F][lastSlot_]; 		// get transmission channel
 			start = lastSlot_;
 			range = 1;
 			if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
-					"(BwMgr)!1 status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status,
+					"[BWmgr] 1st status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status,
 						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
 							undsch, lastSlot_ );
-
 		} else {
-				if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
-						"(BwMgr)!  status %u dst %d service %d src %d channel %d undsch %u slot %d\n", (bool)grants_[F][lastSlot_],
-							dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
-							(unsigned int)uncoordsch_[F][lastSlot_], lastSlot_ );
+			if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
+					"[BWmgr] grant %u dst %d service %d src %d channel %d undsch %u slot %d\n", grants_[F][lastSlot_]?1:0,
+						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
+						uncoordsch_[F][lastSlot_], lastSlot_ );
 
+			// Conditions: same channel, unDSCH, grant status,
+			// and 'direction=rx or (direction=tx & same dst & same service)'
 			if ( channel_[F][lastSlot_] == channel && uncoordsch_[F][lastSlot_] == undsch &&
-				  grants_[F][lastSlot_] == status &&
-				  ( ( status == true && dst_[F][lastSlot_] == dst &&
-						service_[F][lastSlot_] == service ) ||
-							( status == false ) )
-				) ++range;
+					grants_[F][lastSlot_] == status && ( ( status == true && dst_[F][lastSlot_] == dst &&
+							service_[F][lastSlot_] == service ) || ( status == false ) ) )
+			{ ++range; }
 			else break;
 		}
 	}
 
-	if ( undsch != UINT_MAX ) {
-		// create MSH-DSCH message on coordinator module and transmite at mac module
-		unsigned int ndx = mac_->neigh2ndx (undsch);
-		bool grant = ( unDschState_[ndx][F] == 1 ) ? true : false;
+	if ( undsch != UINT_MAX ) { // if this slot range is marked for uncoordinated DSCH
+		unsigned int ndx = mac_->neigh2ndx (undsch); // get the local node identifier
+		bool grant = ( unDschState_[ndx][F] == 1 )?1:0; // unDschState?
 		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_uncoordrange_ ) fprintf (stderr,
-				"(UncrdRng)!!!uncoordinated MSH-DSCH message range %d dst %d gnt %d \n",range, undsch , grant );
+				"[BWmgr] uncoordinated MSH-DSCH message range %d dst %d gnt %d \n", range, undsch , grant );
+
+		// create an MSH-DSCH message on coordinator module and transmit at mac module
 		mac_->uncoordinated_opportunity (undsch, grant);
-	} else if ( status == true && undsch == UINT_MAX ) {
+
+	} else if ( status == true ) {
 		// set transmit mode on channel 0 towards dst
 		mac_->transmit (range, dst, channel, service);
 	} else {
@@ -156,7 +172,7 @@ WimshBwManager::handle ()
 		mac_->receive (channel);
 	}
 
-	// if the whole frame has been considered, then the timer is set to
+	// if the whole frame has been considered, then set the timer to
 	// expire at the beginning of the next data subframe
 
 	if ( lastSlot_ == N ) {
@@ -182,7 +198,7 @@ void
 WimshBwManager::invalidate (unsigned int F)
 {
 	for ( unsigned int i = 0 ; i < MAX_SLOTS ; i++ ) {
-		if ( service_[F][i] == 3 ) { }
+		if ( service_[F][i] == wimax::UGS ) { } // keep UGS entries on the current frame
 		else {
 			channel_[F][i] = 0;
 			grants_[F][i]  = 0;

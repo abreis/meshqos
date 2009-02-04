@@ -52,9 +52,8 @@ protected:
 	//! Timer to schedule bandwidth manager events.
 	TTimer<WimshBwManager> timer_;
 
-   //! Array of bit maps representing granted minislots within frames.
-   /*!
-     When the minislot is not granted for transmission, the node
+   /*! Array of bit maps representing granted minislots within frames.
+      When the minislot is not granted for transmission, the node
 	  moves to receive mode. The channel used for both reception and
 	  transmission is specified in the channel_ array.
 
@@ -83,7 +82,7 @@ protected:
 	//! Array of vectors representing the service class for each burst traffic.
 	std::vector< std::vector<unsigned char> > service_;
 	//! Array of vectors representing tx opportunities for uncoordinated MSH-DSCH.
-	// NOTE: couldn't this be a bitset?
+	// NOTE: couldn't this be a std::vector< Bitmap >?
 	std::vector< std::vector<unsigned int> > uncoordsch_;
 
 	//! Next slot to be served.
