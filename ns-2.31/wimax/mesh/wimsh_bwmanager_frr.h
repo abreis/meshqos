@@ -317,10 +317,10 @@ public:
 			WimaxNodeId nexthop, unsigned int bytes);
 
 	//! We have some new data to send out on a link.
-	void backlog (WimaxNodeId nexthop, unsigned int bytes, unsigned int service);
+	void backlog (WimaxNodeId nexthop, unsigned int bytes, unsigned int serv);
 
 	//! We sent out some data on a link (i.e. negative backlog).
-	void sent (WimaxNodeId nexthop, unsigned int bytes, unsigned int service_class);
+	void sent (WimaxNodeId nexthop, unsigned int bytes, unsigned int serv);
 
 	//! We received some new data addressed to this node.
 	void received (WimaxNodeId src, WimaxNodeId dst, unsigned char prio,
@@ -418,16 +418,16 @@ private:
 	  - update the status of the cnf_out_ data structure
 	  - set the minislots reserved for transmission at this node, which
 	    will be used by the handle() function to trigger the packet
-		 scheduler at the MAC layer. Both self_tx_unavl_ and self_tx_unavl_
+		 scheduler at the MAC layer. Both self_tx_unavl_ and self_rx_unavl_
 		 are updated
 
      Note that the cnf_out_ data structure is updated with the number
 	  of minislots actually confirmed which will be used for transmission.
 	  */
-	void confirm (WimshMshDsch* dsch, unsigned int n, unsigned int serv_class);
+	void confirm (WimshMshDsch* dsch, unsigned int nodeid, unsigned int serv);
 
 	//! Advertise pending availabilities.
-	void availabilities (WimshMshDsch* dsch, unsigned int s);
+	void availabilities (WimshMshDsch* dsch, unsigned int serv);
 
 	//! Request/grant bandwidth.
 	/*!
@@ -441,8 +441,23 @@ private:
 	  The granted minislots are marked as unavailable for reception.
 	  The amount of granted minislots are udpated.
 	  */
-	void requestGrant (WimshMshDsch* dsch,
-			unsigned int ndx, unsigned int s);
+	void requestGrant (WimshMshDsch* dsch, unsigned int ndx, unsigned int serv);
+
+	//! Regrant as much as possible unconfirmed bandwidth.
+	/*!
+	  Bandwidth is regranted on a round-robin fashion. If it is not possible
+	  to regrant bandwidth to a neighbor, then the behavior depends on the
+	  someFairness_ flag. If true, regranting stops immediately, and
+	  next regranting will begin from the current neighbor. On the other
+	  hand, if it is false, the neighbor is skipped and regranting continues
+	  over the remaining neighbors until either none of them can be
+	  served or there is not any more spare room in the MSH-DSCH message.
+
+	  In any case, the gnt_in_ counter for this neighbor is not updated.
+	  In other words, the latter counts the bytes that have been granted
+	  the first time only.
+	  */
+	//void regrant (WimshMshDsch* dsch);
 
 	//! Return the real number of frames for which the persistence is relevant.
 	/*!
@@ -474,6 +489,7 @@ private:
 		bool& room, bool& frame_room, grantFitDesc& status,
 		unsigned int serv_class, WimshMshDsch* dsch);
 
+	//! TODO: Document realGrantStart
 	void WimshBwManagerFairRR::realGrantStart (unsigned int ndx,
 		unsigned int gframe, unsigned char gstart,
 		unsigned char grange, unsigned char gchannel, WimshMshDsch::GntIE& gnt);
@@ -485,7 +501,7 @@ private:
 	  */
 	void confFit (unsigned int f, unsigned int mstart,
 			unsigned int mrange, WimshMshDsch::GntIE& gnt, bool& room,
-				unsigned int serv_class, WimshMshDsch* dsch);
+				unsigned int serv, WimshMshDsch* dsch);
 
 	//! Get the interval between two consecutive control opportunities in frames.
 	unsigned int handshake (WimaxNodeId x) {
@@ -498,7 +514,7 @@ private:
 		return (unsigned int) (ceil(wm_.weight (ndx, dir) * roundDuration_)); }
 
 	//! Debug function. Print out  RR data structures.
-	void printDataStructures (FILE* os, WimshMshDsch* dsch);
+	void printDataStructures (FILE* os);
 };
 
 
