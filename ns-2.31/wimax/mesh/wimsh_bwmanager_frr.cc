@@ -209,8 +209,8 @@ WimshBwManagerFairRR::initialize ()
 	nextFrame_.resize (neighbors);
 	send_rtps_together_.resize (neighbors);
 	for ( unsigned int ngh = 0 ; ngh < neighbors ; ngh++ ) {
-		neigh_[ngh].resize (4);
-		startHorizon_[ngh].resize (4);
+		neigh_[ngh].resize (wimax::N_SERV_CALSS);
+		startHorizon_[ngh].resize (wimax::N_SERV_CALSS);
 		nextFrame_[ngh].resize (wimax::N_SERV_CALSS);
 		send_rtps_together_[ngh] = false;
 		for ( unsigned int i = 0 ; i < wimax::N_SERV_CALSS ; i++ ) {
@@ -284,7 +284,7 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 	if ( WimaxDebug::trace("WBWM::recvMshDsch") ) fprintf (stderr,
 			"%.9f WBWM::recvMshDsch[%d]\n", NOW, mac_->nodeId());
 
-	rcvAvailabilities(dsch);			// order changed!!!
+	rcvAvailabilities(dsch);	// NOTE: why are we interpreting avlIEs before grantIEs now?
 	rcvGrants(dsch);
 	rcvRequests(dsch);
 }
@@ -292,141 +292,170 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 void
 WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 {
-	bool uncrdDSCH = ( dsch->reserved() ) ? true : false;
-
+	// true if we're interpreting an uncoordinated DSCH's grants
+	bool uncrdDSCH = dsch->reserved();
+	// ?
 	bool rcvCnfs = false;
 
 	// get the local identifier of the node who sent this MSH-DSCH
 	unsigned int ndx = mac_->neigh2ndx (dsch->src());
 
-	// get the index of the neighbor who sent this message
-	//unsigned int src_ndx = mac_->neigh2ndx (dsch->src());
+	// in any case we set the rcvCnf_ flag to true, so that the grant()
+	// function will grant any unconfirmed bandwidth with a higher
+	// priority than that of "fresh" bandwidth grants
+	if ( uncrdDSCH )
+		neigh_[ndx][wimax::RTPS].rcvCnf_ = true;
+	else
+		for ( unsigned int j = 0 ; j < wimax::N_SERV_CALSS ; j++) {
+			if ( j == wimax::RTPS ) continue;
+			neigh_[ndx][j].rcvCnf_ = true;
+		}
 
+	// get the list of grants/confirmations
+	std::list<WimshMshDsch::GntIE>& gnt = dsch->gnt();
 
-		// in any case we set the rcvCnf_ flag to true, so that the grant()
-		// function will grant any unconfirmed bandwidth with a higher
-		// priority than that of "fresh" bandwidth grants
-		if ( uncrdDSCH )
-			neigh_[ndx][wimax::RTPS].rcvCnf_ = true;
-		else
-			for ( unsigned int j = 0 ; j < wimax::N_SERV_CALSS ; j++) {
-				if ( j == wimax::RTPS ) continue;
-				neigh_[ndx][j].rcvCnf_ = true;
+	std::list<WimshMshDsch::GntIE>::iterator it;
+	for ( it = gnt.begin() ; it != gnt.end() ; ++it ) {
+		// grant service class
+		unsigned int s = it->service_;
+
+		//
+		// grant
+		//
+
+		// if this grant is addressed to us, we first schedule a confirmation
+		// message to be advertised as soon as possible by this node,
+		// then mark the slots as unconfirmed unavailable
+		// moreover, we update the amount of granted bandwidth
+		if ( it->fromRequester_ == false && it->nodeId_ == mac_->nodeId() ) {
+
+			// schedule the confirmation to be sent asap
+			// modify the destination NodeID and the grant direction
+			it->nodeId_ = dsch->src();
+			it->fromRequester_ = true;
+
+			// add the IE to the list of unconfirmed grants
+			if ( uncrdDSCH )
+				unconfirmed_[1][ndx].push_back (*it);
+			else
+				unconfirmed_[0][0].push_back (*it);
+
+			// number of frames over which the grant spans
+			// we assume that bandwidth is never granted in the past         !!!!
+			unsigned int frange = WimshMshDsch::pers2frames(it->persistence_);
+
+			if ( s == 3 )
+				setSlots (unconfirmedSlots_UGS_, it->frame_, frange,
+						it->start_, it->range_, true);
+			else {
+				if ( s == wimax::NRTPS ) {
+					unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
+
+					setSlots (unconfirmedSlots_NRTPS_, it->frame_, frange,
+							it->start_, slots, true);
+					if ( WimaxDebug::enabled() ) fprintf (stderr,
+						"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+							it->frame_, it->start_, slots);
+				}
+
+				setSlots (unconfirmedSlots_, it->frame_, frange,
+						it->start_, it->range_, true);
 			}
 
-		// get the list of grants/confirmations
-		std::list<WimshMshDsch::GntIE>& gnt = dsch->gnt();
+			// update the amount of bytes granted from this node
+			neigh_[ndx][s].gnt_out_ +=
+				frange * mac_->slots2bytes (ndx, it->range_, true);
+			Stat::put ( "wimsh_gnt_out", mac_->index(),
+				frange * mac_->slots2bytes (ndx, it->range_, true) );
 
-		std::list<WimshMshDsch::GntIE>::iterator it;
-		for ( it = gnt.begin() ; it != gnt.end() ; ++it ) {
+			// we enforce the number of granted bytes to be smaller than
+			// that of requested bytes
+			neigh_[ndx][s].gnt_out_ =
+				( neigh_[ndx][s].gnt_out_ < neigh_[ndx][s].req_out_ ) ?
+				neigh_[ndx][s].gnt_out_ : neigh_[ndx][s].req_out_;      // XXX
 
-		// grant service class
-			unsigned int s = it->service_;
+			// schedule uncoordinated MSH-DSCH confirmation response
+				//mac_->bwmanager()->search_tx_slot (ndx, false);
+				if ( s == wimax::RTPS ) {
+					rtpsDschFrame_[ndx] = mac_->frame() + 1;
+					unDschState_[ndx][(mac_->frame() + 1) % HORIZON] = 2;
+					if ( WimaxDebug::enabled() ) fprintf (stderr,
+							"rcvGrants enviei uma msg de resposta do servico 2 nodeId %d ndx %d\n",
+						mac_->nodeId(),ndx);
+				}
+		}
+
+		// if this grant is not addressed to us, then add a pending availability
+		// and update the bandwidth grant/confirm data structures so that:
+		// - we will not grant bandwidth to the requester on any channel
+		// - we will not grant bandwidth to the granter's neighbors on the
+		//   same channel of this grant
+		// - we will not confirm bandwidth on the same channel of this grant
+		if ( it->fromRequester_ == false && it->nodeId_ != mac_->nodeId() ) {
 
 			//
-			// grant
+			// create a new availability and add it to the pending list
 			//
 
-			// if this grant is addressed to us, we first schedule a confirmation
-			// message to be advertised as soon as possible by this node,
-			// then mark the slots as unconfirmed unavailable
-			// moreover, we update the amount of granted bandwidth
-			if ( it->fromRequester_ == false && it->nodeId_ == mac_->nodeId() ) {
+			WimshMshDsch::AvlIE avl;
+			avl.frame_ = it->frame_;
+			avl.start_ = it->start_;
+			avl.range_ = it->range_;
+			avl.direction_ = WimshMshDsch::UNAVAILABLE;
+			avl.persistence_ = it->persistence_;
+			avl.channel_ = it->channel_;
+			avl.service_ = it->service_;
 
-				// schedule the confirmation to be sent asap
-				// modify the destination NodeID and the grant direction
-				it->nodeId_ = dsch->src();
-				it->fromRequester_ = true;
+			// push the new availability into the pending list
+			if ( uncrdDSCH )
+				availabilities_[1].push_back (avl);
+			else
+				availabilities_[0].push_back (avl);
 
-				// add the IE to the list of unconfirmed grants
-				if ( uncrdDSCH )
-					unconfirmed_[1][ndx].push_back (*it);
-				else
-					unconfirmed_[0][0].push_back (*it);
+			//
+			// the granter is (not) able to receive data from this node while
+			// it is receiving data from any of its neighbors.
+			// Thus, we mark the granted slots as unavailable on all channels
+			//
 
-				// number of frames over which the grant spans
-				// we assume that bandwidth is never granted in the past         !!!!
-				unsigned int frange = WimshMshDsch::pers2frames(it->persistence_);
+			// number of frames over which the grant spans
+			// we assume that bandwidth is never granted in the past
+			unsigned int frange = WimshMshDsch::pers2frames(it->persistence_);
 
-				if ( s == 3 )
-					setSlots (unconfirmedSlots_UGS_, it->frame_, frange,
+			// set the minislots as unavailable to transmit to granter
+			for ( unsigned int ch = 0 ; ch < mac_->nchannels() ; ch++ ) {
+				if ( s == 3 ) {
+					setSlots (neigh_tx_unavl_UGS_[ndx][ch], it->frame_, frange,
 							it->start_, it->range_, true);
-				else {
+				} else {
 					if ( s == wimax::NRTPS ) {
 						unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
 
-						setSlots (unconfirmedSlots_NRTPS_, it->frame_, frange,
+						setSlots (neigh_tx_unavl_NRTPS_[ndx][ch], it->frame_, frange,
 								it->start_, slots, true);
 						if ( WimaxDebug::enabled() ) fprintf (stderr,
 							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
 								it->frame_, it->start_, slots);
 					}
 
-					setSlots (unconfirmedSlots_, it->frame_, frange,
+					setSlots (neigh_tx_unavl_[ndx][ch], it->frame_, frange,
 							it->start_, it->range_, true);
 				}
-
-				// update the amount of bytes granted from this node
-				neigh_[ndx][s].gnt_out_ +=
-					frange * mac_->slots2bytes (ndx, it->range_, true);
-				Stat::put ( "wimsh_gnt_out", mac_->index(),
-					frange * mac_->slots2bytes (ndx, it->range_, true) );
-
-				// we enforce the number of granted bytes to be smaller than
-				// that of requested bytes
-				neigh_[ndx][s].gnt_out_ =
-					( neigh_[ndx][s].gnt_out_ < neigh_[ndx][s].req_out_ ) ?
-					neigh_[ndx][s].gnt_out_ : neigh_[ndx][s].req_out_;      // XXX
-
-				// schedule uncoordinated MSH-DSCH confirmation response
-					//mac_->bwmanager()->search_tx_slot (ndx, false);
-					if ( s == wimax::RTPS ) {
-						rtpsDschFrame_[ndx] = mac_->frame() + 1;
-						unDschState_[ndx][(mac_->frame() + 1) % HORIZON] = 2;
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"rcvGrants enviei uma msg de resposta do servico 2 nodeId %d ndx %d\n",
-							mac_->nodeId(),ndx);
-					}
+				setSlots (service_, it->frame_, frange,
+						it->start_, it->range_, s);
 			}
 
-			// if this grant is not addressed to us, then add a pending availability
-			// and update the bandwidth grant/confirm data structures so that:
-			// - we will not grant bandwidth to the requester on any channel
-			// - we will not grant bandwidth to the granter's neighbors on the
-			//   same channel of this grant
-			// - we will not confirm bandwidth on the same channel of this grant
-			if ( it->fromRequester_ == false && it->nodeId_ != mac_->nodeId() ) {
+			//
+			// if the requester is one of our neighbors, then we will not
+			// be able to grant bandwidth to it (if requested) into the
+			// set of granted slots on any channel
+			//
 
-				//
-				// create a new availability and add it to the pending list
-				//
+			if ( mac_->topology()->neighbors (it->nodeId_, mac_->nodeId()) ) {
+				// index of the requester
+				const unsigned int ndx = mac_->neigh2ndx (it->nodeId_);
 
-				WimshMshDsch::AvlIE avl;
-				avl.frame_ = it->frame_;
-				avl.start_ = it->start_;
-				avl.range_ = it->range_;
-				avl.direction_ = WimshMshDsch::UNAVAILABLE;
-				avl.persistence_ = it->persistence_;
-				avl.channel_ = it->channel_;
-				avl.service_ = it->service_;
-
-				// push the new availability into the pending list
-				if ( uncrdDSCH )
-					availabilities_[1].push_back (avl);
-				else
-					availabilities_[0].push_back (avl);
-
-				//
-				// the granter is (not) able to receive data from this node while
-				// it is receiving data from any of its neighbors.
-				// Thus, we mark the granted slots as unavailable on all channels
-				//
-
-				// number of frames over which the grant spans
-				// we assume that bandwidth is never granted in the past
-				unsigned int frange = WimshMshDsch::pers2frames(it->persistence_);
-
-				// set the minislots as unavailable to transmit to granter
+				// set the minislots as unavailable to transmit to requester
 				for ( unsigned int ch = 0 ; ch < mac_->nchannels() ; ch++ ) {
 					if ( s == 3 ) {
 						setSlots (neigh_tx_unavl_UGS_[ndx][ch], it->frame_, frange,
@@ -448,102 +477,44 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 					setSlots (service_, it->frame_, frange,
 							it->start_, it->range_, s);
 				}
+			}
 
-				//
-				// if the requester is one of our neighbors, then we will not
-				// be able to grant bandwidth to it (if requested) into the
-				// set of granted slots on any channel
-				//
+			//
+			// all neighbors of the granter will not be able to transmit
+			// in the set of granted slots on the specified channel, which
+			// is thus set as unavailable for transmission for all the
+			// neighbors of the granter which are also our neighbors
+			// ???? what's the difference for this condition to taht one below
+			//
 
-				if ( mac_->topology()->neighbors (it->nodeId_, mac_->nodeId()) ) {
-					// index of the requester
-					const unsigned int ndx = mac_->neigh2ndx (it->nodeId_);
+			std::vector<WimaxNodeId> gntNeigh;  // array of the granter's neighbors
+			mac_->topology()->neighbors (dsch->src(), gntNeigh); // retrieve them
+			for ( unsigned int ngh = 0 ; ngh < gntNeigh.size() ; ngh++ ) {
 
-					// set the minislots as unavailable to transmit to requester
-					for ( unsigned int ch = 0 ; ch < mac_->nchannels() ; ch++ ) {
-						if ( s == 3 ) {
-							setSlots (neigh_tx_unavl_UGS_[ndx][ch], it->frame_, frange,
-									it->start_, it->range_, true);
-						} else {
-							if ( s == wimax::NRTPS ) {
-								unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
+				// skip the requester, which has been already managed,
+				// and nodes which are not our neighbors
+				if ( gntNeigh[ngh] == it->nodeId_ ||
+					  ! mac_->topology()->neighbors (gntNeigh[ngh], mac_->nodeId()) )
+					continue;
 
-								setSlots (neigh_tx_unavl_NRTPS_[ndx][ch], it->frame_, frange,
-										it->start_, slots, true);
-								if ( WimaxDebug::enabled() ) fprintf (stderr,
-									"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-										it->frame_, it->start_, slots);
-							}
+				// otherwise, set the granted slots as unavailable
+				const unsigned int ndx = mac_->neigh2ndx (gntNeigh[ngh]); // index
 
-							setSlots (neigh_tx_unavl_[ndx][ch], it->frame_, frange,
-									it->start_, it->range_, true);
-						}
-						setSlots (service_, it->frame_, frange,
-								it->start_, it->range_, s);
-					}
-				}
-
-				//
-				// all neighbors of the granter will not be able to transmit
-				// in the set of granted slots on the specified channel, which
-				// is thus set as unavailable for transmission for all the
-				// neighbors of the granter which are also our neighbors
-				// ???? what's the difference for this condition to taht one below
-				//
-
-				std::vector<WimaxNodeId> gntNeigh;  // array of the granter's neighbors
-				mac_->topology()->neighbors (dsch->src(), gntNeigh); // retrieve them
-				for ( unsigned int ngh = 0 ; ngh < gntNeigh.size() ; ngh++ ) {
-
-					// skip the requester, which has been already managed,
-					// and nodes which are not our neighbors
-					if ( gntNeigh[ngh] == it->nodeId_ ||
-						  ! mac_->topology()->neighbors (gntNeigh[ngh], mac_->nodeId()) )
-						continue;
-
-					// otherwise, set the granted slots as unavailable
-					const unsigned int ndx = mac_->neigh2ndx (gntNeigh[ngh]); // index
-
-					if ( s == 3 ) {
-						setSlots (neigh_tx_unavl_UGS_[ndx][it->channel_],
-								it->frame_, frange, it->start_, it->range_, true);
-					} else {
-						if ( s == wimax::NRTPS ) {
-							unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
-
-							setSlots (neigh_tx_unavl_NRTPS_[ndx][it->channel_], it->frame_, frange,
-									it->start_, slots, true);
-							if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-									it->frame_, it->start_, slots);
-						}
-
-						setSlots (neigh_tx_unavl_[ndx][it->channel_],
-								it->frame_, frange, it->start_, it->range_, true);
-					}
-					setSlots (service_, it->frame_, frange, it->start_,
-							it->range_, s);
-				}
-
-				//
-				// we are not able to transmit in the granted slots on the specified
-				// channel (ie. to confirm bandwidth, even though it has been granted)
-				//
 				if ( s == 3 ) {
-					setSlots (self_tx_unavl_UGS_[it->channel_],
+					setSlots (neigh_tx_unavl_UGS_[ndx][it->channel_],
 							it->frame_, frange, it->start_, it->range_, true);
 				} else {
 					if ( s == wimax::NRTPS ) {
 						unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
 
-						setSlots (self_tx_unavl_NRTPS_[it->channel_], it->frame_, frange,
+						setSlots (neigh_tx_unavl_NRTPS_[ndx][it->channel_], it->frame_, frange,
 								it->start_, slots, true);
 						if ( WimaxDebug::enabled() ) fprintf (stderr,
 							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
 								it->frame_, it->start_, slots);
 					}
 
-					setSlots (self_tx_unavl_[it->channel_],
+					setSlots (neigh_tx_unavl_[ndx][it->channel_],
 							it->frame_, frange, it->start_, it->range_, true);
 				}
 				setSlots (service_, it->frame_, frange, it->start_,
@@ -551,119 +522,143 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 			}
 
 			//
-			// confirmation
+			// we are not able to transmit in the granted slots on the specified
+			// channel (ie. to confirm bandwidth, even though it has been granted)
 			//
+			if ( s == 3 ) {
+				setSlots (self_tx_unavl_UGS_[it->channel_],
+						it->frame_, frange, it->start_, it->range_, true);
+			} else {
+				if ( s == wimax::NRTPS ) {
+					unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
 
-			// if the confirmation is addressed to a node which is not in
-			// our first-hop neighborhood (nor to this node itself), then
-			// that node cannot transmit in the confirmed minislots on all channels
-			// and we cannot receive in the confirmed minislots on the
-			// specified channel
-			if ( it->fromRequester_ == true &&
-					! mac_->topology()->neighbors (it->nodeId_, mac_->nodeId()) ) {
-
-				// receive confirmations flag
-				rcvCnfs = true;
-
-				if ( it->frame_ == 0 && it->start_ == 0 && it->range_ == 0 ) {
-					if ( WimaxDebug::enabled() ) fprintf (stderr,"0detectei uma confirmacao branca\n");
-					abort();
+					setSlots (self_tx_unavl_NRTPS_[it->channel_], it->frame_, frange,
+							it->start_, slots, true);
+					if ( WimaxDebug::enabled() ) fprintf (stderr,
+						"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+							it->frame_, it->start_, slots);
 				}
 
-				// convert the <frame, persistence> pair to the actual <frame, range>
-				unsigned int fstart;   // start frame number
-				unsigned int frange;   // frame range
-				realPersistence (it->frame_, it->persistence_, fstart, frange);
+				setSlots (self_tx_unavl_[it->channel_],
+						it->frame_, frange, it->start_, it->range_, true);
+			}
+			setSlots (service_, it->frame_, frange, it->start_,
+					it->range_, s);
+		}
 
-				// set the minislots as unavailable for reception on all channels
-				for ( unsigned int ch = 0 ; ch < mac_->nchannels() ; ch++ ) {
-					if ( s == 3 ) {
-						setSlots (neigh_tx_unavl_UGS_[ndx][ch], fstart, frange,
-								it->start_, it->range_, true);
-					} else {
-						if ( s == wimax::NRTPS ) {
-							unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
+		//
+		// confirmation
+		//
 
-							setSlots (neigh_tx_unavl_NRTPS_[ndx][ch], fstart, frange,
-									it->start_, slots, true);
-							if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-									it->frame_, it->start_, slots);
-						}
+		// if the confirmation is addressed to a node which is not in
+		// our first-hop neighborhood (nor to this node itself), then
+		// that node cannot transmit in the confirmed minislots on all channels
+		// and we cannot receive in the confirmed minislots on the
+		// specified channel
+		if ( it->fromRequester_ == true &&
+				! mac_->topology()->neighbors (it->nodeId_, mac_->nodeId()) ) {
 
-						setSlots (neigh_tx_unavl_[ndx][ch], fstart, frange,
-							it->start_, it->range_, true);
-					}
-				}
+			// receive confirmations flag
+			rcvCnfs = true;
 
-				// set the minislots as unavailable for reception at this node
+			if ( it->frame_ == 0 && it->start_ == 0 && it->range_ == 0 ) {
+				if ( WimaxDebug::enabled() ) fprintf (stderr,"0detectei uma confirmacao branca\n");
+				abort();
+			}
+
+			// convert the <frame, persistence> pair to the actual <frame, range>
+			unsigned int fstart;   // start frame number
+			unsigned int frange;   // frame range
+			realPersistence (it->frame_, it->persistence_, fstart, frange);
+
+			// set the minislots as unavailable for reception on all channels
+			for ( unsigned int ch = 0 ; ch < mac_->nchannels() ; ch++ ) {
 				if ( s == 3 ) {
-					setSlots (self_rx_unavl_UGS_[it->channel_], fstart, frange,
+					setSlots (neigh_tx_unavl_UGS_[ndx][ch], fstart, frange,
 							it->start_, it->range_, true);
 				} else {
 					if ( s == wimax::NRTPS ) {
 						unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
 
-						setSlots (self_rx_unavl_NRTPS_[it->channel_], fstart, frange,
+						setSlots (neigh_tx_unavl_NRTPS_[ndx][ch], fstart, frange,
 								it->start_, slots, true);
 						if ( WimaxDebug::enabled() ) fprintf (stderr,
 							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
 								it->frame_, it->start_, slots);
 					}
 
-					setSlots (self_rx_unavl_[it->channel_], fstart, frange,
+					setSlots (neigh_tx_unavl_[ndx][ch], fstart, frange,
 						it->start_, it->range_, true);
 				}
-				setSlots (service_, fstart, frange, it->start_,
-						it->range_, s);
 			}
 
-			// if the confirmation is addressed to this node, then update
-			// the counter of the incoming confirmed bandwidth
-			// and set the (only) radio to listen to the confirmed channel
-			if ( it->fromRequester_ == true && it->nodeId_ == mac_->nodeId() ) {
+			// set the minislots as unavailable for reception at this node
+			if ( s == 3 ) {
+				setSlots (self_rx_unavl_UGS_[it->channel_], fstart, frange,
+						it->start_, it->range_, true);
+			} else {
+				if ( s == wimax::NRTPS ) {
+					unsigned int slots = ( it->range_ > nrtpsMinSlots_ ) ? nrtpsMinSlots_ : it->range_;
 
-				// receive confirmations flag
-				rcvCnfs = true;
-
-				if ( it->frame_ == 0 && it->start_ == 0 && it->range_ == 0 ) {
-					if ( WimaxDebug::enabled() ) fprintf (stderr,"0detectei uma confirmacao branca\n");
-					abort();
+					setSlots (self_rx_unavl_NRTPS_[it->channel_], fstart, frange,
+							it->start_, slots, true);
+					if ( WimaxDebug::enabled() ) fprintf (stderr,
+						"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+							it->frame_, it->start_, slots);
 				}
 
-				// get the local identifier of the node who sent this MSH-DSCH
-				unsigned int ndx = mac_->neigh2ndx (dsch->src());
-
-				// get number of frames over which the confirmation spans
-				// we assume that the persistence_ is not 'forever'
-				// we assume that bandwidth requests are not canceled
-				unsigned int frange = WimshMshDsch::pers2frames(it->persistence_);
-
-				// listen to the specified channel in the confirmed set of slots
-				setSlots (channel_, it->frame_, frange,
-						it->start_, it->range_, it->channel_);
-
-				setSlots (src_, it->frame_, frange, it->start_, it->range_, dsch->src());
-
-				// update the number of bytes confirmed
-				neigh_[ndx][s].cnf_in_ +=
-					frange * mac_->slots2bytes (ndx, it->range_, true);
-				Stat::put ( "wimsh_cnf_in", mac_->index(),
-					frange * mac_->slots2bytes (ndx, it->range_, true) );
-
-					if ( WimaxDebug::enabled() ) fprintf (stderr,"subi o lastCnf_ ndx %d s %d\n", ndx, s);
-
-				//if ( uncrdDSCH && rcvCnfs && neigh_[ndx][s].cnf_in_ < neigh_[ndx][s].gnt_in_ ) {
-				//if ( s == wimax::RTPS ) {
-					// schedule uncoordinated MSH-DSCH to regrant left bytes
-				//	if ( WimaxDebug::enabled() ) fprintf (stderr,"rcvGrants enviei uma msg REgrant do servico 2 nodeId %d ndx %d\n",
-				//				mac_->nodeId(),ndx);
-					//mac_->bwmanager()->search_tx_slot (ndx, false);
-				//	rtpsDschFrame_[ndx] = mac_->frame() + 1;
-				//}
+				setSlots (self_rx_unavl_[it->channel_], fstart, frange,
+					it->start_, it->range_, true);
 			}
+			setSlots (service_, fstart, frange, it->start_,
+					it->range_, s);
 		}
 
+		// if the confirmation is addressed to this node, then update
+		// the counter of the incoming confirmed bandwidth
+		// and set the (only) radio to listen to the confirmed channel
+		if ( it->fromRequester_ == true && it->nodeId_ == mac_->nodeId() ) {
+
+			// receive confirmations flag
+			rcvCnfs = true;
+
+			if ( it->frame_ == 0 && it->start_ == 0 && it->range_ == 0 ) {
+				if ( WimaxDebug::enabled() ) fprintf (stderr,"0detectei uma confirmacao branca\n");
+				abort();
+			}
+
+			// get the local identifier of the node who sent this MSH-DSCH
+			unsigned int ndx = mac_->neigh2ndx (dsch->src());
+
+			// get number of frames over which the confirmation spans
+			// we assume that the persistence_ is not 'forever'
+			// we assume that bandwidth requests are not canceled
+			unsigned int frange = WimshMshDsch::pers2frames(it->persistence_);
+
+			// listen to the specified channel in the confirmed set of slots
+			setSlots (channel_, it->frame_, frange,
+					it->start_, it->range_, it->channel_);
+
+			setSlots (src_, it->frame_, frange, it->start_, it->range_, dsch->src());
+
+			// update the number of bytes confirmed
+			neigh_[ndx][s].cnf_in_ +=
+				frange * mac_->slots2bytes (ndx, it->range_, true);
+			Stat::put ( "wimsh_cnf_in", mac_->index(),
+				frange * mac_->slots2bytes (ndx, it->range_, true) );
+
+				if ( WimaxDebug::enabled() ) fprintf (stderr,"subi o lastCnf_ ndx %d s %d\n", ndx, s);
+
+			//if ( uncrdDSCH && rcvCnfs && neigh_[ndx][s].cnf_in_ < neigh_[ndx][s].gnt_in_ ) {
+			//if ( s == wimax::RTPS ) {
+				// schedule uncoordinated MSH-DSCH to regrant left bytes
+			//	if ( WimaxDebug::enabled() ) fprintf (stderr,"rcvGrants enviei uma msg REgrant do servico 2 nodeId %d ndx %d\n",
+			//				mac_->nodeId(),ndx);
+				//mac_->bwmanager()->search_tx_slot (ndx, false);
+			//	rtpsDschFrame_[ndx] = mac_->frame() + 1;
+			//}
+		}
+	}
 }
 
 void
