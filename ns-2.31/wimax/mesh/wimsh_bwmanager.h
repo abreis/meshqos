@@ -90,6 +90,7 @@ protected:
 
 	// TODO: document the following four
 	//! turn on when able to transmit service class scheduling message
+	// (is initialized as true)
 	std::vector< std::vector<unsigned int> > startHorizon_;
 	//! store next frame opportunity to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > nextFrame_;
