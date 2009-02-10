@@ -113,6 +113,7 @@ public:
 		//! Minislot range (8 bits).
 		unsigned char range_;
 		//! Direction (1 bit). True = from requester to granter. Otherwise, false.
+		// False: Grant IE ; True: Grant Confirmation IE
 		bool fromRequester_;
 		//! Persistence (3 bits).
 		Persistence persistence_;

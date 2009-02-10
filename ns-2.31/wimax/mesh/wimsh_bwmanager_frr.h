@@ -223,6 +223,8 @@ protected:
 	std::list<WimshMshDsch::GntIE> grantWaiting_[2];
 
 	//! List of pending availabilities to send out.
+	// availabilities_[0] -> normal availabilities
+	// availabilities_[1] -> uncoordinated DSCH availabilities
 	std::list<WimshMshDsch::AvlIE> availabilities_[2];
 
 	//! True if availabilities have to be advertised. Configured via Tcl.

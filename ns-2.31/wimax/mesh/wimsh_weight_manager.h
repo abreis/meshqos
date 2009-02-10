@@ -25,7 +25,7 @@
 
 #include <vector>
 
-//! Object which computes/stores he weight of end-to-end flows.
+//! Object which computes/stores the weight of end-to-end flows.
 /*!
   We define an end-to-end flow as a stream of IP datagrams from a
   source to a destination.

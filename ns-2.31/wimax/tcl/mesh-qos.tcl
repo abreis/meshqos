@@ -158,7 +158,7 @@ set opt(buffer-sharing)     "per-flow" ;# FairRR scheduler only
 #
 # link profiles
 #
-set opt(prfall) 0    ;# default burst profile index, overriden by prfndx's
+set opt(prfall) 2    ;# default burst profile index, overriden by prfndx's
 set opt(prfsrc) { }  ;# QPSK_1_2 = 0,  QPSK_3_4 = 1,
 set opt(prfdst) { }  ;# QAM16_1_2 = 2, QAM16_3_4 = 3,
 set opt(prfndx) { }  ;# QAM64_2_3 = 4, QAM64_3_4 = 5
@@ -171,7 +171,7 @@ set opt(prfndx) { }  ;# QAM64_2_3 = 4, QAM64_3_4 = 5
 # traffic
 #
 set opt(servicename) {"UGS" "rtPS" "nrtPS" "BE"}
-set opt(nflow)    { 0 1 0 3 }	;#; number of {UGS, rtPS, nrtPS, BE} flows
+set opt(nflow)    { 1 1 1 1 }	;#; number of {UGS, rtPS, nrtPS, BE} flows
 set opt(trfsrc)   { 0 0 0 0 }	;#;
 set opt(trfdst)   { 2 2 2 2 }	;#;
 set opt(trftype-def)   {"cbr" "cbr" "cbr" "cbr"};# default traffic type
