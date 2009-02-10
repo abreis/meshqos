@@ -1,4 +1,4 @@
-#; andrer: my comments after pound-semicolon
+# vim: syntax=tcl
 #
 # Copyright (C) 2007 Dip. Ing. dell'Informazione, University of Pisa, Italy
 # http://info.iet.unipi.it/~cng/ns2mesh80216/
@@ -53,17 +53,17 @@ set opt(warm)       5.0		;# run duration, in seconds
 set opt(out)        "out"	;# statistics output file
 set opt(debug)      ""		;# debug configuration file, "" = no debug
 set opt(startdebug) 0.0		;# start time of debug output
-set opt(debuglevel) 0		;#; debug levels: 
-				 #; 0: no debug, 1: minor simulation info
-				 #; 2: major sim info, 3: debug sim info
-				 #; 4-9: code debug messages
-				 #; >3: don't pipe it to /dev/printer
+set opt(debuglevel) 0		;# debug levels: 
+				 # 0: no debug, 1: minor tcl info
+				 # 2: major tcl info, 3: debug tcl info
+				 # 4-9: cpp debug info (see wimax_debug.h)
+				 # >3: don't pipe to /dev/printer
 
 #
 # topology
 #
 set opt(topology)       "chain"	;# see TOPOLOGIES
-set opt(n)              3       ;# meaningful with: chain, ring, grid,  
+set opt(n)              4       ;# meaningful with: chain, ring, grid,  
                                 ;#    multiring, star, clique, bintree
 				;#    triangular (see TOPOLOGIES)
 set opt(branches)       3       ;# meaningful with: star, multiring
@@ -170,25 +170,20 @@ set opt(prfndx) { }  ;# QAM64_2_3 = 4, QAM64_3_4 = 5
 #
 # traffic
 #
-set opt(servicename) {"UGS" "rtPS" "nrtPS" "BE"}
-set opt(nflow)    { 1 1 1 1 }	;#; number of {UGS, rtPS, nrtPS, BE} flows
-set opt(trfsrc)   { 0 0 0 0 }	;#;
-set opt(trfdst)   { 2 2 2 2 }	;#;
-set opt(trftype-def)   {"cbr" "cbr" "cbr" "cbr"};# default traffic type
-						;#; {UGS, rtPS, nrtPS, BE}
-						;#; change from default to below
+set opt(nflow)    { 4 }			;# number of flows
+set opt(trfsrc)   { 0 0 0 0 }		;# unspecify to obtain random sources
+set opt(trfdst)   { 2 2 2 2 }		;# unspecify to obtain random destinations
+set opt(trftype-def)	"cbr"		;# default traffic type {cbr voip vod bwa ftp}
 set opt(trfstart-def)   1.0		;# default application start time 
-set opt(trfstop-def)    "never"		;# default application start time
+set opt(trfstop-def)    "never"		;# default application stop time
 set opt(trfnsrc-def)    1		;# default number of sources per flow
-set opt(trfprio-def)    {7 5 3 1}	;# default priority level
-					;# {UGS, rtPS, nrtPS, BE}
-#set opt(trftype)  { voip voip vod }
+set opt(trfclass-def)	"be"		;# default service class {ugs rtps nrtps be}
+
 set opt(trftype)  { }
-#set opt(trfnsrc)  { 1    2    1 }
 set opt(trfnsrc)  { }
 set opt(trfstart) { }
 set opt(trfstop)  { }
-set opt(trfprio)  { }
+set opt(trfclass) { }
 
 #
 # VoIP traffic
@@ -206,13 +201,10 @@ set opt(bwa-pkt)     192      ;# packet size of BWA traffic flows, in bytes
 #
 # CBR traffic
 #
-#set opt(cbr-pkt)     1000     ;# packet size, in bytes
-set opt(cbr-pkt)     500     ;# packet size, in bytes
-set opt(cbr-rate)   {500000 500000 500000 500000}	;# rate, in b/s
-							;#; {UGS, rtPS, nrtPS, BE}
-							;#; this is defining rates per service, need
-							;#; change to support per flow
-set opt(cbr-rnd)     1       ;# set to 0 to have perfect CBR generation
+set opt(cbr-pkt)     	500     	;# packet size, in bytes
+set opt(cbr-rate-def)   500000		;# default rate, in b/s
+set opt(cbr-rate)   	{ }
+set opt(cbr-rnd)     	1       	;# set to 0 to have perfect CBR generation
 
 #
 # VoD traffic
@@ -244,102 +236,154 @@ set opt(net-entry-bs)       0
 # workload definition procedure
 #
 proc create_connections {} {
-   global ns opt macmib node topo
+   global ns opt macmib node topo flows
 
-   set cyclestart 0
-   set cyclestop 0
-   for { set flowid 0 } { $flowid < 4 } {incr flowid } {
-	#; TODO: support service classes per flow, in a non-linear fashion
-	set servicename [lindex $opt(servicename) $flowid ] ;
-	set cyclestart $cyclestop
-	set cyclestop [expr $cyclestart + [lindex $opt(nflow) $flowid] ]
+   # flow counters
+   set flows(ugs) 0
+   set flows(rtps) 0
+   set flows(nrtps) 0
+   set flows(be) 0
 
-	if { $opt(debuglevel) > 2 } {
-		puts "\[3\](cycle) flowid $flowid, service $servicename, start $cyclestart, stop $cyclestop"
+   for { set flowid 0 } { $flowid < $opt(nflow) } {incr flowid} {
+	# if there is a default service class, use it
+	set serviceclass $opt(trfclass-def)
+	if { [llength $opt(trfclass)] > $flowid } {
+		set serviceclass [lindex $opt(trfclass) $flowid]
 	}
 
-	for { set i $cyclestart } { $i < $cyclestop } { incr i } {
-		# if there is a default application, use it
-		set traffic [lindex $opt(trftype-def) $flowid ]	;#; TODO: change from def to normal
-		if { [llength $opt(trftype)] > 0 } {
-			set traffic [lindex $opt(trftype) $i]
-		}
+	# if there is a default application, use it
+	set traffic $opt(trftype-def)
+	if { [llength $opt(trftype)] > $flowid } {
+		set traffic [lindex $opt(trftype) $flowid]
+	}
 
-		# if there is a default number of sources per flow, use it
-		set nsources $opt(trfnsrc-def)
-		if { [llength $opt(trfnsrc)] > 0 } {
-			set nsources [lindex $opt(trfnsrc) $i ]
-		}
+	# if there is a default number of sources per flow, use it
+	set nsources $opt(trfnsrc-def)
+	if { [llength $opt(trfnsrc)] > $flowid } {
+		set nsources [lindex $opt(trfnsrc) $flowid ]
+	}      
 
-		# if there is a default application start time, use it
-                #set s [new RandomVariable/Uniform]
-                #$s set min_ 1.0 
-                #$s set max_ 4.0
-		#set start [expr round([$s value]) ]
-                set start $opt(trfstart-def)
-		if { [llength $opt(trfstart)] > 0 } {
-			set start [lindex $opt(trfstart) $i ]
-		}
+	# if there is a default application start time, use it
+	set start $opt(trfstart-def)
+	if { [llength $opt(trfstart)] > $flowid } {
+		set start [lindex $opt(trfstart) $flowid ]
+	}
 
-		# if there is a default application stop time, use it
-		set stop $opt(trfstop-def)
-		if { [llength $opt(trfstop)] > 0 } {
-			set stop [lindex $opt(trfstop) $i ]		}
+	# uncomment to randomize application start times
+	#set s [new RandomVariable/Uniform]
+	#$s set min_ 1.0 ;# lower bound
+	#$s set max_ 4.0 ;# upper bound
+	#set start [expr round([$s value]) ]
 
-		# if there is a default priority level, use it
-		set prio [lindex $opt(trfprio-def) $flowid ]	;#; TODO: change use of def 
-		if { [llength $opt(trfprio)] > 0 } {
-			set prio [lindex $opt(trfprio) $i ]
-		}
+	# if there is a default application stop time, use it
+	set stop $opt(trfstop-def)
+	if { [llength $opt(trfstop)] > $flowid } {
+		set stop [lindex $opt(trfstop) $flowid ]
+	}
 
-		# get the source/destination nodes
-      		if { [llength $opt(trfsrc)] > 0 } {
-                    set src [lindex $opt(trfsrc) $i]
-                    set dst [lindex $opt(trfdst) $i]
-                } else {
-		#; randomize src and dst
-                    set u [new RandomVariable/Uniform]
-                    $u set min_ 0 
-                    $u set max_ [expr $opt(n) - 1 ]
+	# if there is a default service class, use it
+	set class $opt(trfclass-def)
+	if { [llength $opt(trfclass)] > $flowid } {
+		set class [lindex $opt(trfclass) $flowid ]
+	}
 
-                    set src [expr round([$u value]) ]
-                    set dst [expr round([$u value]) ]
-                
-                    while { $src == $dst } {
-			set src [expr round([$u value]) ]
-                        set dst [expr round([$u value]) ]        
-                    }
-                }
-                
-                set rate [lindex $opt(cbr-rate) $flowid]	;#; array
-                
-		# print some debug info about this flow
-		if { $opt(debuglevel) > 1 } {
-			puts "\[2\](flow) * creating flow $i ($src -> $dst) with priority $prio"
-			puts "\[2\](flow)   traffic = $traffic, sources = $nsources, service = $servicename"
-		}
-
-      for { set j 0 } { $j < $nsources } { incr j } {
-	# create the application
-	if { $traffic == "cbr" } {
-		create_cbr $src $dst $rate $prio $i $start $stop
-	} elseif { $traffic == "bwa" } {
-		create_bwa $src $dst $prio $i $start $stop
-	} elseif { $traffic == "voip" } {
-		create_voip $src $dst $prio $i $start $stop
-	} elseif { $traffic == "ftp" } {
-		create_ftp $src $dst $prio $i $start $stop
-	} elseif { $traffic == "vod" } {
-		create_vod $src $dst $prio $i $start $stop
-	} elseif { $traffic == "udptunnel" } {
-		create_udptunnel $src $dst $prio $i $start $stop
+	# if there is a default cbr rate, use it
+	set rate $opt(cbr-rate-def)
+	if { [llength $opt(cbr-rate)] > $flowid } {
+		set rate [lindex $opt(cbr-rate) $flowid]
+	}
+	
+	# convert the service class into a priority level
+	if { $class == "ugs" } {
+		set prio 7
+		incr flows(ugs)
+	} elseif { $class == "rtps" } {
+		set prio 5
+		incr flows(rtps)
+	} elseif { $class == "nrtps" } {
+		set prio 3
+		incr flows(nrtps)
+	} elseif { $class == "be" } {
+		set prio 1
+		incr flows(be)
 	} else {
-            puts "traffic '$traffic' not available"
-            exit 0
-         }
-      }
-   }		
-} ;# end service cycle	
+		puts "prio for class '$class' not available"
+		exit 0
+	}
+	
+	# get the source / destination nodes
+	if { [llength $opt(trfsrc)] > $flowid && [llength $opt(trfdst)] > $flowid } {
+		# both src and destination are specified, fetch them
+		set src [lindex $opt(trfsrc) $flowid]
+		set dst [lindex $opt(trfdst) $flowid]
+	} elseif { [llength $opt(trfsrc)] > $flowid } {
+		# fetch src, randomize dst
+		set src [lindex $opt(trfsrc) $flowid]
+
+		set u [new RandomVariable/Uniform]
+		$u set min_ 0 
+		$u set max_ [expr $opt(n) - 1 ]
+
+		set dst [expr round([$u value]) ]
+                
+		while { $src == $dst } {
+			set dst [expr round([$u value]) ]        
+		}
+	} elseif { [llength $opt(trfdst)] > $flowid } {
+		# fetch dst, randomize src
+		set dst [lindex $opt(trfdst) $flowid]
+
+		set u [new RandomVariable/Uniform]
+		$u set min_ 0 
+		$u set max_ [expr $opt(n) - 1 ]
+
+		set src [expr round([$u value]) ]
+                
+		while { $src == $dst } {
+			set src [expr round([$u value]) ]
+		}
+	} else {
+		# randomize both src and dst
+		set u [new RandomVariable/Uniform]
+		$u set min_ 0 
+		$u set max_ [expr $opt(n) - 1 ]
+
+		set src [expr round([$u value]) ]
+		set dst [expr round([$u value]) ]
+
+		while { $src == $dst } {
+			set src [expr round([$u value]) ]
+			set dst [expr round([$u value]) ]
+		}
+	}
+
+	# print some debug info about this flow
+	if { $opt(debuglevel) > 1 } {
+		puts "\[2\](flow) * creating flow $flowid ($src -> $dst) with priority $prio"
+		puts "\[2\](flow)   traffic = $traffic, sources = $nsources, service = $class"
+	}
+
+	for { set j 0 } { $j < $nsources } { incr j } {
+		# create the application
+		if { $traffic == "cbr" } {
+			create_cbr $src $dst $rate $prio $flowid $start $stop
+		} elseif { $traffic == "bwa" } {
+			create_bwa $src $dst $prio $flowid $start $stop
+		} elseif { $traffic == "voip" } {
+			create_voip $src $dst $prio $flowid $start $stop
+		} elseif { $traffic == "ftp" } {
+			create_ftp $src $dst $prio $flowid $start $stop
+		} elseif { $traffic == "vod" } {
+			create_vod $src $dst $prio $flowid $start $stop
+		} elseif { $traffic == "udptunnel" } {
+			create_udptunnel $src $dst $prio $flowid $start $stop
+		} else {
+			puts "traffic '$traffic' not available"
+			exit 0
+		}
+	}
+
+   } ;# end of flow cycle
 } ;# end proc create_connections
 
 ################################################################################
@@ -362,11 +406,6 @@ if { $opt(debuglevel) > 0 } {
 		puts "\[1\](info) channels: $opt(channel)"
 	}
 	puts "\[1\](info) bit_modelation: $opt(prfall)"
-	puts "\[1\](info) [lindex $opt(nflow) 0] UGS flow(s)"
-	puts "\[1\](info) [lindex $opt(nflow) 1] rtPS flow(s)"
-	puts "\[1\](info) [lindex $opt(nflow) 2] nrtPS flow(s)"
-	puts "\[1\](info) [lindex $opt(nflow) 3] BE flow(s)"
-	#puts "cbr_rate:$opt(cbr-rate)" 
 }
 
 init
@@ -390,8 +429,7 @@ if { $opt(net-entry) == "scan" } {
 	lappend opt(trfstart)  "$start"
 	lappend opt(trfprio)   "0"
 
-	set opt(trftype-def1)   ""	;#; TODO: ??
-	set opt(trftype-def2)   ""
+	set opt(trftype-def)   ""
 	set opt(trfstart-def)  ""
 	set opt(trfnsrc-def)   ""
 	set opt(trfprio-def)   ""
@@ -401,12 +439,19 @@ if { $opt(net-entry) == "scan" } {
 } 
 
 create_connections
+
+if { $opt(debuglevel) > 0 } {
+	puts "\[1\](info) $flows(ugs) UGS flow(s)"
+	puts "\[1\](info) $flows(rtps) rtPS flow(s)"
+	puts "\[1\](info) $flows(nrtps) nrtPS flow(s)"
+	puts "\[1\](info) $flows(be) BE flow(s)"
+}
+
 create_profiles
 create_metrics
 if { $opt(debug) != "" } {
 	printopt
 }
 alive
-
 
 $ns run
