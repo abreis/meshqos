@@ -46,11 +46,11 @@ int main(int argc, char** argv){
     // help function
     if ( args >> OptionPresent('h', "help") ) {
     	cout << "Usage: packetize tracefile [-p packetsize] [-o outputfile] [-a|-b]\n"
-				"\tOptions:\n"
-				"\t-p|--packetsize: Size, in bytes, of output network packets\n"
-    			"\t-o|--out: File in which to write results\n"
-    			"\t-a|--ascii: Output results in plain-text mode\n"
-				"\t-b|--binary: Output results in binary mode, suitable for ns2"
+				"\nOptions:\n"
+				"  -p, --packet-size \tSize, in bytes, of output network packets\n"
+    			"  -o, --out \t\tFile in which to write results\n"
+    			"  -a, --ascii \t\tOutput in plain-text mode\n"
+				"  -b, --binary \t\tOutput in binary mode, suitable for ns2"
 				<< endl;
     	exit(0);
     }
@@ -103,7 +103,7 @@ int main(int argc, char** argv){
 
 	// get the packet size
 	unsigned psize = 200; 	// default packet size set to 200 bytes
-	args >> Option('p', "packetsize", psize);
+	args >> Option('p', "packet-size", psize);
 	// TODO: write checks for the packet size
 
 	unsigned len_;
