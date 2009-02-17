@@ -1,10 +1,20 @@
-/* GPL */
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include "getopt_pp.h"
+/* Copyright (C) 2009 Andre Braga Reis
+ * andrebragareis at gmail dot com
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 	/*
 	 * This application will receive a terse video trace file containing the video's frame sizes and
@@ -14,9 +24,15 @@
 	 * for ns2's Traffic Generator [Application/Traffic/Trace].
 	 */
 
-	/*
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include "getopt_pp.h"
+
+	/* TODO: support accounting for size of streaming protocol headers
 	 * TODO: support verbose trace files
-	 * TODO: write usage information for --help
+	 * TODO: support grouping of multiple frames inside a single packet
 	 */
 
 enum OutputFormat { ASCII, BINARY };
@@ -27,6 +43,18 @@ int main(int argc, char** argv){
 
     GetOpt_pp args (argc, argv);
 
+    // help function
+    if ( args >> OptionPresent('h', "help") ) {
+    	cout << "Usage: packetize tracefile [-p packetsize] [-o outputfile] [-a|-b]\n"
+				"\tOptions:\n"
+				"\t-p|--packetsize: Size, in bytes, of output network packets\n"
+    			"\t-o|--out: File in which to write results\n"
+    			"\t-a|--ascii: Output results in plain-text mode\n"
+				"\t-b|--binary: Output results in binary mode, suitable for ns2"
+				<< endl;
+    	exit(0);
+    }
+
     // get output type
     bool outputbin, outputascii;
 	args >> OptionPresent('b', "binary", outputbin);
@@ -35,7 +63,8 @@ int main(int argc, char** argv){
     OutputFormat format_ = BINARY; 	// default to binary output
 	if( outputascii && !outputbin ) format_ = ASCII;
 	else if ( outputascii && outputbin) {
-		cerr << "Error: Please supply only one of '--binary' and '--ascii'" << endl;
+		cerr << "Error: Please supply only one of '--binary' and '--ascii'" << '\n';
+		cerr << "Try `packetize --help' for more information." << endl;
 		exit(1);
 	}
 
@@ -43,7 +72,8 @@ int main(int argc, char** argv){
 	string inFilename, outFilename;
 	args >> Option(GetOpt_pp::EMPTY_OPTION, inFilename);
 	if ( inFilename == "" ) {
-		cerr << "Error: Please supply an input trace file." << endl;
+		cerr << "Error: Please supply an input trace file." << '\n';
+		cerr << "Try `packetize --help' for more information." << endl;
 		exit(1);
 	}
 	if ( args >> OptionPresent('o', "out") )
