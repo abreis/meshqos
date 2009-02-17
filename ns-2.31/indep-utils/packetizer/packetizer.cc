@@ -2,7 +2,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <cmath>
 
 	/*
 	 * This application will receive a terse video trace file containing the video's frame sizes and
