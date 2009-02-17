@@ -1,7 +1,10 @@
+/* GPL */
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
+#include "getopt_pp.h"
 
 	/*
 	 * This application will receive a terse video trace file containing the video's frame sizes and
@@ -11,30 +14,43 @@
 	 * for ns2's Traffic Generator [Application/Traffic/Trace].
 	 */
 
+	/*
+	 * TODO: support verbose trace files
+	 * TODO: write usage information for --help
+	 */
+
 enum OutputFormat { ASCII, BINARY };
 
 int main(int argc, char** argv){
 	using namespace std;
+	using namespace GetOpt;
 
-	// TODO: read option from cmd line
-	OutputFormat format_ = BINARY;
+    GetOpt_pp args (argc, argv);
 
-	if(argc == 1) {
-		cerr << "Error: Please supply a file to process." << '\n';
-		cerr << "Usage: " << argv[0] << " filename.terse.trace packetsize" << '\n';
-		exit(1);
-	} else if(argc == 2) {
-		cerr << "Error: Please supply a packet size." << '\n';
-		cerr << "Usage: " << argv[0] << " filename.terse.trace packetsize" << '\n';
-		exit(1);
-	} else if(argc > 3) {
-		cerr << "Error: Incorrect number of input parameters." << '\n';
-		cerr << "Usage: " << argv[0] << " filename.terse.trace packetsize" << '\n';
+    // get output type
+    bool outputbin, outputascii;
+	args >> OptionPresent('b', "binary", outputbin);
+	args >> OptionPresent('a', "ascii", outputascii);
+
+    OutputFormat format_ = BINARY; 	// default to binary output
+	if( outputascii && !outputbin ) format_ = ASCII;
+	else if ( outputascii && outputbin) {
+		cerr << "Error: Please supply only one of '--binary' and '--ascii'" << endl;
 		exit(1);
 	}
 
-	string inFilename(argv[1]);
-	string outFilename = inFilename + ".ns2"; // append .ns2 to the input filename
+	// get input / output filenames
+	string inFilename, outFilename;
+	args >> Option(GetOpt_pp::EMPTY_OPTION, inFilename);
+	if ( inFilename == "" ) {
+		cerr << "Error: Please supply an input trace file." << endl;
+		exit(1);
+	}
+	if ( args >> OptionPresent('o', "out") )
+		args >> Option('o', "out", outFilename);
+	else {
+		outFilename = inFilename + ".ns2"; // append .ns2 to the input filename
+	}
 
 	// open the input file
 	ifstream inFile (inFilename.c_str());
@@ -56,7 +72,8 @@ int main(int argc, char** argv){
 	}
 
 	// get the packet size
-	unsigned psize ( atoi(argv[2]) );
+	unsigned psize = 200; 	// default packet size set to 200 bytes
+	args >> Option('p', "packetsize", psize);
 	// TODO: write checks for the packet size
 
 	unsigned len_;
@@ -70,7 +87,6 @@ int main(int argc, char** argv){
 		trace_time_.push_back(time_);
 	}
 
-
 	// TODO: sort the {length,time} pairs (atm we assume the input trace is sorted)
 
 	/* packetization algorithm
@@ -78,9 +94,8 @@ int main(int argc, char** argv){
 	 * The first field contains the time in microseconds until the next packet is generated,
 	 * and the second field contains the packet size in bytes (from the ns2 manual).
 	 */
-	// TODO: explain
 	unsigned packetcount = 0;
-
+	cout << "Processing " << trace_time_.size() << " frames..." << '\n';
 	for(unsigned i=0; i < trace_time_.size(); i++){
 		vector< unsigned > out_time_;
 		vector< unsigned > out_len_;
@@ -100,7 +115,7 @@ int main(int argc, char** argv){
 		// finaltime makes up for this by increasing the last packet arrival time, if necessary
 		unsigned finaltime ( timefraction + (nexttime_ - timefraction*npkts) );
 
-		unsigned packets = 0;
+		unsigned packets = 0;	// number of packets generated from this frame
 		while (remsize > psize) {
 			out_time_.push_back(timefraction);
 			out_len_.push_back(psize);
@@ -135,10 +150,9 @@ int main(int argc, char** argv){
 	outFile.close();
 
 	// print some information
-	cout << trace_time_.size() << " entries processed from " << inFilename << '\n';
-	cout << "Frame size: " << psize << ", output frame count: " << packetcount << '\n';
-	cout << "Output saved in " << outFilename << '\n';
-	cout << "All done" << '\n';
+	cout << '\n' << trace_time_.size() << " entries processed from '" << inFilename << "'\n";
+	cout << "Packet size: " << psize << ", output packet count: " << packetcount << '\n';
+	cout << "Output saved in '" << outFilename << "'\n";
 
 	return 0;
 }
