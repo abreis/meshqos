@@ -31,10 +31,11 @@
 #include "getopt_pp.h"
 
 	/* TODO: support accounting for size of streaming protocol headers
-	 * TODO: support verbose trace files
+	 * TODO: support fetching all fields in verbose trace files (atm only frame type)
 	 * TODO: support grouping of multiple frames inside a single packet
 	 */
 
+enum InputFormat { TERSE, VERBOSE };
 enum OutputFormat { ASCII, BINARY };
 
 int main(int argc, char** argv){
@@ -49,19 +50,34 @@ int main(int argc, char** argv){
 				"\nOptions:\n"
 				"  -p, --packet-size \tSize, in bytes, of output network packets\n"
     			"  -o, --out \t\tFile in which to write results\n"
+				"  -t, --terse \t\tInput trace is in terse format\n"
+				"  -v, --verbose \tInput trace is in verbose format\n"
     			"  -a, --ascii \t\tOutput in plain-text mode\n"
 				"  -b, --binary \t\tOutput in binary mode, suitable for ns2"
 				<< endl;
     	exit(0);
     }
 
+    // get input type
+    bool inputterse, inputverbose;
+	args >> OptionPresent('t', "terse", inputterse);
+	args >> OptionPresent('v', "verbose", inputverbose);
+
+    InputFormat informat_ = TERSE; 	// default to terse input
+	if( inputverbose && !inputterse ) informat_ = VERBOSE;
+	else if ( inputverbose && inputterse) {
+		cerr << "Error: Please supply only one of '--terse' and '--verbose'" << '\n';
+		cerr << "Try `packetize --help' for more information." << endl;
+		exit(1);
+	}
+
     // get output type
     bool outputbin, outputascii;
 	args >> OptionPresent('b', "binary", outputbin);
 	args >> OptionPresent('a', "ascii", outputascii);
 
-    OutputFormat format_ = BINARY; 	// default to binary output
-	if( outputascii && !outputbin ) format_ = ASCII;
+    OutputFormat outformat_ = BINARY; 	// default to binary output
+	if( outputascii && !outputbin ) outformat_ = ASCII;
 	else if ( outputascii && outputbin) {
 		cerr << "Error: Please supply only one of '--binary' and '--ascii'" << '\n';
 		cerr << "Try `packetize --help' for more information." << endl;
@@ -91,9 +107,9 @@ int main(int argc, char** argv){
 
 	// open the output file
 	ofstream outFile;
-	if( format_ == BINARY) {
+	if( outformat_ == BINARY) {
 		outFile.open (outFilename.c_str(), ios::trunc | ios::binary);
-	} else if (format_ == ASCII) {
+	} else if (outformat_ == ASCII) {
 		outFile.open (outFilename.c_str(), ios::trunc);
 	}
 	if (!outFile.is_open()) {
@@ -110,11 +126,27 @@ int main(int argc, char** argv){
 	float time_;
 	vector< unsigned > trace_len_;
 	vector< float > trace_time_;
+	vector < unsigned > trace_ftype_;
 
-	// read the {length,time} pairs from inFile into the vectors
-	while ( inFile >> len_ && inFile >> time_ ) {
-		trace_len_.push_back(len_);
-		trace_time_.push_back(time_);
+	if(informat_ == TERSE) {
+		// read the {length,time} pairs from inFile into the vectors
+		while ( inFile >> len_ && inFile >> time_ ) {
+			trace_len_.push_back(len_);
+			trace_time_.push_back(time_);
+		}
+	} else if(informat_ == VERBOSE) {
+		int fnumber_;
+		char ftype_;
+		float unknown_, psnr1_, psnr2_;
+
+		// read the {length,time,frametype} values from inFile into the vectors
+		while ( inFile >> fnumber_ && inFile >> unknown_ &&
+				inFile >> ftype_ && inFile >> len_ && inFile >> time_ &&
+				inFile >> psnr1_ && inFile >> psnr2_) {
+			trace_len_.push_back(len_);
+			trace_time_.push_back(time_);
+			trace_ftype_.push_back( (unsigned) ftype_);
+		}
 	}
 
 	// TODO: sort the {length,time} pairs (atm we assume the input trace is sorted)
@@ -129,6 +161,9 @@ int main(int argc, char** argv){
 	for(unsigned i=0; i < trace_time_.size(); i++){
 		vector< unsigned > out_time_;
 		vector< unsigned > out_len_;
+		unsigned out_ftype_;
+		if(informat_ == VERBOSE)
+			out_ftype_ = trace_ftype_[i];
 
 		// uncomment this line to get some debug help into the output file (ASCII only)
 		//outFile << "*** " << trace_time_[i] << '\t' << trace_len_[i] << endl;
@@ -161,16 +196,22 @@ int main(int argc, char** argv){
 		packetcount += packets;
 
 		// immediately output the resulting frames, to keep the memory usage small
-		if( format_ == BINARY ) {
+		if( outformat_ == BINARY ) {
 			for(unsigned i=0; i < out_time_.size(); i++){
 				unsigned memtime_ = htonl(out_time_[i]);	// convert to bigendian (network byte order)
 				unsigned memlen_ = htonl(out_len_[i]);
-				outFile.write( (char*) &memtime_, 4);	// write 32 bits (4 bytes) into the file
+				unsigned memftype_;
+				if(informat_ == VERBOSE)
+					memftype_ = htonl(out_ftype_);
+
+				outFile.write( (char*) &memtime_, 4);	// write 2*32 bits (4 bytes) into the file
 				outFile.write( (char*) &memlen_, 4);
+				if(informat_ == VERBOSE)
+					outFile.write( (char*) &memftype_, 4); // write 32 bits with frame type
 			}
-		} else if ( format_ == ASCII) {
+		} else if ( outformat_ == ASCII) {
 			for(unsigned i=0; i < out_time_.size(); i++){
-				outFile << out_time_[i] << '\t' << out_len_[i] << '\n';
+				outFile << (char)out_ftype_ << '\t' << out_time_[i] << '\t' << out_len_[i] << '\n';
 			}
 		}
 	}

@@ -63,8 +63,8 @@
 struct tracerec {
 	u_int32_t trec_time; // inter-packet time (usec)
 	u_int32_t trec_size; // size of packet (bytes)
-	u_int16_t trec_ftype;	// frame type {I,P,B} (char)
-							// due to the lack of an htonX() for uint8, we 'waste' 16-bits
+	u_int32_t trec_ftype;	// frame type {I,P,B} (char)
+							// due to the lack of an htonX() for uint8, we 'waste' 24-bits
 };
 
 // object to hold a single trace file
@@ -99,11 +99,11 @@ class VODTrafficTrace : public TrafficGenerator {
 	void init();
 };
 
-// [VODTracefile] Tcl handlers
+// [VODTraceFile] Tcl handlers
 
 static class VODTraceFileClass : public TclClass {
  public:
-	VODTraceFileClass() : TclClass("VODTracefile") {}
+	VODTraceFileClass() : TclClass("VODTraceFile") {}
 	TclObject* create(int, const char*const*) {
 		return (new VODTraceFile());
 	}
@@ -148,34 +148,34 @@ int VODTraceFile::setup()
 		status_ = 1;
 
 		if (stat(name_, (struct stat *)&buf)) {
-			printf("could not stat %s\n", name_);
-			return -1;
+			printf("VODTraceFile: could not stat %s\n", name_);
+			exit(-1);
 		}
 
 		// get the number of records in the file by the number of bytes in it
 		nrec_ = buf.st_size/sizeof(tracerec);
 
-		if ((unsigned)(nrec_ * sizeof(tracerec)) != buf.st_size) {
-			printf("bad file size in %s\n", name_);
-			return -1;
+		if ( (unsigned)( nrec_ * sizeof(tracerec) ) != buf.st_size) {
+			printf("VODTraceFile: bad file size in %s\n", name_);
+			exit(-1);
 		}
 
 		trace_ = new struct tracerec[nrec_];
 
 		if ((fp = fopen(name_, "rb")) == NULL) {
-			printf("can't open file %s\n", name_);
-			return -1;
+			printf("VODTraceFile: can't open file %s\n", name_);
+			exit(-1);
 		}
 
 		for (i = 0, t = trace_; i < nrec_; i++, t++)
 			if (fread((char *)t, sizeof(tracerec), 1, fp) != 1) {
-				printf("read failed\n");
-				return -1 ;
+				printf("VODTraceFile: read failed\n");
+				exit(-1);
 			}
 			else {
 				t->trec_time = ntohl(t->trec_time);
 				t->trec_size = ntohl(t->trec_size);
-				t->trec_ftype = ntohs(t->trec_ftype);
+				t->trec_ftype = ntohl(t->trec_ftype);
 			}
 
 	}
