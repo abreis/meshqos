@@ -241,8 +241,9 @@ void VODTrafficTrace::timeout()
 	 */
 	agent_->sendmsg(size_);
 	// figure out when to send the next one
+	// next_interval will fetch the next packet's size and store it in size_
 	nextPkttime_ = next_interval(size_);
-	// schedule it */
+	// schedule it
 	timer_.resched(nextPkttime_);
 }
 
@@ -250,6 +251,6 @@ double VODTrafficTrace::next_interval(int& size)
 {
 	tfile_->get_next(ndx_, trec_);
 	size = trec_.trec_size;
-	return(((double)trec_.trec_time)/1000000.0); /* usecs->secs */
+	return(((double)trec_.trec_time)/1000000.0); // usecs->secs
 }
 
