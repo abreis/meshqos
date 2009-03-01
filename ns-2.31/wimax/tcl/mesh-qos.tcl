@@ -173,7 +173,7 @@ set opt(prfndx) { }  ;# QAM64_2_3 = 4, QAM64_3_4 = 5
 set opt(nflow)    { 4 }			;# number of flows
 set opt(trfsrc)   { 0 0 0 0 }		;# unspecify to obtain random sources
 set opt(trfdst)   { 2 2 2 2 }		;# unspecify to obtain random destinations
-set opt(trftype-def)	"cbr"		;# default traffic type {cbr voip vod bwa ftp}
+set opt(trftype-def)	"cbr"		;# default traffic type {cbr voip vod bwa telnet ftp traffic}
 set opt(trfstart-def)   1.0		;# default application start time 
 set opt(trfstop-def)    "never"		;# default application stop time
 set opt(trfnsrc-def)    1		;# default number of sources per flow
@@ -202,7 +202,7 @@ set opt(bwa-pkt)     192      ;# packet size of BWA traffic flows, in bytes
 # CBR traffic
 #
 set opt(cbr-pkt)     	500     	;# packet size, in bytes
-set opt(cbr-rate-def)   500000		;# default rate, in b/s
+set opt(cbr-rate-def)   500000		;# default rate, in bits per second
 set opt(cbr-rate)   	{ }
 set opt(cbr-rnd)     	1       	;# set to 0 to have perfect CBR generation
 
@@ -212,10 +212,23 @@ set opt(cbr-rnd)     	1       	;# set to 0 to have perfect CBR generation
 set opt(vod-trace)   "traces/streaming.ns2"
 
 #
+# Traffic Trace
+#
+set opt(traffic-trace)	"traces/streaming.ns2"
+
+#
 # FTP traffic
 #
 set opt(ftp-wnd)    64      ;# TCP maximum congestion window size
 set opt(ftp-pkt)    1024    ;# TCP Maximum Segment Size
+
+#
+# Telnet traffic
+#
+set opt(telnet-interval)   0	;# If interval_ is non-zero, inter-packet times 
+				;# are chosen from an exponential distribution with 
+				;# average equal to interval_; otherwise, inter-arrival
+				;# times are chosen according to the tcplib distribution
 
 ################################################################################
 # NETWORK ENTRY CONFIGURATION
@@ -318,6 +331,10 @@ proc create_connections {} {
 		set dst [lindex $opt(trfdst) $flowid]
 	} elseif { [llength $opt(trfsrc)] > $flowid } {
 		# fetch src, randomize dst
+		if { $opt(debuglevel) > 2 } {
+			puts "\[3\](flow) randomizing dst for flow $flowid"
+		}
+
 		set src [lindex $opt(trfsrc) $flowid]
 
 		set u [new RandomVariable/Uniform]
@@ -331,6 +348,10 @@ proc create_connections {} {
 		}
 	} elseif { [llength $opt(trfdst)] > $flowid } {
 		# fetch dst, randomize src
+		if { $opt(debuglevel) > 2 } {
+			puts "\[3\](flow) randomizing src for flow $flowid"
+		}
+
 		set dst [lindex $opt(trfdst) $flowid]
 
 		set u [new RandomVariable/Uniform]
@@ -344,6 +365,10 @@ proc create_connections {} {
 		}
 	} else {
 		# randomize both src and dst
+		if { $opt(debuglevel) > 2 } {
+			puts "\[3\](flow) randomizing src and dst for flow $flowid"
+		}
+
 		set u [new RandomVariable/Uniform]
 		$u set min_ 0 
 		$u set max_ [expr $opt(n) - 1 ]
@@ -371,10 +396,14 @@ proc create_connections {} {
 			create_bwa $src $dst $prio $flowid $start $stop
 		} elseif { $traffic == "voip" } {
 			create_voip $src $dst $prio $flowid $start $stop
+		} elseif { $traffic == "telnet" } {
+			create_telnet $src $dst $prio $flowid $start $stop
 		} elseif { $traffic == "ftp" } {
 			create_ftp $src $dst $prio $flowid $start $stop
 		} elseif { $traffic == "vod" } {
 			create_vod $src $dst $prio $flowid $start $stop
+		} elseif { $traffic == "traffic" } {
+			create_traffic $src $dst $prio $flowid $start $stop
 		} elseif { $traffic == "udptunnel" } {
 			create_udptunnel $src $dst $prio $flowid $start $stop
 		} else {
