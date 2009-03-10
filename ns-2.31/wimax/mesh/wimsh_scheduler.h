@@ -62,7 +62,7 @@ protected:
 		unsigned int bytes_; // Byte count
 		double startime_; // Time of flow initialization
 		double endtime_; // Unused
-		unsigned int quocient_; // Data rate in bits per second
+		unsigned int quocient_; // Estimated data rate in bits per second
 		Cbr () { pkt_ = 0; bytes_ = 0; startime_ = 0.0; endtime_ = 0.0;  quocient_ = 0; }
 	};
 

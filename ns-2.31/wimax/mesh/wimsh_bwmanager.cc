@@ -135,15 +135,15 @@ WimshBwManager::handle ()
 			channel = channel_[F][lastSlot_]; 		// get transmission channel
 			start = lastSlot_;
 			range = 1;
-			if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
-					"[BWmgr] 1st status %u dst %d service %d src %d channel %d undsch %d slot %d\n", status,
-						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
-							undsch, lastSlot_ );
+			if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
+					"%.9f WBWM::handle     [%d] 1st status %u dst %d serv %d src %d channel %d undsch %d slot %d\n",
+					NOW, mac_->nodeId(), status, dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_],
+					channel_[F][lastSlot_], undsch, lastSlot_);
 		} else {
-			if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_handle_ ) fprintf (stderr,
-					"[BWmgr] grant %u dst %d service %d src %d channel %d undsch %u slot %d\n", grants_[F][lastSlot_]?1:0,
-						dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_], channel_[F][lastSlot_],
-						uncoordsch_[F][lastSlot_], lastSlot_ );
+			if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
+					"%.9f WBWM::handle     [%d] grant %u dst %d service %d src %d channel %d undsch %u slot %d\n",
+					NOW, mac_->nodeId(), grants_[F][lastSlot_]?1:0,dst_[F][lastSlot_], service_[F][lastSlot_],
+					src_[F][lastSlot_], channel_[F][lastSlot_], uncoordsch_[F][lastSlot_], lastSlot_);
 
 			// Conditions: same channel, unDSCH, grant status,
 			// and 'direction=rx or (direction=tx & same dst & same service)'
@@ -158,8 +158,9 @@ WimshBwManager::handle ()
 	if ( undsch != UINT_MAX ) { // if this slot range is marked for uncoordinated DSCH
 		unsigned int ndx = mac_->neigh2ndx (undsch); // get the local node identifier
 		bool grant = ( unDschState_[ndx][F] == 1 )?1:0; // unDschState?
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgr_uncoordrange_ ) fprintf (stderr,
-				"[BWmgr] uncoordinated MSH-DSCH message range %d dst %d gnt %d \n", range, undsch , grant );
+		if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
+				"%.9f WBWM::handle     [%d] uncoordinated MSH-DSCH message range %d dst %d gnt %d\n",
+				NOW, mac_->nodeId(), range, undsch, grant);
 
 		// create an MSH-DSCH message on coordinator module and transmit at mac module
 		mac_->uncoordinated_opportunity (undsch, grant);

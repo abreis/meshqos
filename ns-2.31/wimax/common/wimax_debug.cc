@@ -41,7 +41,7 @@ int
 WimaxDebug::command (int argc, const char*const* argv)
 {
 	if ( argc == 3 && strcmp (argv[1], "enable") == 0 ) {
-		enabled_ = false;					// TODO: change to true when all debuglevels are implemented
+		enabled_ = true;
 		debuglevel_ = atoi( argv[2] );		// store debuglevel
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[1], "enable") == 0 ) {
@@ -49,12 +49,11 @@ WimaxDebug::command (int argc, const char*const* argv)
 		debuglevel_ = 9;		// no debuglevel supplied, assume maximum intended
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[1], "disable") == 0 ) {
-		enabled_ = false;		// TODO: deprecate
+		enabled_ = false;
 		debuglevel_ = 0;		// no debug
 		return TCL_OK;
 	} else if ( argc == 4 && strcmp (argv[1], "trace") == 0 ) {
 		bool status;
-
 		if ( strcmp (argv[3], "on") == 0 ) status = true;
 		else if ( strcmp (argv[3], "off") == 0 ) status = false;
 		else {

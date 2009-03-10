@@ -109,7 +109,7 @@ void
 WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 {
 	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
-			"%.9f WSCH::addPdu     [%d] %s\n",
+			"%.9f WSCH::addPdu     [%d] %s",
 			NOW, mac_->nodeId(), WimaxDebug::format(pdu));
 
 	// index used to identify the next-hop neighbor node
@@ -128,6 +128,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	if ( ( bufferSharingMode_ == SHARED && bufSize_ + pdu->size() > maxBufSize_ ) ||
 			( bufferSharingMode_ == PER_LINK && link_[ndx][s].size_ + pdu->size() > maxBufSize_) ) {
 		drop (pdu);
+		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, " dropped\n");
 		return;
 	}
 
@@ -152,6 +153,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	if ( bufferSharingMode_ == PER_FLOW &&
 		  desc.size_ + pdu->size() > maxBufSize_ ) {
 		drop (pdu);
+		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, " dropped\n");
 		return;
 	}
 
@@ -167,8 +169,9 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	link_[ndx][s].size_ += pdu->size();  // per link/service pair
 	bufSize_ += pdu->size();          // shared
 
-	if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.scheduler_addpdu_ )
-		fprintf (stderr, "[sched_addPdu] link %i serv %d buffsize %d\n", ndx, s, link_[ndx][s].size_ );
+	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
+			" buffsize %d\n",
+			link_[ndx][s].size_);
 
 	Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
 	Stat::put ("wimsh_bufsize_mac_d", mac_->index(), bufSize_ );
@@ -195,7 +198,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 		mac_->bwmanager()->search_tx_slot(ndx, 0);
 
 	// add this PDU to flow rate statistics and recompute
-	recomputecbr (ndx, s, pdu->size());
+	recomputeCBR (ndx, s, pdu->size());
 }
 
 void
@@ -313,9 +316,9 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 		// add the PDU to the fragmentation buffer
 		spare = frag.addPdu (pdu, s);
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.scheduler_serve_ )
-			fprintf (stderr, "[sched-serve] link %i serv %d buffsize %d pdu-size %d spare %d\n",
-			ndx, s, link_[ndx][s].size_, pdu->size(), spare);
+		if ( WimaxDebug::trace("WSCH::serve") ) fprintf (stderr,
+					"%.9f WSCH::serve      [%d] link %i serv %d buffsize %d pdu-size %d spare %d\n",
+					NOW, mac_->nodeId(), ndx, s, link_[ndx][s].size_, pdu->size(), spare);
 	}
 
 	// if this round terminated because there is no more spare room
@@ -365,14 +368,14 @@ WimshSchedulerFairRR::recompute (CircularList<FlowDesc>& rr)
 }
 
 void
-WimshSchedulerFairRR::recomputecbr (unsigned int ndx, unsigned char s, unsigned int bytes)
+WimshSchedulerFairRR::recomputeCBR (unsigned int ndx, unsigned char s, unsigned int bytes)
 {
 	if ( cbr_[ndx][s].pkt_ == 0 ) {
 		cbr_[ndx][s].startime_ = NOW;
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.recomputecbr_start_ )
-			fprintf (stderr,"[reCBRstart] recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f\n",
-		 mac_->nodeId(), ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_);
+		if ( WimaxDebug::trace("WSCH::recomputeCBR") ) fprintf (stderr,
+					"%.9f WSCH::recompCBR  [%d] recomputeCBR start ndx %d serv %d pkt %d bytes %d startime %.9f\n", NOW, mac_->nodeId(),
+					ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_);
 
 	} else {
 		if ( NOW - cbr_[ndx][s].startime_ != 0 ) { // Prevent a divide by zero
@@ -380,9 +383,9 @@ WimshSchedulerFairRR::recomputecbr (unsigned int ndx, unsigned char s, unsigned 
 			cbr_[ndx][s].quocient_ = (unsigned int) ( cbr_[ndx][s].bytes_ * 8 / (NOW - cbr_[ndx][s].startime_ ) );
 		} else { cbr_[ndx][s].quocient_ = 0; };
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.recomputecbr_ )
-			fprintf (stderr,"[reCBR] recomputecbr nodeId %d ndx %d s %d pkt %d bytes %d startime %.9f endtime %.9f quocient %d frame %d\n",
-		mac_->nodeId(),ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_, NOW, cbr_[ndx][s].quocient_, mac_->frame());
+		if ( WimaxDebug::trace("WSCH::recomputeCBR") ) fprintf (stderr,
+					"%.9f WSCH::recompCBR  [%d] ndx %d serv %d pkt %d bytes %d startime %.9f deltatime %.9f frame %d estimate %d\n", NOW, mac_->nodeId(),
+					ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_, (NOW - cbr_[ndx][s].startime_), mac_->frame(), cbr_[ndx][s].quocient_);
 	}
 
 	cbr_[ndx][s].pkt_++; // Increase packet count

@@ -146,7 +146,8 @@ WimshBwManagerFairRR::command (int argc, const char*const* argv)
 		return TCL_OK;
 	} else if ( argc == 2 && strcmp (argv[0], "nrtps-min-slots") == 0 ) {
 		if ( atoi (argv[1]) < 1 ) {
-			fprintf (stderr, "Invalid minimum nrtps slots number '%d'.\n",
+			fprintf (stderr, "Invalid minimum number of nrtPS slots '%d'. "
+					"Choose a number greater than zero\n",
 					atoi (argv[1]));
 			return TCL_ERROR;
 		}
@@ -365,8 +366,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 					setSlots (unconfirmedSlots_NRTPS_, it->frame_, frange,
 							it->start_, slots, true);
 
-					if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgrfrr_rcvGrnt_nrtps_ ) fprintf (stderr,
-						"[BWmgrFRR-rcvGrnt] marquei com nrtpsMin_ a frame %d start %d slots %d\n", it->frame_, it->start_, slots);
+					if ( WimaxDebug::trace("WBWM::rcvGrants") ) fprintf (stderr,
+								"%.9f WSCH::rcvGrants  [%d] mark w/ nrtpsMin_ frame %d start %d slots %d\n",
+								NOW, mac_->nodeId(), it->frame_, it->start_, slots);
 				}
 				// mark the granted slot range in unconfirmed_ ; NOTE: does not run for UGS, why?
 				setSlots (unconfirmedSlots_, it->frame_, frange,
@@ -875,7 +877,7 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 
 		// cancel reservations
 		if ( it->persistence_ == WimshMshDsch::CANCEL ) {
-			cancel_Granter (ndx, s);
+			cancel_Granter  (ndx, s);
 			continue;
 		}
 
@@ -1194,7 +1196,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 		// pending bytes are decremented during cycle below
 		unsigned int pending = total_req;
-		if ( WimaxDebug::enabled() ) fprintf (stderr, "total_req %d level %d\n",total_req, level);
+		if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr, "\ttotal_req %d level %d\n",total_req, level);
 
 		//
 		// grant until one of the following occurs:
@@ -2002,6 +2004,8 @@ WimshBwManagerFairRR::realGrantStart (
 	unsigned int s;
 	std::bitset<MAX_SLOTS> map;
 
+
+
 	for ( unsigned int f = gframe ; f < gframe + 10 ; f++ ) {
 		F = f % HORIZON;
 
@@ -2012,11 +2016,15 @@ WimshBwManagerFairRR::realGrantStart (
 			neigh_tx_unavl_[ndx][gchannel][F] | neigh_tx_unavl_UGS_[ndx][gchannel][F];
 
 		for ( s = gstart ; s < (gstart + grange) && map[s] == false ; s++ ) { }
-		if ( WimaxDebug::enabled() ) fprintf (stderr, "s %d\n",s);
+		//if ( WimaxDebug::enabled() ) fprintf (stderr, "s %d\n",s);
+		if ( WimaxDebug::trace("WBWM::realGrantStart") ) fprintf (stderr,
+				"\trealGrantStart s %d\n", s);
 
 		if ( s == (gstart + grange) ) {
 			gnt.frame_ = gframe + c;
-			if ( WimaxDebug::enabled() ) fprintf (stderr, "realGrantStart gnt.frame_ %d\n",gnt.frame_);
+			//if ( WimaxDebug::enabled() ) fprintf (stderr, "realGrantStart gnt.frame_ %d\n",gnt.frame_);
+			if ( WimaxDebug::trace("WBWM::realGrantStart") ) fprintf (stderr,
+					"\trealGrantStart gnt.frame_ %d\n", gnt.frame_);
 			return;
 		} else
 			c++;
@@ -2133,7 +2141,8 @@ WimshBwManagerFairRR::backlog (WimaxNodeId src, WimaxNodeId dst,
 	// add the amount of received bytes to the backlog of this output link
 	neigh_[ndx][s].backlog_ += bytes;
 
-		if ( WimaxDebug::enabled() ) fprintf (stderr, "!!bw_backlog prio %d serv %d ndx %i\n", prio, s, ndx );
+	if ( WimaxDebug::trace("WBWM::backlog") ) fprintf (stderr,
+			"%.9f WBWM::backlog    [%d] prio %d serv %d ndx %i\n", NOW, mac_->nodeId(), prio, s, ndx);
 }
 
 void
@@ -2170,16 +2179,17 @@ WimshBwManagerFairRR::search_tx_slot (unsigned int ndx, unsigned int reqState)
 				 flimit = 3, // number of frames to look in advance when trying to reserve slots
 				 s; // general purpose iterating variable
 
-	if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgrfrr_searchTXslots_ ) fprintf (stderr,
-			"[searchSlot] Node #%d: Attempting to send in frame %d an uncoord-DSCH to %d\n",
-				mac_->nodeId(), fstart , dst );
+	if ( WimaxDebug::trace("WBWM::search_tx_slot") ) fprintf (stderr,
+			"%.9f WBWM::srchTXslot [%d] Attempting to send in frame %d an uncoord-DSCH to %d\n",
+			NOW, mac_->nodeId(), fstart , dst);
 
 	// Search for a slot in the next 'flimit' frames
 	for ( unsigned int f = fstart ; f < fstart + flimit ; f++ ) {
 		unsigned int F = f % HORIZON; // this frame's number mod horizon
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgrfrr_searchTXslots_ ) fprintf (stderr,
-				"[searchSlot] Node #%d: Looking into frame %d, destination %d\n", mac_->nodeId(), f , dst );
+		if ( WimaxDebug::trace("WBWM::search_tx_slot") ) fprintf (stderr,
+				"\tLooking into frame %d, destination %d\n",
+				f, dst);
 
 		// obtain a bitset map of all slots unavailable for transmision
 		const std::bitset<MAX_SLOTS> map =
@@ -2220,8 +2230,8 @@ WimshBwManagerFairRR::search_tx_slot (unsigned int ndx, unsigned int reqState)
 			}
 		}
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgrfrr_searchTXslots_ ) fprintf (stderr,
-				"[searchSlot] Unable to send uncoordinated MSH-DSCH where intended. Sending at the end of the frame\n");
+		if ( WimaxDebug::trace("WBWM::search_tx_slot") ) fprintf (stderr,
+				"\tUnable to send uncoordinated MSH-DSCH where intended. Sending at the end of the frame\n");
 
 		// if that already scheduled an uncoordinated message in this frame
 		if ( uncoordsch_[F][(SlotsPerFrame-1)-sstart] == dst) return;
@@ -2236,8 +2246,8 @@ WimshBwManagerFairRR::search_tx_slot (unsigned int ndx, unsigned int reqState)
 			return;
 		}
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgrfrr_searchTXslots_ ) fprintf (stderr,
-				"[searchSlot] Unable to send uncoordinated MSH-DSCH where intended. Blocking traffic\n");
+		if ( WimaxDebug::trace("WBWM::search_tx_slot") ) fprintf (stderr,
+				"\tUnable to send uncoordinated MSH-DSCH where intended. Blocking other traffic\n");
 
 		/*
 		 * Here we try to borrow bandwidth previously allocated for other services, starting in Best Effort
@@ -2273,8 +2283,8 @@ WimshBwManagerFairRR::search_tx_slot (unsigned int ndx, unsigned int reqState)
 			}
 		}
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgrfrr_searchTXslots_ ) fprintf (stderr,
-				"[searchSlot] Unable to borrow bandwidth for an uncoordinated MSH-DSCH\n");
+		if ( WimaxDebug::trace("WBWM::search_tx_slot") ) fprintf (stderr,
+				"\tUnable to borrow bandwidth for an uncoordinated MSH-DSCH\n");
 
 		/*
 		 * Last chance to reserve collision-free minislots.
@@ -2296,9 +2306,8 @@ WimshBwManagerFairRR::search_tx_slot (unsigned int ndx, unsigned int reqState)
 			}
 		}
 
-		if ( WimaxDebug::debuglevel() > WimaxDebug::lvl.bwmgrfrr_searchTXslots_ ) fprintf (stderr,
-				"[searchSlot] Unable to find slots for an uncoordinated MSH-DSCH. End of search_tx_slots\n");
-
+		if ( WimaxDebug::trace("WBWM::search_tx_slot") ) fprintf (stderr,
+				"\tUnable to find slots for an uncoordinated MSH-DSCH\n");
 	} // loop and look into the next frame if this frame had no slots available
 
 	// if sending in any of the next 'flimit' frames is impossible, mark send_rtps_together_

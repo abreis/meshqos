@@ -106,14 +106,7 @@ public:
 	    cause the debug message to be shown with debuglevel set to > 5.
 	  */
 	struct debuglevels {
-		static const unsigned bwmgr_handle_ = 8;
-		static const unsigned bwmgr_uncoordrange_ = 7;
-		static const unsigned recomputecbr_start_ = 7;
-		static const unsigned recomputecbr_ = 8;
-		static const unsigned scheduler_addpdu_ = 7;
-		static const unsigned scheduler_serve_ = 7;
-		static const unsigned bwmgrfrr_searchTXslots_ = 7;
-		static const unsigned bwmgrfrr_rcvGrnt_nrtps_ = 8;
+		static const unsigned max = 8;
 	} static const lvl;
 
 #ifdef WIMAX_DEBUG

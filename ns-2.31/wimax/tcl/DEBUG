@@ -5,6 +5,11 @@ WBWM::recvMshDsch
 WBWM::schedule
 WBWM::request
 WBWM::regrant
+WBWM::backlog
+WBWM::rcvGrants
+WBWM::search_tx_slot
+WBWM::requestGrant
+WBWM::realGrantStart
 WCHN::handle
 WCHN::recvBurst
 WCRD::handle
@@ -26,4 +31,6 @@ WPHY::setMode
 WSCH::addPdu
 WSCH::handle
 WSCH::schedule
+WSCH::serve
+WSCH::recomputeCBR
 WWMN::handle
