@@ -74,7 +74,7 @@ protected:
 		bool operator== (const FlowDesc& x) const {
 			return ( dst_ == x.dst_ && src_ == x.src_ && prio_ == x.prio_ ); }
 
-		//! Returns false if two descriptors do not have the same src and dst.
+		//! Returns true if two descriptors do not have the same src, dst and prio.
 		bool operator!= (const FlowDesc& x) const {
 			return ! ( *this == x ); }
 	};

@@ -210,11 +210,11 @@ WimshBwManagerFairRR::initialize ()
 	nextFrame_.resize (neighbors);
 	send_rtps_together_.resize (neighbors);
 	for ( unsigned int ngh = 0 ; ngh < neighbors ; ngh++ ) {
-		neigh_[ngh].resize (wimax::N_SERV_CALSS);
-		startHorizon_[ngh].resize (wimax::N_SERV_CALSS);
-		nextFrame_[ngh].resize (wimax::N_SERV_CALSS);
+		neigh_[ngh].resize (wimax::N_SERV_CLASS);
+		startHorizon_[ngh].resize (wimax::N_SERV_CLASS);
+		nextFrame_[ngh].resize (wimax::N_SERV_CLASS);
 		send_rtps_together_[ngh] = false;
-		for ( unsigned int i = 0 ; i < wimax::N_SERV_CALSS ; i++ ) {
+		for ( unsigned int i = 0 ; i < wimax::N_SERV_CLASS ; i++ ) {
 			startHorizon_[ngh][i] = true;
 			nextFrame_[ngh][i] = 0;
 		}
@@ -308,7 +308,7 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 	if ( uncrdDSCH )
 		neigh_[ndx][wimax::RTPS].rcvCnf_ = true;
 	else
-		for ( unsigned int j = 0 ; j < wimax::N_SERV_CALSS ; j++) {
+		for ( unsigned int j = 0 ; j < wimax::N_SERV_CLASS ; j++) {
 			if ( j == wimax::RTPS ) continue;
 			neigh_[ndx][j].rcvCnf_ = true;
 		}
@@ -1183,7 +1183,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 		// alias for the deficit counter and other variables
 		unsigned int& granted   = neigh_[ndx][serv].gnt_in_;
-		unsigned int& requested = neigh_[ndx][serv].req_in_;			// slots * preistence
+		unsigned int& requested = neigh_[ndx][serv].req_in_;			// slots * persistence
 		unsigned int& level = neigh_[ndx][serv].level_in_;
 
 		// number of pending bytes
@@ -1196,7 +1196,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 		// pending bytes are decremented during cycle below
 		unsigned int pending = total_req;
-		if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr, "\ttotal_req %d level %d\n",total_req, level);
+		if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+				"\tgranting: src %d dst %d pending %d level %d\n", mac_->nodeId(), mac_->ndx2neigh(ndx), total_req, level);
 
 		//
 		// grant until one of the following occurs:
@@ -1291,7 +1292,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 							gnt.start_, slots, true);
 
 					nrtPS_slots = nrtPS_slots - gnt.range_;
-
 				}
 
 				setSlots (busy_, gnt.frame_, WimshMshDsch::pers2frames(gnt.persistence_),
@@ -1325,31 +1325,42 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 			bool reqTraffic = ( mac_->scheduler()->cbrQuocient (ndx, serv) > 0 ) ?
 					true : false;
 
+//			fprintf (stderr,"\tstartHorizon detail: service %d\n", serv);
+//			for(unsigned tmpi=0; tmpi < startHorizon_.size(); tmpi++)
+//				for(unsigned tmpj; tmpj < startHorizon_[tmpi].size(); tmpj++)
+//					fprintf (stderr,"\t\tndx %d serv %d value %d\n", tmpi, tmpj, startHorizon_[tmpi][tmpj]);
+//
+//			fprintf (stderr,"\tnode %d: to ndx %d serv %d cbrestimate %d\n",mac_->nodeId(), ndx, serv, mac_->scheduler()->cbrQuocient (ndx, serv));
+
 			// request for UGS service
-			if ( serv == wimax::UGS &&
-					startHorizon_[ndx][wimax::UGS] && reqTraffic) {
+			if ( serv == wimax::UGS && startHorizon_[ndx][wimax::UGS] && reqTraffic) {
 
 				// create a request IE
 				WimshMshDsch::ReqIE req;
 				req.nodeId_ = mac_->ndx2neigh (ndx);
 
 				// make new request of bandwidth
-				nextFrame_[ndx][wimax::UGS] = mac_->frame() + 10000;    //!!!
+				nextFrame_[ndx][wimax::UGS] = mac_->frame() + 10000;    //!!! // TODO: 10000 frames?
 				cbr = mac_->scheduler()->cbrQuocient (ndx, serv);
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
 				//		"!!cbr nodeId %d ndx %d cbr %d\n",
 				//	mac_->nodeId() , ndx, cbr);
 				req_bytes = ( cbr * 4e-3 ) / 8;
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-				req.level_ = req_slots + 3;
-				if (req.level_ > mac_->phyMib()->slotPerFrame()) req.level_ = mac_->phyMib()->slotPerFrame();
-				req.persistence_ = WimshMshDsch::FRAME128;
+				req.level_ = req_slots + 3;	// why the +3 margin?
+				if (req.level_ > mac_->phyMib()->slotPerFrame())
+					req.level_ = mac_->phyMib()->slotPerFrame();
+				req.persistence_ = WimshMshDsch::FRAME128; // TODO: bloody hell?!?!
 				startHorizon_[ndx][wimax::UGS] = false;
 				req.service_ = 3;
 				//if ( WimaxDebug::enabled() ) fprintf (stderr,
 				//		"!!3 baixei o startHorizon_[3] %d nextFrame_[3] %d ndx %d\n",
 				//		startHorizon_[ndx][3], nextFrame_[ndx][3], ndx);
 				//request_UGS_[ndx] = 1;
+
+				if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+						"\trequesting: src %d dst %d bytes %d slots %d level %d pers %d serv UGS\n",
+						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, req_slots, req.level_, req.persistence_, req.service_);
 
 				// insert the IE into the MSH-DSCH message
 				dsch->add (req);
@@ -1392,8 +1403,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 						* WimshMshDsch::pers2frames(ie.persistence_);
 
 			// nrtPS request
-			} else if ( serv == wimax::NRTPS &&
-					startHorizon_[ndx][wimax::NRTPS] && reqTraffic )  {
+			} else if ( serv == wimax::NRTPS && startHorizon_[ndx][wimax::NRTPS] && reqTraffic )  {
 
 				// create a request IE
 				WimshMshDsch::ReqIE ie;
@@ -1424,8 +1434,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 						* WimshMshDsch::pers2frames(ie.persistence_);
 
 			// BE request
-			} else if ( serv == wimax::BE &&
-					startHorizon_[ndx][wimax::BE] && reqTraffic) {
+			} else if ( serv == wimax::BE && startHorizon_[ndx][wimax::BE] && reqTraffic) {
 
 				// create a request IE
 				WimshMshDsch::ReqIE ie;
@@ -2254,7 +2263,7 @@ WimshBwManagerFairRR::search_tx_slot (unsigned int ndx, unsigned int reqState)
 		 * and up to UGS. Keep in mind that if multichannel is being used, then other nodes might be unable
 		 * to receive messages in these slots if they're set to transmit in a channel other than zero.
 		 */
-		for ( unsigned int serv = wimax::BE ; serv < wimax::N_SERV_CALSS ; serv++ ) {
+		for ( unsigned int serv = wimax::BE ; serv < wimax::N_SERV_CLASS ; serv++ ) {
 			// for each minislot in the target frame
 			for ( unsigned int i = 0 ; i < SlotsPerFrame ; i++ ) {
 				// find and mark slots to transmit MSH-DSCH message
@@ -2322,17 +2331,17 @@ WimshBwManagerFairRR::printDataStructures (FILE* os)
 
 	fprintf (os, "\tDATA STRUCTURES\n");
 	for ( unsigned int s = 0 ; s < 4 ; s++ ) {
-	fprintf (os, "\t%s\n", class_names[s] );
-		for ( unsigned int i = 0 ; i < mac_->nneighs() ; i++ ) {
-			fprintf (os, "\t%d in  %d req %d gnt %d cnf %d def %d\n",
-					i, mac_->ndx2neigh(i),
-					neigh_[i][s].req_in_, neigh_[i][s].gnt_in_, neigh_[i][s].cnf_in_,
-					neigh_[i][s].def_in_);
-			fprintf (os, "\t%d out %d req %d gnt %d cnf %d def %d backlog %d \n",
-					i, mac_->ndx2neigh(i),
-					neigh_[i][s].req_out_, neigh_[i][s].gnt_out_, neigh_[i][s].cnf_out_,
-					neigh_[i][s].def_out_, neigh_[i][s].backlog_);
-		}
+		fprintf (os, "\t%s\n", class_names[s] );
+			for ( unsigned int i = 0 ; i < mac_->nneighs() ; i++ ) {
+				fprintf (os, "\t%d in  %d req %d gnt %d cnf %d def %d\n",
+						i, mac_->ndx2neigh(i),
+						neigh_[i][s].req_in_, neigh_[i][s].gnt_in_, neigh_[i][s].cnf_in_,
+						neigh_[i][s].def_in_);
+				fprintf (os, "\t%d out %d req %d gnt %d cnf %d def %d backlog %d \n",
+						i, mac_->ndx2neigh(i),
+						neigh_[i][s].req_out_, neigh_[i][s].gnt_out_, neigh_[i][s].cnf_out_,
+						neigh_[i][s].def_out_, neigh_[i][s].backlog_);
+			}
 	}
 	fprintf (os, "\tREQUEST/GRANTING ACTIVE-LIST\n");
 	for ( unsigned int s = 0 ; s < 4 ; s++ )

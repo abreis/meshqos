@@ -152,7 +152,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	// check for per-flow buffer overflow
 	if ( bufferSharingMode_ == PER_FLOW &&
 		  desc.size_ + pdu->size() > maxBufSize_ ) {
-		drop (pdu);
+		drop (pdu);	// TODO: 2hop+ throughput issue begins here
 		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, " dropped\n");
 		return;
 	}

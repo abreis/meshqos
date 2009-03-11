@@ -93,6 +93,7 @@ public:
 	//! Return the total buffer occupancy, in bytes.
 	virtual unsigned int bufSize () { return bufSize_; }
 
+	//! TODO: document cbrQuocient
 	unsigned int cbrQuocient (unsigned int ndx, unsigned int s ) { return cbr_[ndx][s].quocient_; }
 };
 

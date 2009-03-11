@@ -131,7 +131,7 @@ protected:
 	*/
 
 	//! Active-list of neighbor descriptors for bandwidth granting/requesting.
-	CircularList<wimax::LinkId> activeList_[wimax::N_SERV_CALSS];
+	CircularList<wimax::LinkId> activeList_[wimax::N_SERV_CLASS];
 
 	//! Neighbors's unavailabilities to transmit.
 	/*!

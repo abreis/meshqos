@@ -31,8 +31,8 @@ WimshFragmentationBuffer::WimshFragmentationBuffer ()
 {
 	fsn_ = 0;
 	burst_ = 0;
-	lastPdu_.resize(wimax::N_SERV_CALSS);
-	for ( unsigned int j = 0 ; j < wimax::N_SERV_CALSS ; j++ )
+	lastPdu_.resize(wimax::N_SERV_CLASS);
+	for ( unsigned int j = 0 ; j < wimax::N_SERV_CLASS ; j++ )
 		lastPdu_[j] = 0;
 }
 

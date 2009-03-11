@@ -81,13 +81,13 @@ WimshBwManager::handle ()
 	unsigned int channel = 0; // channel identifier
 	unsigned int start;       // start minislot index of the next event
 	unsigned int range = 0;   // minislot range of the next event
-	unsigned int service = wimax::N_SERV_CALSS;		// traffic service class
+	unsigned int service = wimax::N_SERV_CLASS;		// traffic service class
 	unsigned int undsch = UINT_MAX;
 
 	// search for next frame to transmit requests (turn on bwmanager_frr flags)
 	// these frames are assigned at end of request procedure in bwmanager_frr
 	for ( unsigned int ngh = 0 ; ngh < mac_->nneighs() ; ngh++ ) {
-		for ( unsigned int s = 0 ; s < wimax::N_SERV_CALSS ; s++ ) {
+		for ( unsigned int s = 0 ; s < wimax::N_SERV_CLASS ; s++ ) {
 			// skip this cycle for rtPS
 			if ( s == wimax::RTPS ) continue;
 			/*
@@ -140,10 +140,10 @@ WimshBwManager::handle ()
 					NOW, mac_->nodeId(), status, dst_[F][lastSlot_], service_[F][lastSlot_], src_[F][lastSlot_],
 					channel_[F][lastSlot_], undsch, lastSlot_);
 		} else {
-			if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
-					"%.9f WBWM::handle     [%d] grant %u dst %d service %d src %d channel %d undsch %u slot %d\n",
-					NOW, mac_->nodeId(), grants_[F][lastSlot_]?1:0,dst_[F][lastSlot_], service_[F][lastSlot_],
-					src_[F][lastSlot_], channel_[F][lastSlot_], uncoordsch_[F][lastSlot_], lastSlot_);
+//			if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
+//					"%.9f WBWM::handle     [%d] grant %u dst %d service %d src %d channel %d undsch %u slot %d\n",
+//					NOW, mac_->nodeId(), grants_[F][lastSlot_]?1:0,dst_[F][lastSlot_], service_[F][lastSlot_],
+//					src_[F][lastSlot_], channel_[F][lastSlot_], uncoordsch_[F][lastSlot_], lastSlot_);
 
 			// Conditions: same channel, unDSCH, grant status,
 			// and 'direction=rx or (direction=tx & same dst & same service)'
