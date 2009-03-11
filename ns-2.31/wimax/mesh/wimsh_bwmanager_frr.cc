@@ -1311,7 +1311,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 	//-------------------------------------------------//
 	// we REQUEST bandwidth							   //
 	//-------------------------------------------------//
-	unsigned int cbr;
+	unsigned int quocient;
 	unsigned int req_bytes;
 	unsigned int req_slots;
 
@@ -1322,149 +1322,52 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 	for ( unsigned int ndx = ndxMin ; ndx < ndxMax ; ndx++ ) {
 
-			bool reqTraffic = ( mac_->scheduler()->cbrQuocient (ndx, serv) > 0 ) ?
-					true : false;
+			// flag to check whether there is an estimate for this flow's bandwidth needs
+			bool reqTraffic = ( mac_->scheduler()->cbrQuocient (ndx, serv) > 0 ) ? true : false;
 
-//			fprintf (stderr,"\tstartHorizon detail: service %d\n", serv);
-//			for(unsigned tmpi=0; tmpi < startHorizon_.size(); tmpi++)
-//				for(unsigned tmpj; tmpj < startHorizon_[tmpi].size(); tmpj++)
-//					fprintf (stderr,"\t\tndx %d serv %d value %d\n", tmpi, tmpj, startHorizon_[tmpi][tmpj]);
-//
-//			fprintf (stderr,"\tnode %d: to ndx %d serv %d cbrestimate %d\n",mac_->nodeId(), ndx, serv, mac_->scheduler()->cbrQuocient (ndx, serv));
-
-			// request for UGS service
-			if ( serv == wimax::UGS && startHorizon_[ndx][wimax::UGS] && reqTraffic) {
-
+			if( startHorizon_[ndx][serv] && reqTraffic ){
 				// create a request IE
-				WimshMshDsch::ReqIE req;
-				req.nodeId_ = mac_->ndx2neigh (ndx);
+				WimshMshDsch::ReqIE ie;
+				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
-				// make new request of bandwidth
-				nextFrame_[ndx][wimax::UGS] = mac_->frame() + 10000;    //!!! // TODO: 10000 frames?
-				cbr = mac_->scheduler()->cbrQuocient (ndx, serv);
-				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"!!cbr nodeId %d ndx %d cbr %d\n",
-				//	mac_->nodeId() , ndx, cbr);
-				req_bytes = ( cbr * 4e-3 ) / 8;
+				// get this class' bandwidth estimate
+				quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
+
+				// calculate number of bytes ps
+				req_bytes = ( quocient * 4e-3 ) / 8; // don't use fixed frame duration (4e-3: 4ms)
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-				req.level_ = req_slots + 3;	// why the +3 margin?
-				if (req.level_ > mac_->phyMib()->slotPerFrame())
-					req.level_ = mac_->phyMib()->slotPerFrame();
-				req.persistence_ = WimshMshDsch::FRAME128; // TODO: bloody hell?!?!
-				startHorizon_[ndx][wimax::UGS] = false;
-				req.service_ = 3;
-				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"!!3 baixei o startHorizon_[3] %d nextFrame_[3] %d ndx %d\n",
-				//		startHorizon_[ndx][3], nextFrame_[ndx][3], ndx);
-				//request_UGS_[ndx] = 1;
+
+				// fill IE with dst nodeid, demand level, demand persistence, service class
+				ie.level_ = req_slots + 3;
+				if (ie.level_ > mac_->phyMib()->slotPerFrame()) // if we ask for too many slots per frame
+					ie.level_ = mac_->phyMib()->slotPerFrame(); // crop
+
+				switch(serv){
+					case wimax::UGS:
+						ie.persistence_ = WimshMshDsch::FRAME128; // should be FOREVER
+						nextFrame_[ndx][serv] = mac_->frame() + 10000; // to max_uint?
+						break;
+					default:
+						ie.persistence_ = WimshMshDsch::FRAME32;
+						nextFrame_[ndx][serv] = mac_->frame() + 32;
+				}
+				ie.service_ = serv;
+
+				// insert the IE into the MSH-DSCH message
+				dsch->add (ie);
+
+				// TODO: document this (startHorizon)
+				startHorizon_[ndx][serv] = false;
+
+				// update request out (requested bytes per frame * persistence)
+				neigh_[ndx][serv].req_out_ = mac_->slots2bytes (ndx, ie.level_, true) * WimshMshDsch::pers2frames(ie.persistence_);
 
 				if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
-						"\trequesting: src %d dst %d bytes %d slots %d level %d pers %d serv UGS\n",
-						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, req_slots, req.level_, req.persistence_, req.service_);
-
-				// insert the IE into the MSH-DSCH message
-				dsch->add (req);
-
-				// update request out
-				neigh_[ndx][serv].req_out_ = mac_->slots2bytes (ndx, req.level_, true)
-						* WimshMshDsch::pers2frames(req.persistence_);
-
-			// rtPS request
-			} else if ( serv == wimax::RTPS &&
-					startHorizon_[ndx][wimax::RTPS] && reqTraffic ) {
-
-				// create a request IE
-				WimshMshDsch::ReqIE ie;
-				ie.nodeId_ = mac_->ndx2neigh (ndx);
-
-				cbr = mac_->scheduler()->cbrQuocient (ndx, serv);
-				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"!!cbr nodeId %d ndx %d cbr %d\n",
-				//	mac_->nodeId() , ndx, cbr);
-				req_bytes = ( cbr * 4e-3 ) / 8;
-				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-				ie.level_ = req_slots + 3;
-				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
-
-				ie.persistence_ = WimshMshDsch::FRAME32;
-				ie.service_ = serv;
-
-				// insert the IE into the MSH-DSCH message
-				dsch->add (ie);
-
-				nextFrame_[ndx][wimax::RTPS] = mac_->frame() + 32;
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!baixei o nextFrame_[2] %d ndx %d\n",
-							nextFrame_[ndx][wimax::RTPS], ndx);
-				startHorizon_[ndx][wimax::RTPS] = false;
-
-				// update request out
-				neigh_[ndx][serv].req_out_ = mac_->slots2bytes (ndx, ie.level_, true)
-						* WimshMshDsch::pers2frames(ie.persistence_);
-
-			// nrtPS request
-			} else if ( serv == wimax::NRTPS && startHorizon_[ndx][wimax::NRTPS] && reqTraffic )  {
-
-				// create a request IE
-				WimshMshDsch::ReqIE ie;
-				ie.nodeId_ = mac_->ndx2neigh (ndx);
-
-				cbr = mac_->scheduler()->cbrQuocient (ndx, serv);
-				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"!!cbr nodeId %d ndx %d cbr %d\n",
-				//			mac_->nodeId() , ndx, cbr);
-				req_bytes = ( cbr * 4e-3 ) / 8;
-				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-				ie.level_ = req_slots + 3;
-				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
-				ie.persistence_ = WimshMshDsch::FRAME32;
-				ie.service_ = serv;
-
-				// insert the IE into the MSH-DSCH message
-				dsch->add (ie);
-
-				nextFrame_[ndx][wimax::NRTPS] = mac_->frame() + 32;
-				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"!!nextFrame_[3] %d ndx %d\n", nextFrame_[ndx][3], ndx);
-
-				startHorizon_[ndx][wimax::NRTPS] = false;
-
-				// update request out
-				neigh_[ndx][serv].req_out_ = mac_->slots2bytes (ndx, ie.level_, true)
-						* WimshMshDsch::pers2frames(ie.persistence_);
-
-			// BE request
-			} else if ( serv == wimax::BE && startHorizon_[ndx][wimax::BE] && reqTraffic) {
-
-				// create a request IE
-				WimshMshDsch::ReqIE ie;
-				ie.nodeId_ = mac_->ndx2neigh (ndx);
-
-				cbr = mac_->scheduler()->cbrQuocient (ndx, serv);
-				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"!!cbr nodeId %d ndx %d cbr %d\n",
-				//			mac_->nodeId() , ndx, cbr);
-				req_bytes = ( cbr * 4e-3 ) / 8;
-				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-				ie.level_ = req_slots + 3;
-				if (ie.level_ > mac_->phyMib()->slotPerFrame()) ie.level_ = mac_->phyMib()->slotPerFrame();
-				ie.persistence_ = WimshMshDsch::FRAME32;
-				ie.service_ = serv;
-
-				// insert the IE into the MSH-DSCH message
-				dsch->add (ie);
-
-				nextFrame_[ndx][wimax::BE] = mac_->frame() + 32;
-				//if ( WimaxDebug::enabled() ) fprintf (stderr,
-				//		"!!nextFrame_[0] %d ndx %d\n", nextFrame_[ndx][0], ndx);
-
-				startHorizon_[ndx][wimax::BE] = false;
-
-				// update request out
-				neigh_[ndx][serv].req_out_ = mac_->slots2bytes (ndx, ie.level_, true)
-						* WimshMshDsch::pers2frames(ie.persistence_);
+						"\trequesting: src %d dst %d bytes %d slots %d level %d pers %d serv %d\n",
+						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, req_slots, ie.level_, ie.persistence_, ie.service_);
 
 			} else {
+				// no requests were made
 				neigh_[ndx][serv].req_out_ = 0;
 			}
 
