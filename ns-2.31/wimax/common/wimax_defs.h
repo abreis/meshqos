@@ -38,7 +38,7 @@ enum ChannelStatus { TX, RX, NONE };
 enum BurstType { DATA, MSHNCFG, MSHNENT, MSHDSCH };
 
 //! Service Class
-enum ServiceClass { BE, NRTPS, RTPS, UGS, N_SERV_CALSS };
+enum ServiceClass { BE, NRTPS, RTPS, UGS, N_SERV_CLASS };
 
 // :MESH: {
 //! Link direction (input or output).
