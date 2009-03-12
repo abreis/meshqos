@@ -1624,7 +1624,7 @@ WimshBwManagerFairRR::cancel_Granter (unsigned int ndx,
 
 				availabilities_[0].push_back (avl);
 
-				// clear data structures busy whith UGS service
+				// clear data structures busy with UGS service
 				setSlots (busy_UGS_, avl.frame_, 1,
 						avl.start_, avl.range_, false);
 				setSlots (src_, avl.frame_, 1,
@@ -1699,13 +1699,13 @@ WimshBwManagerFairRR::grantFit (
 		  unconfirmedSlots_[F] | unconfirmedSlots_UGS_[F] | unconfirmedSlots_NRTPS_[F] |
 		  busy_[F] | busy_UGS_[F] | busy_NRTPS_[F] |
 		  self_rx_unavl_[ch][F] | self_rx_unavl_UGS_[ch][F] | self_rx_unavl_NRTPS_[ch][F] |
-		neigh_tx_unavl_[ndx][ch][F] | neigh_tx_unavl_UGS_[ndx][ch][F] | neigh_tx_unavl_NRTPS_[ndx][ch][F];
+		  neigh_tx_unavl_[ndx][ch][F] | neigh_tx_unavl_UGS_[ndx][ch][F] | neigh_tx_unavl_NRTPS_[ndx][ch][F];
 
 		// for each minislot in the current frame
 		for ( unsigned int s = 0 ; s < N ; s++ ) {
 			//if ( txBE_[F][serv] == false ) fprintf (stderr, "!!txBE_ = 0 tarma %d slot %d\n", frame ,s  );
 
-			// as soon as a free min islot is found, start the grant allocation
+			// as soon as a free minislot is found, start the grant allocation
 			if ( map[s] == false ) {
 
 				gnt.service_ = serv_class;
@@ -1749,12 +1749,13 @@ WimshBwManagerFairRR::grantFit (
 					// for each minislot in the current frame
 					for ( unsigned int m = 0 ; m < N ; m++ ) {
 
-						// barrow bandwidth of BE and nrtPS services
-						// but atention to nrtps minumum reservation
+						// borrow bandwidth of BE and nrtPS services
+						// but attention to nrtPS minimum slots
 						if ( service_[F][m] == 9 || service_[F][m] == wimax::BE ||
-								  (service_[F][m] == wimax::NRTPS && !(( unconfirmedSlots_NRTPS_[F][m] ||
-																		busy_NRTPS_[F][m] || self_rx_unavl_NRTPS_[ch][F][m] ||
-																		  neigh_tx_unavl_NRTPS_[ndx][ch][F][m]))) ) {
+								(service_[F][m] == wimax::NRTPS &&
+										!(( unconfirmedSlots_NRTPS_[F][m] ||
+												busy_NRTPS_[F][m] || self_rx_unavl_NRTPS_[ch][F][m] ||
+												neigh_tx_unavl_NRTPS_[ndx][ch][F][m]))) ) {
 							map[m] = false;
 							count++;
 						}
@@ -1764,7 +1765,7 @@ WimshBwManagerFairRR::grantFit (
 					{
 						for ( unsigned int r = 0 ; r < N ; r++ ) {
 
-							// as soon as a  service_[F][m] == 9 || ree minislot is found, start the grant allocation
+							// as soon as a  service_[F][m] == 9 || free minislot is found, start the grant allocation
 							if ( map[r] == false ) {
 
 								gnt.service_ = serv_class;
@@ -1779,8 +1780,9 @@ WimshBwManagerFairRR::grantFit (
 									( r - gnt.start_ ) < nSlots ; r++ ) { }
 
 								gnt.range_ = r - gnt.start_;
-								if ( WimaxDebug::enabled() ) fprintf (stderr,
-										"2gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, r, frame);
+								if ( WimaxDebug::trace("WBWM::grantFit") ) fprintf (stderr,
+										"%.9f WBWM::grantFit   [%d] range %d (%d-%d) frame %d\n",
+										NOW, mac_->nodeId(), gnt.range_, gnt.start_, r, frame);
 
 								unsigned int symbols =
 									gnt.range_ * mac_->phyMib()->symPerSlot()
@@ -1794,7 +1796,7 @@ WimshBwManagerFairRR::grantFit (
 								avl.direction_ = WimshMshDsch::TX_AVL;
 								avl.persistence_ = WimshMshDsch::FRAME128;
 								avl.channel_ = ch;
-								avl.service_ = (serv_class == wimax::UGS ) ? wimax::RTPS : serv_class;
+								avl.service_ = (serv_class == wimax::UGS ) ? wimax::RTPS : serv_class; // TODO: if ugs then rtps?
 								avl.range_ = gnt.range_;
 
 								if ( dsch->remaining() > WimshMshDsch::AvlIE::size() +
@@ -1863,8 +1865,7 @@ WimshBwManagerFairRR::grantFit (
 									avl.service_ = serv_class;
 									avl.range_ = gnt.range_;
 
-									if ( dsch->remaining() > WimshMshDsch::AvlIE::size() +
-										WimshMshDsch::GntIE::size() )
+									if ( dsch->remaining() > WimshMshDsch::AvlIE::size() + WimshMshDsch::GntIE::size() )
 										dsch->add (avl);
 									else {
 										if (serv_class == wimax::NRTPS )
@@ -1985,11 +1986,9 @@ WimshBwManagerFairRR::confFit (
 				"!1frame totalmente ocupada \n");
 			for ( unsigned int s = mstart ; s < mstart + mrange ; s++ ) {
 
-				// barrow bandwidth of nrtPS less importantat slots
-				map[s] = ( service_[F][s] == wimax::NRTPS &&
-						 ! busy_NRTPS_[F][s] &&
-							! self_tx_unavl_NRTPS_[gnt.channel_][F][s] ) ?
-									false : map[s];
+				// borrow bandwidth from nrtPS slots // TODO: review
+				map[s] = ( service_[F][s] == wimax::NRTPS && ! busy_NRTPS_[F][s] &&
+							! self_tx_unavl_NRTPS_[gnt.channel_][F][s] ) ? false : map[s];
 			}
 
 			for ( unsigned int s = mstart ; s < mstart + mrange ; s++ ) {
@@ -2007,8 +2006,9 @@ WimshBwManagerFairRR::confFit (
 
 					gnt.range_ = s - gnt.start_;
 
-										if ( WimaxDebug::enabled() ) fprintf (stderr,
-				"!2meio do grant fit gnt.range %d \n", gnt.range_);
+					if ( WimaxDebug::trace("WBWM::confFit") ) fprintf (stderr,
+							"%.9f WBWM::confFit    [%d] grant range %d (%d-%d) frame %d\n",
+							NOW, mac_->nodeId(), gnt.range_, gnt.start_, s, f);
 
 					WimshMshDsch::AvlIE avl;
 					avl.frame_ = gnt.frame_;

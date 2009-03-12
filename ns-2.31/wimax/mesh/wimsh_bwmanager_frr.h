@@ -482,7 +482,7 @@ private:
 	  the requester if the corresponding entry in the following
 	  data structures are false: busy_, neigh_tx_unavl_, unconfirmed_.
 
-	  If it is not possible to schedule bandiwdth to ndx in the
+	  If it is not possible to schedule bandwidth to ndx in the
 	  specified time window, then a grant with an empty minislot
 	  range is returned.
 	  */
