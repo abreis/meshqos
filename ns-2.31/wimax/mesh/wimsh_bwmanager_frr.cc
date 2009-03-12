@@ -1310,9 +1310,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 	//-------------------------------------------------//
 	// we REQUEST bandwidth							   //
 	//-------------------------------------------------//
-	unsigned int quocient;
-	unsigned int req_bytes;
-	unsigned int req_slots;
 
 	// add to the MSH-DSCH message the request IEs that have been
 	// accounted for during the request/grant process above
@@ -1320,7 +1317,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 	unsigned int ndxMax = ( serv == wimax::RTPS ) ? (ndx + 1) : neighbors;
 
 	for ( unsigned int ndx = ndxMin ; ndx < ndxMax ; ndx++ ) {
-
 			// flag to check whether there is an estimate for this flow's bandwidth needs
 			bool reqTraffic = ( mac_->scheduler()->cbrQuocient (ndx, serv) > 0 ) ? true : false;
 
@@ -1329,12 +1325,20 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				WimshMshDsch::ReqIE ie;
 				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
-				// get this class' bandwidth estimate
-				quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
+				// get this class' bandwidth estimates
+				unsigned int quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
+				unsigned int extquocient = mac_->scheduler()->cbrExtQuocient (ndx, serv); // to outside the neighborhood
 
 				// calculate number of bytes requested per frame
-				req_bytes = ( quocient * mac_->phyMib()->frameDuration() ) / 8;
-				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
+				unsigned int req_bytes = ( quocient * mac_->phyMib()->frameDuration() ) / 8;
+				unsigned int req_extbytes = ( extquocient * mac_->phyMib()->frameDuration() ) / 8;
+				// and the number of slots
+				unsigned int req_slots = mac_->bytes2slots (ndx, req_bytes, true);
+				unsigned int req_extslots = mac_->bytes2slots (ndx, req_extbytes, true);
+
+				// simple limiter of slots for 2hop+ traffic (TODO: improve)
+				if( req_extslots > mac_->phyMib()->slotPerFrame()/2 )
+					req_slots = mac_->phyMib()->slotPerFrame()/2 - 3;
 
 				// fill IE with dst nodeid, demand level, demand persistence, service class
 				ie.level_ = req_slots + 3;
