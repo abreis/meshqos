@@ -161,7 +161,7 @@ private:
 	void recompute (CircularList<FlowDesc>& rr);
 
 	//! Recompute statistics of a flow's data rate
-	void recomputeCBR (unsigned int ndx, unsigned char s, unsigned int bytes);
+	void recomputeCBR (WimaxPdu* pdu);
 };
 
 #endif // __NS2_WIMSH_SCHEDULER_FRR_H

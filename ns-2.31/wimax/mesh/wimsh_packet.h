@@ -280,6 +280,13 @@ public:
 			( p == FRAME8 ) ? FRAME32 :
 			( p == FRAME32 ) ? FRAME128 : FRAME128; }
 
+	//! Convert an IP PRIO field into a service class
+	static unsigned char prio2serv(const unsigned char prio) {
+		return 	( prio == 0 || prio == 1 ) ? 0 : // BE
+				( prio == 2 || prio == 3 ) ? 1 : // NRTPS
+				( prio == 4 || prio == 5 ) ? 2 : // RTPS
+											 3 ; // UGS
+	}
 protected:
 	//! Add a grant IE with contiguous allocation.
 	void addContiguous (GntIE& x);

@@ -889,7 +889,6 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 			WimshMshDsch::pers2frames(it->persistence_)
 				* mac_->slots2bytes (ndx, it->level_, true);
 
-
 		// frame persistence of request
 		neigh_[ndx][s].pers_in_ = it->persistence_;
 		neigh_[ndx][s].level_in_ = it->level_;
@@ -1333,8 +1332,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				// get this class' bandwidth estimate
 				quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
 
-				// calculate number of bytes ps
-				req_bytes = ( quocient * 4e-3 ) / 8; // don't use fixed frame duration (4e-3: 4ms)
+				// calculate number of bytes requested per frame
+				req_bytes = ( quocient * mac_->phyMib()->frameDuration() ) / 8;
 				req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 
 				// fill IE with dst nodeid, demand level, demand persistence, service class
@@ -1872,7 +1871,6 @@ WimshBwManagerFairRR::grantFit (
 											availabilities_[0].push_back (avl);
 										else
 											availabilities_[1].push_back (avl);
-
 										room = false;
 									}
 
