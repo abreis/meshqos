@@ -122,6 +122,12 @@ protected:
 		}
 	};
 
+	//! Demand Level / Demand Persistence pairs
+	struct Demand {
+		unsigned level_;	// in minislots (according to the current burst profile, always)
+		WimshMshDsch::Persistence pers_;
+	};
+
 	//! Array of neighbor descriptors for bandwidth requesting/granting.
 	std::vector< std::vector< NeighDesc > > neigh_;
 
@@ -368,6 +374,9 @@ public:
 protected:
 	//! Invalidate the data structures' entries for the current frame.
 	void invalidate (unsigned int F);
+
+	//! Cancel a reservation or part of it
+	void cancelGrant (unsigned ndx, unsigned char start, unsigned char range, wimax::ServiceClass serv);
 
 	//! Cancel UGS reservation for requester's neighbours and itself
 	void cancel_Requester (unsigned int ndx, unsigned char s, WimshMshDsch* dsch);

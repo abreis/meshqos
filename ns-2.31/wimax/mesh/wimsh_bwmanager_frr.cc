@@ -876,13 +876,13 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 		unsigned char s = it->service_;
 
 		// cancel reservations
-		if ( it->persistence_ == WimshMshDsch::CANCEL ) {
+		if ( it->persistence_ == WimshMshDsch::CANCEL ) { // TODO: bw cancellation here
 			cancel_Granter  (ndx, s);
 			continue;
 		}
 
 		// indicate that there may be a new flow to the weight manager
-		//wm_.flow (ndx, wimax::IN);														//!!ELIMINAR
+		//wm_.flow (ndx, wimax::IN);
 
 		// number of bytes requested
 		unsigned requested =
@@ -1217,11 +1217,13 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 			// grant up to 'deficit' bytes within the time horizon
 			gnt = grantFit (ndx,
 					bytes_req,						// max number of bytes (slots * persistence)
+//					level,							// demand level
+//					pers,							// demand persistences
 					mac_->frame() + h,				// first eligible frame
 					room,							// room for more grant entries
 					frame_room,
 					grantFitStatus[ndx],			// current grant status
-					serv,								// traffic class
+					serv,							// traffic class
 					dsch);
 
 			// if the minislot range is empty, then it was not possible
@@ -1348,7 +1350,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				switch(serv){
 					case wimax::UGS:
 						ie.persistence_ = WimshMshDsch::FRAME128; // should be FOREVER
-						nextFrame_[ndx][serv] = mac_->frame() + 10000; // to max_uint?
+						nextFrame_[ndx][serv] = UINT_MAX;
+						//nextFrame_[ndx][serv] = mac_->frame() + 10000; // to uint_max?
 						break;
 					default:
 						ie.persistence_ = WimshMshDsch::FRAME32;
@@ -1403,7 +1406,7 @@ WimshBwManagerFairRR::confirm (WimshMshDsch* dsch, unsigned int nodeid, unsigned
 		// we ignore cancellations (ie. persistence = 'cancel')
 		//
 
-		// get de service class of this grant
+		// get the service class of this grant
 		unsigned int s = gnt.service_;
 
 		// get the start frame number and range
@@ -1540,7 +1543,7 @@ void
 WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 		unsigned char s, WimshMshDsch* dsch)
 {
-	if ( WimaxDebug::enabled() ) fprintf (stderr,"requester vou cancelar o serviço UGS\n");
+	if ( WimaxDebug::enabled() ) fprintf (stderr,"requester vou cancelar o servico UGS\n");
 	WimaxNodeId dst = mac_->ndx2neigh (ndx);
 	unsigned int fs = mac_->frame();
 	unsigned int F;
@@ -1594,6 +1597,84 @@ WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 			}
 		}
 	}
+}
+
+void
+WimshBwManagerFairRR::cancelGrant (unsigned ndx, unsigned char start, unsigned char range, wimax::ServiceClass serv)
+{
+	//enum ServiceClass { BE, NRTPS, RTPS, UGS, N_SERV_CLASS };
+	//continuation cancel? (cancel everything along the path X)
+	// if start=UCHAR_MAX, cancel anywhere, otherwise cancel in exact position (assumes #minislots < 255)
+	// if range=0, cancel all reservations of given service
+	// only for UGS, other methods needed for periodic classes
+
+	if ( WimaxDebug::trace("WBWM::cancelGrant") ) fprintf (stderr,
+			"%.9f WBWM::cancelGrant[%d] ndx %d start %d range %d serv %d\n", NOW, mac_->nodeId(), ndx, start, range, serv);
+
+	WimaxNodeId src = mac_->ndx2neigh (ndx);
+
+	if( serv == wimax::UGS )
+	{
+		// create an AvailabilityIE with Persistence CANCEL
+		WimshMshDsch::AvlIE avl;
+		avl.service_ = wimax::UGS;
+		// minislot start
+		avl.start_ = start;
+		// minislot range [start, start+range]
+		avl.range_ = range;
+		// cancel via Persistence 0
+		avl.persistence_ = WimshMshDsch::CANCEL;
+		// start frame number; we order the cancel to take effect after 4 frames
+		avl.frame_ = mac_->frame() + 4;
+		//
+//		avl.direction_ = WimshMshDsch::RX_AVL;
+//		avl.channel_ = channel_[F][i];
+
+		// place the AvlIE in the queue for sending
+		availabilities_[0].push_back (avl);
+
+		// clear the reservation from local structures
+//		setSlots (busy_UGS_,avl.frame_, 1, avl.start_, avl.range_, false);
+//		setSlots (src_,		avl.frame_, 1, avl.start_, avl.range_, 999	);
+//		setSlots (service_,	avl.frame_, 1, avl.start_, avl.range_, 9	);
+//		setSlots (channel_,	avl.frame_, 1, avl.start_, avl.range_, false);
+	}
+//
+//	// create AvlIE to inform granter's neighbours
+//	for ( unsigned int f = fs ; f < ( fs + HORIZON )  ; f++ ) {
+//		F = f % HORIZON;
+//		for ( unsigned int i = 0 ; i < MAX_SLOTS ; i++ ) {
+//
+//			if ( service_[F][i] == s && src_[F][i] == src ) {
+//
+//				WimshMshDsch::AvlIE avl;
+//				avl.frame_ = f;
+//				avl.start_ = i;
+//				avl.direction_ = WimshMshDsch::TX_AVL;
+//				avl.persistence_ = WimshMshDsch::FRAME1;
+//				avl.channel_ = channel_[F][i];
+//				avl.service_ = s;
+//
+//				for ( ; i < MAX_SLOTS && service_[F][i] == s &&
+//						src_[F][i] == src ; i++ ) { }
+//
+//				avl.range_ = i - avl.start_;
+//
+//				availabilities_[0].push_back (avl);
+//
+//				// clear data structures busy with UGS service
+//				setSlots (busy_UGS_, avl.frame_, 1,
+//						avl.start_, avl.range_, false);
+//				setSlots (src_, avl.frame_, 1,
+//						avl.start_, avl.range_, 999);
+//				setSlots (service_, avl.frame_, 1,
+//						avl.start_, avl.range_, 9);
+//				setSlots (channel_, avl.frame_, 1,
+//						avl.start_, avl.range_, false);
+//			}
+//		}
+//	}
+
 }
 
 void
@@ -1670,9 +1751,13 @@ WimshBwManagerFairRR::grantFit (
 	WimshMshDsch::GntIE gnt;
 	gnt.nodeId_ = mac_->ndx2neigh (ndx);
 
+	// TODO: GrantFit isn't passed the persistence level
 	WimshMshDsch::Persistence persistence;
-	if ( serv_class == wimax::UGS ) persistence = WimshMshDsch::frames2pers(HORIZON);
-	else persistence = WimshMshDsch::frames2pers(HORIZON / 4);
+//	if ( req-persistence == WimshMshDsch::FOREVER )
+	if ( serv_class == wimax::UGS )
+		persistence = WimshMshDsch::frames2pers(HORIZON);
+	else
+		persistence = WimshMshDsch::frames2pers(HORIZON / 4);
 
 	// number of minislots per frame
 	unsigned int N = mac_->phyMib()->slotPerFrame();
