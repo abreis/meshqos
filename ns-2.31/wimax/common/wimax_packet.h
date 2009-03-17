@@ -93,6 +93,9 @@ public:
 		h = hops_; n = nhops_; }
 	//! Return the last hop. Return 0 if the number of hops is not stored.
 	WimaxNodeId lastHop () { return ( nhops_ > 0 ) ? hops_[nhops_ - 1] : 0; }
+	//! Return the hop before the last hop. Useful if trying to find the last hop just after updating the hop list.
+	//  Returns UINT_MAX if there is no such hop (to clearly distinguish between hop 0 and no hop).
+	WimaxNodeId lastlastHop () { return ( nhops_ > 1 ) ? hops_[nhops_ - 2] : UINT_MAX; }
 	//! Check whether a hop has been traversed.
 	bool traversed (WimaxNodeId hop) {
 		for ( unsigned int i = 0 ; i < nhops_ ; i++ )

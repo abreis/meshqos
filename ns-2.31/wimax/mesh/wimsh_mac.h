@@ -416,10 +416,10 @@ public:
 	  the function argument preamble, which defaults to true.
 	 */
 	/*
-    *     __                       __
-    *    |      _           _        |
+	 *     __                       __
+	 *    |      _           _        |
 	 *    |     |    bytes	  |       |
-    *    |     |  ---------  | + P   |    P == 1 if preamble is present
+	 *    |     |  ---------  | + P   |    P == 1 if preamble is present
 	 *    |     |  alpha_[n]  |       |    P == 0 otherwise
 	 *    |  -----------------------  |
 	 *    |   phyMib_->symPerSlot()   |

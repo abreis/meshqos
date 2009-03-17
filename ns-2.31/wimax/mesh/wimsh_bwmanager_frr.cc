@@ -1338,9 +1338,9 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				unsigned int req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 				unsigned int req_extslots = mac_->bytes2slots (ndx, req_extbytes, true);
 
-				// simple limiter of slots for 2hop+ traffic (TODO: improve)
+				// simple limiter of slots for 2hop+ traffic
 				if( req_extslots > mac_->phyMib()->slotPerFrame()/2 )
-					req_slots = mac_->phyMib()->slotPerFrame()/2 - 3;
+					req_slots = mac_->phyMib()->slotPerFrame()/2 - 3; // TODO: not true, depends on nexthop burstprofile
 
 				// fill IE with dst nodeid, demand level, demand persistence, service class
 				ie.level_ = req_slots + 3;
@@ -1611,7 +1611,7 @@ WimshBwManagerFairRR::cancelGrant (unsigned ndx, unsigned char start, unsigned c
 	if ( WimaxDebug::trace("WBWM::cancelGrant") ) fprintf (stderr,
 			"%.9f WBWM::cancelGrant[%d] ndx %d start %d range %d serv %d\n", NOW, mac_->nodeId(), ndx, start, range, serv);
 
-	WimaxNodeId src = mac_->ndx2neigh (ndx);
+	//WimaxNodeId src = mac_->ndx2neigh (ndx);
 
 	if( serv == wimax::UGS )
 	{

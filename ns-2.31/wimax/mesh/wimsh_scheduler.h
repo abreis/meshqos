@@ -61,10 +61,12 @@ protected:
 		unsigned int pkt_; // Packet count
 		unsigned int bytes_; // Byte count
 		unsigned int extbytes_; // Byte count for traffic directed to outside the neighborhood
+		std::vector<unsigned int> fwdbytes_; // Byte count vector for traffic being forwarded by the node
 		double startime_; // Time of flow initialization
 		double endtime_; // Unused
 		unsigned int quocient_; // Estimated data rate in bits per second
 		unsigned int extquocient_; // Estimated data rate of traffic directed to outside the neighborhood
+		std::vector<unsigned int> fwdquocient_; // Estimated data rate of traffic being forwarded from neighbors
 		Cbr () { pkt_ = 0; bytes_ = 0; extbytes_ = 0; startime_ = 0.0; endtime_ = 0.0; quocient_ = 0; extquocient_ = 0;}
 	};
 
@@ -95,11 +97,14 @@ public:
 	//! Return the total buffer occupancy, in bytes.
 	virtual unsigned int bufSize () { return bufSize_; }
 
-	//! Return the estimated traffic needs of service s towards node ndx
-	unsigned int cbrQuocient (unsigned int ndx, unsigned int s ) { return cbr_[ndx][s].quocient_; }
+	//! Return the estimated traffic needs of service s towards node ndx.
+	unsigned int cbrQuocient (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].quocient_; }
 
-	//! Return the estimated traffic needs of service s towards node ndx, whose final destination != ndx
-	unsigned int cbrExtQuocient (unsigned int ndx, unsigned int s ) { return cbr_[ndx][s].extquocient_; }
+	//! Return the estimated traffic needs of service s towards node ndx, whose final destination != ndx.
+	unsigned int cbrExtQuocient (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].extquocient_; }
+
+	//! Return the estimated traffic needs of packets being forwarded from node sndx to node dndx, service s.
+	unsigned int cbrFwdQuocient (unsigned int sndx, unsigned int dndx, unsigned int s) { return cbr_[dndx][s].fwdbytes_[sndx]; }
 };
 
 /*

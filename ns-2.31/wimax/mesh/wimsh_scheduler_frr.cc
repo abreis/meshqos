@@ -375,10 +375,18 @@ WimshSchedulerFairRR::recomputeCBR (WimaxPdu* pdu)
 	const unsigned char s = WimshMshDsch::prio2serv(prio);
 	// size of this PDU
 	const unsigned int bytes = pdu->size();
+	// node from where this pdu arrived (MAX_UINT if originating here)
+	const unsigned int lastHop = mac_->neigh2ndx( pdu->sdu()->lastlastHop() );
 
 	if ( cbr_[ndx][s].pkt_ == 0 ) {
 		// first run of recomputeCBR
 		cbr_[ndx][s].startime_ = NOW;
+
+		// clear and resize variable size structures
+		cbr_[ndx][s].fwdquocient_.clear();
+		cbr_[ndx][s].fwdquocient_.resize(mac_->nneighs(),0);
+		cbr_[ndx][s].fwdbytes_.clear();
+		cbr_[ndx][s].fwdbytes_.resize(mac_->nneighs(),0);
 
 		if ( WimaxDebug::trace("WSCH::recomputeCBR") ) fprintf (stderr,
 					"%.9f WSCH::recompCBR  [%d] recomputeCBR start ndx %d serv %d pkt %d bytes %d startime %.9f\n", NOW, mac_->nodeId(),
@@ -390,21 +398,35 @@ WimshSchedulerFairRR::recomputeCBR (WimaxPdu* pdu)
 			// quocient = (bytes*8 / elapsed time) [bps]
 			cbr_[ndx][s].quocient_ = (unsigned int) ( cbr_[ndx][s].bytes_ * 8 / (NOW - cbr_[ndx][s].startime_ ) );
 
-			// if this pdu is not directed to a neighbor, add its size to extquocient_
-			if( pdu->hdr().meshCid().dst() != (unsigned) HDR_IP(pdu->sdu()->ip())->daddr() )
-				cbr_[ndx][s].extquocient_ = (unsigned int) ( cbr_[ndx][s].extbytes_ * 8 / (NOW - cbr_[ndx][s].startime_ ) );
+			// if this pdu is not directed to a neighbor, recompute extquocient_
+			if( pdu->hdr().meshCid().dst() != (unsigned) HDR_IP( pdu->sdu()->ip() )->daddr() )
+				cbr_[ndx][s].extquocient_ = (unsigned) ( cbr_[ndx][s].extbytes_ * 8 / (NOW - cbr_[ndx][s].startime_ ) );
 
-		} else { cbr_[ndx][s].quocient_ = 0; };
+			// if this pdu is only being forwarded by this node, recompute fwdquocient_[srcndx]
+			if( pdu->sdu()->lastlastHop() != mac_->nodeId() && pdu->sdu()->lastlastHop() != UINT_MAX )
+				cbr_[ndx][s].fwdquocient_[lastHop] = (unsigned) ( cbr_[ndx][s].fwdbytes_[lastHop] * 8 / (NOW - cbr_[ndx][s].startime_ ) );
 
-		if ( WimaxDebug::trace("WSCH::recomputeCBR") ) fprintf (stderr,
+		} //else { cbr_[ndx][s].quocient_ = 0; };
+
+		if ( WimaxDebug::trace("WSCH::recomputeCBR") ) {
+			fprintf (stderr,
 					"%.9f WSCH::recompCBR  [%d] ndx %d serv %d pkt %d bytes %d startime %.9f deltatime %.9f frame %d estimate %d extestimate %d\n", NOW, mac_->nodeId(),
 					ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_, (NOW - cbr_[ndx][s].startime_), mac_->frame(), cbr_[ndx][s].quocient_, cbr_[ndx][s].extquocient_);
+
+			for(unsigned i=0; i < mac_->nneighs() ; i++)
+				if( ndx != i && cbr_[ndx][s].fwdquocient_[i] != 0 )
+					fprintf (stderr,
+						"\t src %d dst %d sndx %d dndx %d serv %d fwdquocient %d\n",
+						mac_->ndx2neigh(i), mac_->ndx2neigh(ndx), i, ndx, s, cbr_[ndx][s].fwdquocient_[i]);
+		}
 	}
 
 	cbr_[ndx][s].pkt_++; // Increase packet count
 	cbr_[ndx][s].bytes_ += bytes; // Update byte count
 	if( pdu->hdr().meshCid().dst() != (unsigned) HDR_IP(pdu->sdu()->ip())->daddr() )
 		cbr_[ndx][s].extbytes_ += bytes; // update byte count of intermediate traffic
+	if( pdu->sdu()->lastlastHop() != mac_->nodeId() )
+		cbr_[ndx][s].fwdbytes_[lastHop] += bytes;	// update byte count of forwarding traffic
 
 	if (cbr_[ndx][s].pkt_ >= 100) { // Reset counts every 100 packets
 		cbr_[ndx][s].pkt_ = 0;
@@ -413,6 +435,7 @@ WimshSchedulerFairRR::recomputeCBR (WimaxPdu* pdu)
 		cbr_[ndx][s].quocient_ = 0;
 		cbr_[ndx][s].extquocient_ = 0;
 		//cbr_[ndx][s].starttime is reset on the next iteration due to (pkt_ = 0)
+		//fwdquocient_ and fwdbytes_ likewise
 	}
 }
 
