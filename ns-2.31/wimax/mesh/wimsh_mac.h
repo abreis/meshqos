@@ -360,6 +360,7 @@ public:
 	  then send it to the PHY layer.
 	  */
 	void opportunity (WimshMshDsch* dsch);
+	// TODO: document
 	void uncoordinated_opportunity (unsigned int dst, bool grant);
 	//! Receive a partial MSH-NCFG from the coordinator and send it to the PHY.
 	void opportunity (WimshMshNcfg* ncfg);

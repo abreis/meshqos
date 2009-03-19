@@ -104,7 +104,7 @@ public:
 	unsigned int cbrExtQuocient (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].extquocient_; }
 
 	//! Return the estimated traffic needs of packets being forwarded from node sndx to node dndx, service s.
-	unsigned int cbrFwdQuocient (unsigned int sndx, unsigned int dndx, unsigned int s) { return cbr_[dndx][s].fwdbytes_[sndx]; }
+	unsigned int cbrFwdQuocient (unsigned int sndx, unsigned int dndx, unsigned int s) { return cbr_[dndx][s].fwdquocient_[sndx]; }
 };
 
 /*

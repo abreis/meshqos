@@ -709,7 +709,6 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 							  it->frame_, WimshMshDsch::pers2frames(it->persistence_), it->start_, it->range_, false);
 				}
 
-
 			} // (cancel UGS service) applies to neighbours of the receiver
 			else if ( it->direction_ == WimshMshDsch::TX_AVL &&
 					   mac_->topology()->neighbors (dsch->src(), mac_->nodeId()) ) {
@@ -1054,6 +1053,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 {
 	const unsigned int neighbors = mac_->nneighs();
 
+	// ndx parameter is only used for rtPS
+
 	//
 	// we do not want to add request IE directly to the MSH-DSCH message
 	// because doing so may unnecessarily increase the overhead (i.e.
@@ -1315,6 +1316,9 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 	// add to the MSH-DSCH message the request IEs that have been
 	// accounted for during the request/grant process above
+
+	// if service is rtPS, run the following code only for the 'ndx' passed to this function
+	// otherwise, run for all of this node's neighbors
 	unsigned int ndxMin = ( serv == wimax::RTPS ) ? ndx : 0;
 	unsigned int ndxMax = ( serv == wimax::RTPS ) ? (ndx + 1) : neighbors;
 
@@ -1341,6 +1345,48 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				// simple limiter of slots for 2hop+ traffic
 				if( req_extslots > mac_->phyMib()->slotPerFrame()/2 )
 					req_slots = mac_->phyMib()->slotPerFrame()/2 - 3; // TODO: not true, depends on nexthop burstprofile
+
+				/* here, todo:
+				 * check for fwdquocient_[] needs
+				 * compute minislot requirements for those needs, according to burst profile to ndx
+				 * get a list of available slots to transmit to ndx
+				 * balance between:
+				 * - minislots reserved for incoming fwdquocient
+				 * - minislots required for outgoing traffic
+				 * - available minislots to send to ndx
+				 * and then cancel reservations as necessary (how to propagate? w/ fwdestimates at the other nodes)
+				 */
+
+				// draft ideas begin here
+
+				// for the target node ndx, we look at all the traffic being forwarded from other neighbors
+				for( unsigned sndx=0; sndx < neighbors; sndx++ ) {
+					if( sndx == ndx ) continue; // no narcissism
+
+					// get how much data is required
+					unsigned fwdQuocient = mac_->scheduler()->cbrFwdQuocient(sndx, ndx, serv);
+
+					// no demands
+					if( fwdQuocient == 0 ) continue;
+
+					// convert quocient to bytes
+					unsigned fwdBytes = ( fwdQuocient * mac_->phyMib()->frameDuration() ) / 8;
+					// convert bytes to minislots
+					unsigned fwdSlots = mac_->bytes2slots (ndx, fwdBytes, true);
+					// now calculate how many minislots this neighbor is already using to send the data to us
+					unsigned bwdSlots = mac_->bytes2slots (sndx, fwdBytes, true);
+
+					// evaluate how many slots are available for this need
+					unsigned avlSlots = 0;
+
+					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+							"\tfwdtraffic: sndx %d needing %d slots to dndx %d, already using %d slots, available %d\n",
+							sndx, ndx, fwdSlots, bwdSlots, avlSlots);
+
+				}
+				// fprintf(stderr, "node %d is forwarding %d traffic which it cannot handle, limiting X from Y
+
+				// draft ideas end here
 
 				// fill IE with dst nodeid, demand level, demand persistence, service class
 				ie.level_ = req_slots + 3;
