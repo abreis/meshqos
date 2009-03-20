@@ -237,7 +237,7 @@ protected:
 	bool avlAdvertise_;
 
 	// TODO: Document this
-	// AFAIK, this is a vector of length 'ndx', where positions are marked as True when
+	// AFAIK, this is a vector of length 'neighs', where positions are marked as True when
 	// a search_tx_slot() fails to reserve slots for an uncoord-DSCH to destination 'ndx'
 	std::vector<bool> send_rtps_together_;
 

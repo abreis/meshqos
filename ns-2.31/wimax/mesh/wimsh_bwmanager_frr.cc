@@ -926,7 +926,7 @@ WimshBwManagerFairRR::schedule (WimshMshDsch* dsch, unsigned int ndx)
 		printDataStructures (stderr);
 	}
 
-	// dsch message dedicated to rtPS service
+	// if this DSCH is dedicated to rtPS
 	if ( dsch->reserved() ) {
 
 		// schedule availabilities into the MSH-DSCH message
@@ -941,9 +941,11 @@ WimshBwManagerFairRR::schedule (WimshMshDsch* dsch, unsigned int ndx)
 		return;
 	}
 
+	// else schedule bandwidth into the DSCH message
 	const unsigned int neighbors = mac_->nneighs();
+
+	// check for uncoordinated DSCH messages that need to be sent in the control subframe (no slots to send in data subframe)
 	for ( ndx = 0 ; ndx < neighbors ; ndx++ ) {
-		// dsch message dedicated to rtPS service
 		if ( send_rtps_together_[ndx] ) {
 
 			// schedule availabilities into the MSH-DSCH message
@@ -1333,58 +1335,98 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 				// get this class' bandwidth estimates
 				unsigned int quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
-				unsigned int extquocient = mac_->scheduler()->cbrExtQuocient (ndx, serv); // to outside the neighborhood
-
+//				unsigned int extquocient = mac_->scheduler()->cbrExtQuocient (ndx, serv); // to outside the neighborhood
 				// calculate number of bytes requested per frame
 				unsigned int req_bytes = ( quocient * mac_->phyMib()->frameDuration() ) / 8;
-				unsigned int req_extbytes = ( extquocient * mac_->phyMib()->frameDuration() ) / 8;
+//				unsigned int req_extbytes = ( extquocient * mac_->phyMib()->frameDuration() ) / 8;
 				// and the number of slots
 				unsigned int req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-				unsigned int req_extslots = mac_->bytes2slots (ndx, req_extbytes, true);
+//				unsigned int req_extslots = mac_->bytes2slots (ndx, req_extbytes, true);
 
 				// simple limiter of slots for 2hop+ traffic
-				if( req_extslots > mac_->phyMib()->slotPerFrame()/2 )
-					req_slots = mac_->phyMib()->slotPerFrame()/2 - 3; // TODO: not true, depends on nexthop burstprofile
+//				if( req_extslots > mac_->phyMib()->slotPerFrame()/2 )
+//					req_slots = mac_->phyMib()->slotPerFrame()/2 - 3; // TODO: not true, depends on nexthop burstprofile
 
-				/* here, todo:
-				 * check for fwdquocient_[] needs
-				 * compute minislot requirements for those needs, according to burst profile to ndx
-				 * get a list of available slots to transmit to ndx
-				 * balance between:
-				 * - minislots reserved for incoming fwdquocient
-				 * - minislots required for outgoing traffic
-				 * - available minislots to send to ndx
-				 * and then cancel reservations as necessary (how to propagate? w/ fwdestimates at the other nodes)
+				/* the next code tries to balance duplex traffic needs
+				 * - check for fwdquocient_[] needs
+				 * - compute minislot requirements for those needs, according to burst profile to ndx
+				 * - get a list of available slots to transmit to ndx
+				 * - balance between:
+				 *   - minislots reserved for incoming fwdquocient (estimate)
+				 *   - minislots required for outgoing traffic (estimate)
+				 *   - available minislots to send to ndx
+				 * - and then cancel reservations as necessary
 				 */
-
-				// draft ideas begin here
 
 				// for the target node ndx, we look at all the traffic being forwarded from other neighbors
 				for( unsigned sndx=0; sndx < neighbors; sndx++ ) {
 					if( sndx == ndx ) continue; // no narcissism
 
-					// get how much data is required
+					// get how much bw is required
 					unsigned fwdQuocient = mac_->scheduler()->cbrFwdQuocient(sndx, ndx, serv);
 
 					// no demands
 					if( fwdQuocient == 0 ) continue;
 
+					// slots per frame
+					unsigned int N = mac_->phyMib()->slotPerFrame();
 					// convert quocient to bytes
-					unsigned fwdBytes = ( fwdQuocient * mac_->phyMib()->frameDuration() ) / 8;
+					unsigned int fwdBytes = ( fwdQuocient * mac_->phyMib()->frameDuration() ) / 8;
 					// convert bytes to minislots
-					unsigned fwdSlots = mac_->bytes2slots (ndx, fwdBytes, true);
-					// now calculate how many minislots this neighbor is already using to send the data to us
-					unsigned bwdSlots = mac_->bytes2slots (sndx, fwdBytes, true);
+					unsigned int fwdSlots = mac_->bytes2slots (ndx, fwdBytes, true);
+					// now estimate how many minislots this neighbor is already using to send the data to us
+					unsigned int bwdSlots = mac_->bytes2slots (sndx, fwdBytes, true);
+					// limits, just in case the estimator is faulty
+					(fwdSlots > N) ? fwdSlots = N : fwdSlots;
+					(bwdSlots > N) ? bwdSlots = N : bwdSlots;
 
 					// evaluate how many slots are available for this need
-					unsigned avlSlots = 0;
+					// we assume a single channel (caution...)
+					unsigned int ch = 0;
+					// frame to start looking for available slots (we use +10, could be +4)
+					unsigned int F = (mac_->frame() + 10) % HORIZON;
+
+					// map with available slots (true -> unavailable, false -> available)
+					// !unconfirmed + !busy + !self_tx_unavl
+					// note: we should consider the destination node's unavailabilities to receive
+					std::bitset<MAX_SLOTS> map =
+						unconfirmedSlots_[F] | unconfirmedSlots_UGS_[F] | unconfirmedSlots_NRTPS_[F] |
+						busy_[F] | busy_UGS_[F] | busy_NRTPS_[F] |
+//						neigh_rx_unavl_[ndx][ch][F] | neigh_rx_unavl_UGS_[ndx][ch][F] | neigh_rx_unavl_NRTPS_[ndx][ch][F] |
+						self_tx_unavl_[ch][F] | self_tx_unavl_UGS_[ch][F] | self_tx_unavl_NRTPS_[ch][F];
+
+					// uncomment to print map to stderr
+//					for(unsigned i = 0; i<N;i++) std::cerr << map[i];
+//					fprintf(stderr, "\n");
+
+					// minislot start and range
+					unsigned int mstart, mrange;
+					for ( mstart=0; map[mstart] != false && mstart < N; mstart++ ); // get the start point
+					if( mstart != N ) { 	// if at least one slot was found
+						// get the available range
+						for ( mrange = 1; (map[mstart+mrange] == false) && (mstart+mrange < N); mrange++ );
+					} else {
+						mstart = 0; mrange = 0;
+					}
 
 					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
-							"\tfwdtraffic: sndx %d needing %d slots to dndx %d, already using %d slots, available %d\n",
-							sndx, ndx, fwdSlots, bwdSlots, avlSlots);
+							"\tfwdtraffic: ndx %d needing %d slots to ndx %d, using %d/%d slots, %d available for fwd [%d:%d]\n",
+							sndx, fwdSlots, ndx, bwdSlots, mac_->phyMib()->slotPerFrame(), mrange, mstart, mstart+mrange);
+
+					// evaluate how many slots should be canceled to have same number of slots to receive and send
+					if( fwdSlots > mrange ) {
+						int balance=0, cancel=0;
+						balance = (bwdSlots + mrange)/2;
+						cancel = bwdSlots - balance;
+
+					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+							"\t\tbalance %d cancel %d\n",
+							balance, cancel);
+
+					// schedule bw cancelations here
+					}
 
 				}
-				// fprintf(stderr, "node %d is forwarding %d traffic which it cannot handle, limiting X from Y
 
 				// draft ideas end here
 
@@ -1814,7 +1856,7 @@ WimshBwManagerFairRR::grantFit (
 	// number of request slots
 	unsigned int nSlots = mac_->bytes2slots (ndx, bytes, true);
 
-	// search the frame and first minislot avilable for grant
+	// search the frame and first minislot available for grant
 	// set the actual frame number within the frame horizon
 	unsigned int F = (frame + 10) % HORIZON;
 
