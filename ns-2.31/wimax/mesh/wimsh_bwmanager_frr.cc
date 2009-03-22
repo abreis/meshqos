@@ -285,7 +285,7 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 	if ( WimaxDebug::trace("WBWM::recvMshDsch") ) fprintf (stderr,
 			"%.9f WBWM::recvMshDsch[%d]\n", NOW, mac_->nodeId());
 
-	rcvAvailabilities(dsch);	// NOTE: why are we interpreting avlIEs before grantIEs now?
+	rcvAvailabilities(dsch);	// we interpret AvlIEs first so we can correctly grant bandwidth afterwards
 	rcvGrants(dsch);
 	rcvRequests(dsch);
 }
@@ -321,6 +321,22 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 	for ( it = gnt.begin() ; it != gnt.end() ; ++it ) {
 		// grant service class
 		unsigned int serv = it->service_;
+
+		/*
+		 * cancel
+		 */
+
+		if ( it->persistence_ == WimshMshDsch::CANCEL ) {
+
+			// if this cancelation is not addressed to this node, ignore it
+			if ( it->nodeId_ != mac_->nodeId() ) continue;
+
+			if ( WimaxDebug::trace("WBWM::rcvGntIE") ) fprintf (stderr,
+					"%.9f WBWM::rcvGntIE   [%d] cancelIE frame %d start %d range %d serv %d\n",
+					NOW, mac_->nodeId(), it->frame_, it->start_, it->range_, it->service_);
+
+			continue;
+		}
 
 		//
 		// grant
@@ -1413,22 +1429,42 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 							"\tfwdtraffic: ndx %d needing %d slots to ndx %d, using %d/%d slots, %d available for fwd [%d:%d]\n",
 							sndx, fwdSlots, ndx, bwdSlots, mac_->phyMib()->slotPerFrame(), mrange, mstart, mstart+mrange);
 
-					// evaluate how many slots should be canceled to have same number of slots to receive and send
+					// evaluate how many slots should be canceled to have same number of slots available to send and receive
 					if( fwdSlots > mrange ) {
 						int balance=0, cancel=0;
 						balance = (bwdSlots + mrange)/2;
 						cancel = bwdSlots - balance;
 
+					// to cancel a request, we create a GrantIE with persistence level CANCEL
+					// cancelations are directed, thus the need for a GrantIE and nodeId_
+
+					WimshMshDsch::GntIE cancelIE;
+					// send the cancel to the traffic source
+					cancelIE.nodeId_ = mac_->ndx2neigh(sndx);
+					// frame to start canceling reservation (we use +10, could be +4)
+					cancelIE.frame_ = mac_->frame() + 10;
+					// minislot start (we cancel the end part of the reservation)
+					cancelIE.start_ = bwdSlots - cancel; // TODO: false
+					// minislot range
+					cancelIE.range_ = cancel;
+					// irrelevant
+					cancelIE.fromRequester_ = 0;
+					// set to CANCEL
+					cancelIE.persistence_ = WimshMshDsch::CANCEL;
+					// channel number (caution, again...)
+					cancelIE.channel_ = 0;
+					// service class
+					cancelIE.service_ = serv;
+
 					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
-							"\t\tbalance %d cancel %d\n",
-							balance, cancel);
+							"\t\tbalance %d cancel %d IE frame %d start %d range %d ch %d serv %d\n",
+							balance, cancel, cancelIE.frame_, cancelIE.start_, cancelIE.range_, cancelIE.channel_, cancelIE.service_);
 
-					// schedule bw cancelations here
+					// the cancel IE can go right into this dsch
+					dsch->add (cancelIE);
+
 					}
-
-				}
-
-				// draft ideas end here
+				}	// fwdtraffic handling ends here
 
 				// fill IE with dst nodeid, demand level, demand persistence, service class
 				ie.level_ = req_slots + 3;
