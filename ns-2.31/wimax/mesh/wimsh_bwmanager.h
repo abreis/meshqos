@@ -82,7 +82,7 @@ protected:
 	//! Array of vectors representing the service class for each burst traffic.
 	std::vector< std::vector<unsigned char> > service_;
 	//! Array of vectors representing tx opportunities for uncoordinated MSH-DSCH.
-	// NOTE: couldn't this be a std::vector< Bitmap >?
+	// NOTE: couldn't this be a Bitmap?
 	std::vector< std::vector<unsigned int> > uncoordsch_;
 
 	//! Next slot to be served.

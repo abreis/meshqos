@@ -94,15 +94,8 @@ protected:
 		  */
 		unsigned int def_out_;
 
-		// TODO: properly document these three
-		//! persistence of request received
-		WimshMshDsch::Persistence pers_in_;
-
-		//! level of request received (slots/frame)
+		//! Level of requests received (slots/frame)
 		unsigned int level_in_;
-
-		//! tell regrant() when received last entry of confirmation set
-		bool lastCnf_;
 
 		//! Create an empty descriptor.
 		NeighDesc () {
@@ -116,9 +109,7 @@ protected:
 			backlog_ = 0;
 			def_in_  = 0;
 			def_out_ = 0;
-			pers_in_ = WimshMshDsch::FRAME1;
 			level_in_ = 0;
-			lastCnf_ = false;
 		}
 	};
 
@@ -375,8 +366,8 @@ protected:
 	//! Invalidate the data structures' entries for the current frame.
 	void invalidate (unsigned int F);
 
-	//! Cancel a reservation or part of it
-	void cancelGrant (unsigned ndx, unsigned char start, unsigned char range, wimax::ServiceClass serv);
+//	//! Cancel a reservation or part of it
+//	void cancelGrant (unsigned ndx, unsigned char start, unsigned char range, wimax::ServiceClass serv);
 
 	//! Cancel UGS reservation for requester's neighbours and itself
 	void cancel_Requester (unsigned int ndx, unsigned char s, WimshMshDsch* dsch);

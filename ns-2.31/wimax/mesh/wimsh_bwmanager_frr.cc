@@ -286,7 +286,7 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 			"%.9f WBWM::recvMshDsch[%d]\n", NOW, mac_->nodeId());
 
 	rcvAvailabilities(dsch);	// we interpret AvlIEs first so we can correctly grant bandwidth afterwards
-	rcvGrants(dsch);
+	rcvGrants(dsch);			// we interpret GntIEs second so that bandwidth cancelations are processed before requests
 	rcvRequests(dsch);
 }
 
@@ -334,6 +334,20 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 			if ( WimaxDebug::trace("WBWM::rcvGntIE") ) fprintf (stderr,
 					"%.9f WBWM::rcvGntIE   [%d] cancelIE frame %d start %d range %d serv %d\n",
 					NOW, mac_->nodeId(), it->frame_, it->start_, it->range_, it->service_);
+
+			// for UGS, we cancel the reservations; for other services, we note the cancel request
+			if ( it->service_ == wimax::UGS ) {
+				// cancel reservation
+				setSlots (busy_UGS_, 						it->frame_, 128, it->start_, it->range_, false);
+				setSlots (self_rx_unavl_UGS_[it->channel_],	it->frame_, 128, it->start_, it->range_, false);
+//				setSlots (neigh_tx_unavl_UGS_[sndx][ch],	it->frame_, 128, it->start_, it->range_, false);
+
+				setSlots (dst_, 	it->frame_, 128, it->start_, it->range_, UINT_MAX);
+				setSlots (grants_, 	it->frame_, 128, it->start_, it->range_, false);
+				setSlots (service_, it->frame_, 128, it->start_, it->range_, 9);
+			} else {
+				// store the bandwidth cancel order for the service
+			}
 
 			continue;
 		}
@@ -677,7 +691,7 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 			Stat::put ( "wimsh_cnf_in", mac_->index(),
 				frange * mac_->slots2bytes (ndx, it->range_, true) );
 
-				if ( WimaxDebug::enabled() ) fprintf (stderr,"subi o lastCnf_ ndx %d s %d\n", ndx, serv);
+//				if ( WimaxDebug::enabled() ) fprintf (stderr,"subi o lastCnf_ ndx %d s %d\n", ndx, serv);
 
 			//if ( uncrdDSCH && rcvCnfs && neigh_[ndx][serv].cnf_in_ < neigh_[ndx][serv].gnt_in_ ) {
 			//if ( s == wimax::RTPS ) {
@@ -905,7 +919,7 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 				* mac_->slots2bytes (ndx, it->level_, true);
 
 		// frame persistence of request
-		neigh_[ndx][s].pers_in_ = it->persistence_;
+//		neigh_[ndx][s].pers_in_ = it->persistence_;
 		neigh_[ndx][s].level_in_ = it->level_;
 
 		// otherwise, update the status of the req_in_, in bytes
@@ -1201,8 +1215,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 		// alias for the deficit counter and other variables
 		unsigned int& granted   = neigh_[ndx][serv].gnt_in_;
-		unsigned int& requested = neigh_[ndx][serv].req_in_;			// slots * persistence
-		unsigned int& level = neigh_[ndx][serv].level_in_;
+		unsigned int& requested = neigh_[ndx][serv].req_in_;
+		unsigned int& level = neigh_[ndx][serv].level_in_;		// slots * persistence
 
 		// number of pending bytes
 		unsigned int total_req = requested - granted;
@@ -1359,10 +1373,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				unsigned int req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 //				unsigned int req_extslots = mac_->bytes2slots (ndx, req_extbytes, true);
 
-				// simple limiter of slots for 2hop+ traffic
-//				if( req_extslots > mac_->phyMib()->slotPerFrame()/2 )
-//					req_slots = mac_->phyMib()->slotPerFrame()/2 - 3; // TODO: not true, depends on nexthop burstprofile
-
 				/* the next code tries to balance duplex traffic needs
 				 * - check for fwdquocient_[] needs
 				 * - compute minislot requirements for those needs, according to burst profile to ndx
@@ -1380,27 +1390,46 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 					// get how much bw is required
 					unsigned fwdQuocient = mac_->scheduler()->cbrFwdQuocient(sndx, ndx, serv);
-
 					// no demands
 					if( fwdQuocient == 0 ) continue;
 
 					// slots per frame
 					unsigned int N = mac_->phyMib()->slotPerFrame();
-					// convert quocient to bytes
-					unsigned int fwdBytes = ( fwdQuocient * mac_->phyMib()->frameDuration() ) / 8;
-					// convert bytes to minislots
-					unsigned int fwdSlots = mac_->bytes2slots (ndx, fwdBytes, true);
-					// now estimate how many minislots this neighbor is already using to send the data to us
-					unsigned int bwdSlots = mac_->bytes2slots (sndx, fwdBytes, true);
-					// limits, just in case the estimator is faulty
-					(fwdSlots > N) ? fwdSlots = N : fwdSlots;
-					(bwdSlots > N) ? bwdSlots = N : bwdSlots;
-
-					// evaluate how many slots are available for this need
 					// we assume a single channel (caution...)
 					unsigned int ch = 0;
 					// frame to start looking for available slots (we use +10, could be +4)
 					unsigned int F = (mac_->frame() + 10) % HORIZON;
+
+					// convert quocient to bytes
+					unsigned int fwdBytes = ( fwdQuocient * mac_->phyMib()->frameDuration() ) / 8;
+					// convert bytes to minislots
+					unsigned int fwdSlots = mac_->bytes2slots (ndx, fwdBytes, true);
+					// limits, just in case the estimator is faulty
+					(fwdSlots > N) ? fwdSlots = N : fwdSlots;
+
+					// now estimate how many minislots this neighbor is already using to send the data to us
+					unsigned int bwdSlots = mac_->bytes2slots (sndx, fwdBytes, true);
+					// just for checks, get the number of minislots really given by this node to sndx/serv
+					unsigned slotCount = 0;
+					for(unsigned i = 0; i < N; i++)
+					if(src_[F][i] == mac_->ndx2neigh(sndx) && service_[F][i]==serv)
+						slotCount++;
+
+					// uncomment to print src_ to stderr
+//					for(unsigned i=0; i < N; i++) std::cerr << src_[F][i] << " ";
+//					fprintf(stderr, "\n");
+
+					// naturally, our estimate can't be larger than the real number of slots allocated
+					if (bwdSlots > slotCount) {
+						// a measure of how much the estimator overshoot (only works with single flows...)
+						float factor = (float)slotCount/(float)bwdSlots;
+						bwdSlots = slotCount;
+						// correct forward estimates also, then
+						fwdSlots *= factor;
+						fprintf(stderr, "\tfwdtraffic: correction factor %f fwdSlots %d\n", factor, fwdSlots);
+					}
+
+					// evaluate how many slots are available for this need
 
 					// map with available slots (true -> unavailable, false -> available)
 					// !unconfirmed + !busy + !self_tx_unavl
@@ -1435,34 +1464,64 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 						balance = (bwdSlots + mrange)/2;
 						cancel = bwdSlots - balance;
 
-					// to cancel a request, we create a GrantIE with persistence level CANCEL
-					// cancelations are directed, thus the need for a GrantIE and nodeId_
+						// get the reservation's end point
+						unsigned rsvEnd = 0;
+						for( ; rsvEnd < N && src_[F][rsvEnd] != mac_->ndx2neigh(sndx) ; rsvEnd++);
+						for( ; rsvEnd < N && src_[F][rsvEnd] == mac_->ndx2neigh(sndx) ; rsvEnd++);
 
-					WimshMshDsch::GntIE cancelIE;
-					// send the cancel to the traffic source
-					cancelIE.nodeId_ = mac_->ndx2neigh(sndx);
-					// frame to start canceling reservation (we use +10, could be +4)
-					cancelIE.frame_ = mac_->frame() + 10;
-					// minislot start (we cancel the end part of the reservation)
-					cancelIE.start_ = bwdSlots - cancel; // TODO: false
-					// minislot range
-					cancelIE.range_ = cancel;
-					// irrelevant
-					cancelIE.fromRequester_ = 0;
-					// set to CANCEL
-					cancelIE.persistence_ = WimshMshDsch::CANCEL;
-					// channel number (caution, again...)
-					cancelIE.channel_ = 0;
-					// service class
-					cancelIE.service_ = serv;
+						// to cancel a request, we create a GrantIE with persistence level CANCEL
+						// cancelations are directed, thus the need for a GrantIE and nodeId_
+						WimshMshDsch::GntIE cancelIE;
+						// send the cancel to the traffic source
+						cancelIE.nodeId_ = mac_->ndx2neigh(sndx);
+						// frame to start canceling reservation (we use +10, could be +4)
+						cancelIE.frame_ = mac_->frame() + 10;
+						// minislot start (we cancel the end part of the reservation)
+						cancelIE.start_ = rsvEnd - cancel;
+						// minislot range
+						cancelIE.range_ = cancel;
+						// irrelevant
+						cancelIE.fromRequester_ = 0;
+						// set to CANCEL
+						cancelIE.persistence_ = WimshMshDsch::CANCEL;
+						// channel number (caution, again...)
+						cancelIE.channel_ = 0;
+						// service class
+						cancelIE.service_ = serv;
 
-					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
-							"\t\tbalance %d cancel %d IE frame %d start %d range %d ch %d serv %d\n",
-							balance, cancel, cancelIE.frame_, cancelIE.start_, cancelIE.range_, cancelIE.channel_, cancelIE.service_);
+						if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+								"\t\tbalance %d cancel %d IE frame %d start %d range %d ch %d serv %d\n",
+								balance, cancel, cancelIE.frame_, cancelIE.start_, cancelIE.range_, cancelIE.channel_, cancelIE.service_);
 
-					// the cancel IE can go right into this dsch
-					dsch->add (cancelIE);
+						// the cancel IE can go right into this DSCH
+						dsch->add (cancelIE);
 
+						// now we cancel the reservations locally, starting in cancelIE.frame_
+						if ( serv == wimax::UGS ) {
+							setSlots (busy_UGS_, 					cancelIE.frame_, 128, cancelIE.start_, cancelIE.range_, false);
+							setSlots (self_rx_unavl_UGS_[ch], 		cancelIE.frame_, 128, cancelIE.start_, cancelIE.range_, false);
+							setSlots (neigh_tx_unavl_UGS_[sndx][ch],cancelIE.frame_, 128, cancelIE.start_, cancelIE.range_, false);
+
+							setSlots (src_, 	cancelIE.frame_, 128, cancelIE.start_, cancelIE.range_, UINT_MAX);
+							setSlots (grants_, 	cancelIE.frame_, 128, cancelIE.start_, cancelIE.range_, false);
+							setSlots (service_, cancelIE.frame_, 128, cancelIE.start_, cancelIE.range_, 9);
+
+							// also, create an AvailabilityIE advertising the freed slots
+
+							WimshMshDsch::AvlIE avlIE;
+							avlIE.frame_ = cancelIE.frame_;
+							avlIE.start_ = cancelIE.start_;
+							avlIE.range_ = cancelIE.range_;
+							avlIE.direction_ = WimshMshDsch::TX_AVL;
+							avlIE.persistence_ = WimshMshDsch::FRAME128;
+							avlIE.channel_ = cancelIE.channel_;
+							avlIE.service_ = cancelIE.service_;
+
+							dsch->add (avlIE);
+						} else {
+							// for classes that request bandwidth periodically, just send the cancel IE
+							// the sender is then responsible for limiting its requests accordingly
+						}
 					}
 				}	// fwdtraffic handling ends here
 
@@ -1493,8 +1552,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				neigh_[ndx][serv].req_out_ = mac_->slots2bytes (ndx, ie.level_, true) * WimshMshDsch::pers2frames(ie.persistence_);
 
 				if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
-						"\trequesting: src %d dst %d bytes %d slots %d level %d pers %d serv %d\n",
-						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, req_slots, ie.level_, ie.persistence_, ie.service_);
+						"\trequesting: src %d dst %d bytes %d level %d pers %d serv %d\n",
+						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, ie.level_, ie.persistence_, ie.service_);
 
 			} else {
 				// no requests were made
@@ -1721,84 +1780,6 @@ WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 			}
 		}
 	}
-}
-
-void
-WimshBwManagerFairRR::cancelGrant (unsigned ndx, unsigned char start, unsigned char range, wimax::ServiceClass serv)
-{
-	//enum ServiceClass { BE, NRTPS, RTPS, UGS, N_SERV_CLASS };
-	//continuation cancel? (cancel everything along the path X)
-	// if start=UCHAR_MAX, cancel anywhere, otherwise cancel in exact position (assumes #minislots < 255)
-	// if range=0, cancel all reservations of given service
-	// only for UGS, other methods needed for periodic classes
-
-	if ( WimaxDebug::trace("WBWM::cancelGrant") ) fprintf (stderr,
-			"%.9f WBWM::cancelGrant[%d] ndx %d start %d range %d serv %d\n", NOW, mac_->nodeId(), ndx, start, range, serv);
-
-	//WimaxNodeId src = mac_->ndx2neigh (ndx);
-
-	if( serv == wimax::UGS )
-	{
-		// create an AvailabilityIE with Persistence CANCEL
-		WimshMshDsch::AvlIE avl;
-		avl.service_ = wimax::UGS;
-		// minislot start
-		avl.start_ = start;
-		// minislot range [start, start+range]
-		avl.range_ = range;
-		// cancel via Persistence 0
-		avl.persistence_ = WimshMshDsch::CANCEL;
-		// start frame number; we order the cancel to take effect after 4 frames
-		avl.frame_ = mac_->frame() + 4;
-		//
-//		avl.direction_ = WimshMshDsch::RX_AVL;
-//		avl.channel_ = channel_[F][i];
-
-		// place the AvlIE in the queue for sending
-		availabilities_[0].push_back (avl);
-
-		// clear the reservation from local structures
-//		setSlots (busy_UGS_,avl.frame_, 1, avl.start_, avl.range_, false);
-//		setSlots (src_,		avl.frame_, 1, avl.start_, avl.range_, 999	);
-//		setSlots (service_,	avl.frame_, 1, avl.start_, avl.range_, 9	);
-//		setSlots (channel_,	avl.frame_, 1, avl.start_, avl.range_, false);
-	}
-//
-//	// create AvlIE to inform granter's neighbours
-//	for ( unsigned int f = fs ; f < ( fs + HORIZON )  ; f++ ) {
-//		F = f % HORIZON;
-//		for ( unsigned int i = 0 ; i < MAX_SLOTS ; i++ ) {
-//
-//			if ( service_[F][i] == s && src_[F][i] == src ) {
-//
-//				WimshMshDsch::AvlIE avl;
-//				avl.frame_ = f;
-//				avl.start_ = i;
-//				avl.direction_ = WimshMshDsch::TX_AVL;
-//				avl.persistence_ = WimshMshDsch::FRAME1;
-//				avl.channel_ = channel_[F][i];
-//				avl.service_ = s;
-//
-//				for ( ; i < MAX_SLOTS && service_[F][i] == s &&
-//						src_[F][i] == src ; i++ ) { }
-//
-//				avl.range_ = i - avl.start_;
-//
-//				availabilities_[0].push_back (avl);
-//
-//				// clear data structures busy with UGS service
-//				setSlots (busy_UGS_, avl.frame_, 1,
-//						avl.start_, avl.range_, false);
-//				setSlots (src_, avl.frame_, 1,
-//						avl.start_, avl.range_, 999);
-//				setSlots (service_, avl.frame_, 1,
-//						avl.start_, avl.range_, 9);
-//				setSlots (channel_, avl.frame_, 1,
-//						avl.start_, avl.range_, false);
-//			}
-//		}
-//	}
-
 }
 
 void
@@ -2063,8 +2044,8 @@ WimshBwManagerFairRR::grantFit (
 										"2gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, r, frame);
 
 									unsigned int symbols =
-									gnt.range_ * mac_->phyMib()->symPerSlot()
-									- mac_->phyMib()->symShortPreamble();
+										gnt.range_ * mac_->phyMib()->symPerSlot()
+										- mac_->phyMib()->symShortPreamble();
 
 									if ( symbols < minGrant_ ) continue;
 
