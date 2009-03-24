@@ -188,11 +188,11 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 			pdu->hdr().meshCid().dst(),       // next-hop
 			pdu->size());                     // bytes
 
-	// call search_tx_slot to handle uncoordinated message to this neighbour
+	// call searchTXslot to handle uncoordinated message to this neighbour
 	// confirm that wasn't alredy called for bwmanager
 	// only considered for rtPS traffic
 	if ( s == wimax::RTPS && (mac_->bwmanager()->nextFrame_rtPS(ndx) + 1) < mac_->frame() )
-		mac_->bwmanager()->search_tx_slot(ndx, 0);
+		mac_->bwmanager()->searchTXslot(ndx, 0);
 
 	// add this PDU to flow rate statistics and recompute
 	recomputeCBR (pdu);

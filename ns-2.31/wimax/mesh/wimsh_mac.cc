@@ -748,8 +748,10 @@ WimshMac::uncoordinated_opportunity (unsigned int dst, bool grant)
 //	assert ( initialized );
 
 	if ( WimaxDebug::trace ("WMAC::opportunity") ) fprintf (stderr,
-			"%.9f WMAC::uncoorDSCH [%d] MSH-DSCH   frame%d\n", NOW, nodeId_,frame());
+			"%.9f WMAC::uncoorDSCH [%d] MSH-DSCH frame %d dst %d grant %d\n",
+			NOW, nodeId_,frame(), dst, grant);
 
+	// get the local neighbor identifier
 	unsigned int ndx = neigh2ndx (dst);
 
 	// create a new (empty) MSH-DSCH message
@@ -790,7 +792,11 @@ WimshMac::uncoordinated_opportunity (unsigned int dst, bool grant)
 	Stat::put ("wimsh_dsch_size_d", index_, dsch->size());
 	*/
 
+	// set transmission mode to the given channel
+//	phy_[0]->setMode ( wimax::TX, channel_[channel] );
+
 	// set the PHY in tx mode to the control channel
+//	(same as:) phy_[0]->setMode (wimax::TX, channel_[0]);
 	setControlChannel (wimax::TX);
 
 	// send the burst using sendBurst(burst)
@@ -1075,8 +1081,8 @@ void
 WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, unsigned int service)
 {
 	if ( WimaxDebug::trace ("WMAC::transmit" ) ) fprintf (stderr,
-			"%.9f WMAC::transmit   [%d] dst %d range %d chn %d\n",
-			NOW, nodeId_, dst, range, channel);
+			"%.9f WMAC::transmit   [%d] dst %d range %d chn %d serv %d\n",
+			NOW, nodeId_, dst, range, channel, service);
 
 	// dst's index
 	const unsigned int ndx = neigh2ndx_[dst];

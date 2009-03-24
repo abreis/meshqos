@@ -107,14 +107,14 @@ WimshBwManager::handle ()
 		 * unDschState_?
 		 */
 		if ( mac_->frame() == nextFrame_[ngh][wimax::RTPS] && mac_->frame() > 0 && lastSlot_ == 0) {
-			search_tx_slot (ngh, 0);
+			searchTXslot (ngh, 0);
 			startHorizon_[ngh][wimax::RTPS] = true;
 			unDschState_[ngh][F] = 0;
 		}
 
 		// TODO: Document
 		if ( mac_->frame() == rtpsDschFrame_[ngh] && mac_->frame() > 0 && lastSlot_ == 0) {
-			search_tx_slot (ngh, unDschState_[ngh][F]);
+			searchTXslot (ngh, unDschState_[ngh][F]);
 		}
 	}
 
@@ -148,8 +148,10 @@ WimshBwManager::handle ()
 			// Conditions: same channel, unDSCH, grant status,
 			// and 'direction=rx or (direction=tx & same dst & same service)'
 			if ( channel_[F][lastSlot_] == channel && uncoordsch_[F][lastSlot_] == undsch &&
-					grants_[F][lastSlot_] == status && ( ( status == true && dst_[F][lastSlot_] == dst &&
-							service_[F][lastSlot_] == service ) || ( status == false ) ) )
+					grants_[F][lastSlot_] == status && (
+							( status == true && dst_[F][lastSlot_] == dst && service_[F][lastSlot_] == service )
+							|| ( status == false )
+							) )
 			{ ++range; }
 			else break;
 		}
@@ -157,12 +159,13 @@ WimshBwManager::handle ()
 
 	if ( undsch != UINT_MAX ) { // if this slot range is marked for uncoordinated DSCH
 		unsigned int ndx = mac_->neigh2ndx (undsch); // get the local node identifier
-		bool grant = ( unDschState_[ndx][F] == 1 )?1:0; // unDschState?
+		bool grant = ( unDschState_[ndx][F] == 1 ) ? 1 : 0; // Request(0) / GrantOpportunity(1)
+
 		if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
 				"%.9f WBWM::handle     [%d] uncoordinated MSH-DSCH message range %d dst %d gnt %d\n",
 				NOW, mac_->nodeId(), range, undsch, grant);
 
-		// create an MSH-DSCH message on coordinator module and transmit at mac module
+		// create an uncoordinated MSH-DSCH message and send it
 		mac_->uncoordinated_opportunity (undsch, grant);
 
 	} else if ( status == true ) {

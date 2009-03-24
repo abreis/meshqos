@@ -82,8 +82,7 @@ protected:
 	//! Array of vectors representing the service class for each burst traffic.
 	std::vector< std::vector<unsigned char> > service_;
 	//! Array of vectors representing tx opportunities for uncoordinated MSH-DSCH.
-	// NOTE: couldn't this be a Bitmap?
-	std::vector< std::vector<unsigned int> > uncoordsch_;
+	std::vector< std::vector<WimaxNodeId> > uncoordsch_;
 
 	//! Next slot to be served.
 	unsigned int lastSlot_;
@@ -138,7 +137,7 @@ public:
 	virtual int command (int argc, const char*const* argv) = 0;
 
 	//! TODO: Documentation
-	virtual void search_tx_slot (unsigned int ndx, unsigned int reqState) = 0;
+	virtual void searchTXslot (unsigned int ndx, unsigned int reqState) = 0;
 	//!
 	unsigned int nextFrame_rtPS (unsigned int ndx)
 		{ return nextFrame_[ndx][wimax::RTPS]; }
@@ -237,7 +236,7 @@ public:
 	//! Tcl interface from the MAC layer.
 	int command (int argc, const char*const* argv);
 
-	void search_tx_slot (unsigned int ndx, unsigned int reqState) { }
+	void searchTXslot (unsigned int ndx, unsigned int reqState) { }
 
 	void computecbr () { }
 

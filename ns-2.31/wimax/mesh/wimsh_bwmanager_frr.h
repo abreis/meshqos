@@ -227,9 +227,11 @@ protected:
 	//! True if availabilities have to be advertised. Configured via Tcl.
 	bool avlAdvertise_;
 
-	// TODO: Document this
-	// AFAIK, this is a vector of length 'neighs', where positions are marked as True when
-	// a search_tx_slot() fails to reserve slots for an uncoord-DSCH to destination 'ndx'
+	/*!
+	 * When a searchTXslot() fails to reserve slots for an uncoord-DSCH to a
+	 * neighbor, this vector's [ndx] position is marked as true as to indicate
+	 * the need to send a DSCH in the control channel
+	 */
 	std::vector<bool> send_rtps_together_;
 
 	//! Regrant horizon offset, in frames. Set via Tcl. Default = 1.
@@ -360,7 +362,7 @@ public:
 	 * for reservation are configurable.
 	 * reqState: '0' => Request ; '1' => Grant_Confirmation // TODO: Confirm this
 	 */
-	void search_tx_slot (unsigned int ndx, unsigned int reqState);
+	void searchTXslot (unsigned int ndx, unsigned int reqState);
 
 protected:
 	//! Invalidate the data structures' entries for the current frame.
