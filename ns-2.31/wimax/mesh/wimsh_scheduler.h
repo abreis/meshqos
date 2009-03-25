@@ -105,6 +105,9 @@ public:
 
 	//! Return the estimated traffic needs of packets being forwarded from node sndx to node dndx, service s.
 	unsigned int cbrFwdQuocient (unsigned int sndx, unsigned int dndx, unsigned int s) { return cbr_[dndx][s].fwdquocient_[sndx]; }
+
+	//! Return the accumulated bytes (useful when there is no quocient yet)
+	unsigned int cbrBytes (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].bytes_; }
 };
 
 /*

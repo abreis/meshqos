@@ -423,9 +423,13 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 			if ( serv == wimax::RTPS ) { // NOTE: see this
 				rtpsDschFrame_[ndx] = mac_->frame() + 1;
 				unDschState_[ndx][(mac_->frame() + 1) % HORIZON] = 2;
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"rcvGrants enviei uma msg de resposta do servico 2 nodeId %d ndx %d\n",
-						mac_->nodeId(),ndx);
+
+				if ( WimaxDebug::trace("WBWM::rcvGrants") ) {
+					fprintf (stderr,
+							"%.9f WBWM::rcvGrants  [%d] Scheduled a grant-confirm to ndx %d frame %d\n",
+							NOW, mac_->nodeId(), ndx, rtpsDschFrame_[ndx]);
+				}
+
 			}
 		} // if ( it->fromRequester_ == false && it->nodeId_ == mac_->nodeId() )
 
@@ -1228,8 +1232,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 		// pending bytes are decremented during cycle below
 		unsigned int pending = total_req;
-		if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
-				"\tgranting: src %d dst %d pending %d level %d\n", mac_->nodeId(), mac_->ndx2neigh(ndx), total_req, level);
 
 		//
 		// grant until one of the following occurs:
@@ -1306,11 +1308,15 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 			realGrantStart (ndx, gnt.frame_, gnt.start_, gnt.range_, gnt.channel_, gnt);
 
+			if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+					"\tgranting: src %d dst %d frame %d start %d range %d pers %d serv %d\n",
+					mac_->nodeId(), mac_->ndx2neigh(ndx), gnt.frame_, gnt.start_, gnt.range_, gnt.persistence_, gnt.service_);
+
 			// add the grant to the MSH-DSCH message, if no room save it
 			// in grantWaiting_ list and transmit it on next opportunity
-			if ( dsch->remaining() > WimshMshDsch::GntIE::size() &&
-					room == true)
+			if ( dsch->remaining() > WimshMshDsch::GntIE::size() && room == true) {
 				dsch->add (gnt);
+			}
 			else
 				grantWaiting_[0].push_back (gnt);
 
@@ -1358,20 +1364,35 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 			// flag to check whether there is an estimate for this flow's bandwidth needs
 			bool reqTraffic = ( mac_->scheduler()->cbrQuocient (ndx, serv) > 0 ) ? true : false;
 
-			if( startHorizon_[ndx][serv] && reqTraffic ){
+			// to speed up rtPS, we do not wait for cbr_ to have an estimate, and request slots for the traffic in backlog
+			bool rtPShurry = false;
+			if( serv == wimax::RTPS && !reqTraffic && mac_->scheduler()->cbrBytes (ndx, serv) > 0 )
+				rtPShurry = true;
+
+			if( startHorizon_[ndx][serv] && (reqTraffic || rtPShurry) ) {
 				// create a request IE
 				WimshMshDsch::ReqIE ie;
 				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
-				// get this class' bandwidth estimates
-				unsigned int quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
-//				unsigned int extquocient = mac_->scheduler()->cbrExtQuocient (ndx, serv); // to outside the neighborhood
-				// calculate number of bytes requested per frame
-				unsigned int req_bytes = ( quocient * mac_->phyMib()->frameDuration() ) / 8;
-//				unsigned int req_extbytes = ( extquocient * mac_->phyMib()->frameDuration() ) / 8;
-				// and the number of slots
-				unsigned int req_slots = mac_->bytes2slots (ndx, req_bytes, true);
-//				unsigned int req_extslots = mac_->bytes2slots (ndx, req_extbytes, true);
+				unsigned int quocient, req_bytes, req_slots;
+				if( !rtPShurry ) {
+					// get this class' bandwidth estimates
+					quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
+	//				unsigned int extquocient = mac_->scheduler()->cbrExtQuocient (ndx, serv); // to outside the neighborhood
+					// calculate number of bytes requested per frame
+					req_bytes = ( quocient * mac_->phyMib()->frameDuration() ) / 8;
+	//				unsigned int req_extbytes = ( extquocient * mac_->phyMib()->frameDuration() ) / 8;
+					// and the number of slots
+					req_slots = mac_->bytes2slots (ndx, req_bytes, true);
+	//				unsigned int req_extslots = mac_->bytes2slots (ndx, req_extbytes, true);
+				} else {
+					req_bytes = mac_->scheduler()->cbrBytes (ndx, serv);
+					req_slots = mac_->bytes2slots (ndx, req_bytes, true);
+					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf(stderr,
+							"\tfasttracking rtPS: bytes %d slots %d\n",
+							req_bytes, req_slots);
+				}
+
 
 				/* the next code tries to balance duplex traffic needs
 				 * - check for fwdquocient_[] needs
@@ -1426,7 +1447,9 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 						bwdSlots = slotCount;
 						// correct forward estimates also, then
 						fwdSlots *= factor;
-						fprintf(stderr, "\tfwdtraffic: correction factor %f fwdSlots %d\n", factor, fwdSlots);
+						if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf(stderr,
+								"\tfwdtraffic: correction factor %f fwdSlots %d\n",
+								factor, fwdSlots);
 					}
 
 					// evaluate how many slots are available for this need
@@ -1628,10 +1651,13 @@ WimshBwManagerFairRR::confirm (WimshMshDsch* dsch, unsigned int nodeid, unsigned
 			// collect the average confirmed grant size, in minislots
 			Stat::put ("wimsh_cnf_size", mac_->index(), gnt.range_);
 
+			if ( WimaxDebug::trace("WBWM::confirm") ) fprintf (stderr,
+					"\tconfirming: src %d dst %d frame %d start %d range %d pers %d serv %d\n",
+					mac_->nodeId(), mac_->ndx2neigh(ndx), gnt.frame_, gnt.start_, gnt.range_, gnt.persistence_, gnt.service_);
+
 			// schedule the grant as a confirmation, if no room save it
 			// in grantWaiting_ list and transmit it on next opportunity
-			if ( dsch->remaining() > WimshMshDsch::GntIE::size() &&
-					room == true)
+			if ( dsch->remaining() > WimshMshDsch::GntIE::size() && room == true)
 				dsch->add (gnt);
 			else
 				grantWaiting_[0].push_back (gnt);
@@ -2444,6 +2470,9 @@ WimshBwManagerFairRR::searchTXslot (unsigned int ndx, unsigned int reqState)
 		if ( WimaxDebug::trace("WBWM::searchTXslot") ) fprintf (stderr,
 				"\t\tUnable to borrow bandwidth from other service classes.\n");
 	} // loop and look into the next frame if this frame had no slots available
+
+	if ( WimaxDebug::trace("WBWM::searchTXslot") ) fprintf (stderr,
+			"\t\tNo opportunities for uncoordinated DSCH found in frames [%d:%d]\n", fstart, fstart+flimit);
 
 	// if sending in any of the next 'flimit' frames is impossible, mark send_rtps_together_
 	// so it will be sent on the next normal (control subframe) MSH-DSCH opportunity
