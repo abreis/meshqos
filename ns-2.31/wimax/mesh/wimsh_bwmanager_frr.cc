@@ -938,16 +938,21 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 				! activeList_[s].find (wimax::LinkId(ndx, wimax::IN, s)) )
 			activeList_[s].insert (wimax::LinkId(ndx, wimax::IN, s));
 
-		// dsch message dedicate to rtPS service class
+		// if we receive an rtPS ReqIE, schedule an uncoordinated MSH-DSCH with a Grant response
 		if ( dsch->reserved() ) {
+			// get slots for this request
+			mac_->bwmanager()->searchTXslot(ndx, true);
 
-			// schedule uncoordinated MSH-DSCH message response
-			//mac_->bwmanager()->searchTXslot(ndx, true);
+			// mark rtpsDschFrame_ to send a DSCH in frame f+1
+			// mark unDschState_ to send a grant in frame f+1
+			// TODO: this assumes searchTXslot is always capable of locating slots in f+1!
+			// searchTXslots should instead return the number of the frame where slots were found
 			rtpsDschFrame_[ndx] = mac_->frame() + 1;
 			unDschState_[ndx][(mac_->frame() + 1) % HORIZON] = 1;
-				if ( WimaxDebug::enabled() ) fprintf (stderr,"rcvRequests enviei uma msg de resposta do servico 2 \n");
-			//mac_->bwmanager()->searchTXslot (ndx, true);
-			//	fprintf (stderr,"rcvRequests enviei uma msg de resposta do servico 2 para uma trama a frente \n");
+
+				if ( WimaxDebug::enabled() ) fprintf (stderr,
+						"\t\tscheduling an rtPS Grant DSCH in frame %d\n",
+						rtpsDschFrame_[ndx]);
 		}
 	}
 }
@@ -1189,8 +1194,11 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 		if ( serv == wimax::RTPS ) {
 
-			if ( WimaxDebug::enabled() ) fprintf (stderr, "flag grant %d\n",dsch->grant());
+			if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+					"\tMSH-DSCH is for %s\n",
+					( dsch->grant() ) ? "GNT" : "REQ");
 
+			// TODO: ding
 			if ( ! dsch->grant() )
 				break;
 
@@ -2314,7 +2322,7 @@ WimshBwManagerFairRR::searchTXslot (unsigned int ndx, unsigned int reqState)
 			NOW, mac_->nodeId(), dst, reqState, fstart, flimit, nslots);
 
 	// Search for a slot in the next 'flimit' frames
-	for ( unsigned int f = fstart ; f < fstart + flimit ; f++ ) {
+	for ( unsigned int f = fstart + 1 ; f < fstart + flimit ; f++ ) {
 		unsigned int F = f % HORIZON; // this frame's number mod horizon
 
 		if ( WimaxDebug::trace("WBWM::searchTXslot") )

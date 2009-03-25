@@ -93,7 +93,7 @@ protected:
 	std::vector< std::vector<unsigned int> > startHorizon_;
 	//! store next frame opportunity to transmit service class scheduling message
 	std::vector< std::vector<unsigned int> > nextFrame_;
-	//! TODO: document
+	//! Array of vectors storing the Request / Grant flag for each node/frame
 	std::vector< std::vector<unsigned int> > unDschState_;
 	//!
 	std::vector<unsigned int> rtpsDschFrame_;
