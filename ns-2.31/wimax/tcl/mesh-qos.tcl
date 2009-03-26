@@ -171,8 +171,8 @@ set opt(prfndx) { }  ;# QAM64_2_3 = 4, QAM64_3_4 = 5
 # traffic
 #
 set opt(nflow)    { 4 }			;# number of flows
-set opt(trfsrc)   { 0 0 0 0 }		;# unspecify to obtain random sources
-set opt(trfdst)   { 2 2 2 2 }		;# unspecify to obtain random destinations
+set opt(trfsrc)   { }		;# unspecify to obtain random sources
+set opt(trfdst)   { }		;# unspecify to obtain random destinations
 set opt(trftype-def)	"cbr"		;# default traffic type {cbr voip vod bwa telnet ftp traffic}
 set opt(trfstart-def)   1.0		;# default application start time 
 set opt(trfstop-def)    "never"		;# default application stop time
@@ -323,6 +323,17 @@ proc create_connections {} {
 		puts "prio for class '$class' not available"
 		exit 0
 	}
+
+	# get the number of nodes of this topology
+	# TODO all topologies
+	set nodes 0
+	if { $opt(topology) == "chain" } {
+		set nodes [expr $opt(n) - 1] 
+	} elseif { $opt(topology) == "grid" } {
+		set nodes [expr $opt(n) * $opt(n) - 1]
+	} elseif { $opt(topology) == "ring" } {
+		set nodes [expr $opt(n) - 1]
+	}
 	
 	# get the source / destination nodes
 	if { [llength $opt(trfsrc)] > $flowid && [llength $opt(trfdst)] > $flowid } {
@@ -339,7 +350,7 @@ proc create_connections {} {
 
 		set u [new RandomVariable/Uniform]
 		$u set min_ 0 
-		$u set max_ [expr $opt(n) - 1 ]
+		$u set max_ $nodes
 
 		set dst [expr round([$u value]) ]
                 
@@ -356,7 +367,7 @@ proc create_connections {} {
 
 		set u [new RandomVariable/Uniform]
 		$u set min_ 0 
-		$u set max_ [expr $opt(n) - 1 ]
+		$u set max_ $nodes
 
 		set src [expr round([$u value]) ]
                 
@@ -371,8 +382,8 @@ proc create_connections {} {
 
 		set u [new RandomVariable/Uniform]
 		$u set min_ 0 
-		$u set max_ [expr $opt(n) - 1 ]
-
+		$u set max_ $nodes
+		puts "======= nodes $nodes"
 		set src [expr round([$u value]) ]
 		set dst [expr round([$u value]) ]
 
