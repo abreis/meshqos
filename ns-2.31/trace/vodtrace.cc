@@ -57,14 +57,18 @@
 #include "object.h"
 #include "trafgen.h"
 
+#include "videodata.h"
+
 /* TODO: deal with errors
  */
 
 struct tracerec {
 	u_int32_t trec_time; // inter-packet time (usec)
 	u_int32_t trec_size; // size of packet (bytes)
-	u_int32_t trec_ftype;	// frame type {I,P,B} (char)
-							// due to the lack of an htonX() for uint8, we 'waste' 24-bits
+	u_int32_t trec_dist; // distortion importance
+
+//	u_int32_t trec_ftype;	// frame type {I,P,B} (char)
+//							// due to the lack of an htonX() for uint8, we 'waste' 24-bits
 };
 
 // object to hold a single trace file
@@ -96,6 +100,7 @@ class VODTrafficTrace : public TrafficGenerator {
 	VODTraceFile *tfile_;
 	struct tracerec trec_;
 	int ndx_;
+//	AppData* vodinfo_;
 	void init();
 };
 
@@ -130,7 +135,8 @@ void VODTraceFile::get_next(int& ndx, struct tracerec& t)
 {
 	t.trec_time = trace_[ndx].trec_time;
 	t.trec_size = trace_[ndx].trec_size;
-	t.trec_ftype = trace_[ndx].trec_ftype;
+//	t.trec_ftype = trace_[ndx].trec_ftype;
+	t.trec_dist = trace_[ndx].trec_dist;
 
 	if (++ndx == nrec_)
 		ndx = 0;
@@ -175,13 +181,19 @@ int VODTraceFile::setup()
 			else {
 				t->trec_time = ntohl(t->trec_time);
 				t->trec_size = ntohl(t->trec_size);
-				t->trec_ftype = ntohl(t->trec_ftype);
+				t->trec_dist = ntohl(t->trec_dist);
+//				t->trec_ftype = ntohl(t->trec_ftype);
+
+				// debug
+				fprintf(stderr, "\n%f %d %f", (float)t->trec_time, t->trec_size, (float)t->trec_dist);
 			}
 
 	}
 
 	/* pick a random starting place in the trace file */
 	return (int(Random::uniform((double)nrec_)+.5));
+
+	// TODO: begin at the start of a GOP
 
 }
 
@@ -236,13 +248,24 @@ void VODTrafficTrace::timeout()
 		return;
 
 	// send a packet
-	/* Note:  May need to set "NEW_BURST" flag in sendmsg() for signifying
+	/* Note: May need to set "NEW_BURST" flag in sendmsg() for signifying
 	 * a new talkspurt when using vat traces(see expoo.cc, tcl/ex/test-rcvr.tcl)
 	 */
-	agent_->sendmsg(size_);
+//	VideoData vodinfo_ ((float)trec_.trec_dist);
+
+	//	PacketData vodinfo(10);
+	AppData* vodinfo = new VideoData ((float)trec_.trec_dist);
+
+	// the following sendmsg() expects an [Agent/UDP]
+	// UdpAgent::sendmsg(int nbytes, AppData* data, const char *flags = 0)
+	agent_->sendmsg(size_, vodinfo);
+//	agent_->sendmsg(size_);
+
 	// figure out when to send the next one
 	// next_interval will fetch the next packet's size and store it in size_
 	nextPkttime_ = next_interval(size_);
+
+
 	// schedule it
 	timer_.resched(nextPkttime_);
 }
@@ -251,6 +274,7 @@ double VODTrafficTrace::next_interval(int& size)
 {
 	tfile_->get_next(ndx_, trec_);
 	size = trec_.trec_size;
-	return(((double)trec_.trec_time)/1000000.0); // usecs->secs
+
+	return(((float)trec_.trec_time)/1000000.0); // usecs->secs
 }
 

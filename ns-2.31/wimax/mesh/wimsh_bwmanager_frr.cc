@@ -1388,7 +1388,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 					quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
 	//				unsigned int extquocient = mac_->scheduler()->cbrExtQuocient (ndx, serv); // to outside the neighborhood
 					// calculate number of bytes requested per frame
-					req_bytes = ( quocient * mac_->phyMib()->frameDuration() ) / 8;
+					req_bytes = (unsigned int) ( ( quocient * mac_->phyMib()->frameDuration() ) / 8 );
 	//				unsigned int req_extbytes = ( extquocient * mac_->phyMib()->frameDuration() ) / 8;
 					// and the number of slots
 					req_slots = mac_->bytes2slots (ndx, req_bytes, true);
@@ -1430,7 +1430,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 					unsigned int F = (mac_->frame() + 10) % HORIZON;
 
 					// convert quocient to bytes
-					unsigned int fwdBytes = ( fwdQuocient * mac_->phyMib()->frameDuration() ) / 8;
+					unsigned int fwdBytes = (unsigned int) ( ( fwdQuocient * mac_->phyMib()->frameDuration() ) / 8 );
 					// convert bytes to minislots
 					unsigned int fwdSlots = mac_->bytes2slots (ndx, fwdBytes, true);
 					// limits, just in case the estimator is faulty
@@ -1454,7 +1454,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 						float factor = (float)slotCount/(float)bwdSlots;
 						bwdSlots = slotCount;
 						// correct forward estimates also, then
-						fwdSlots *= factor;
+						fwdSlots = (unsigned) (fwdSlots*factor);
 						if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf(stderr,
 								"\tfwdtraffic: correction factor %f fwdSlots %d\n",
 								factor, fwdSlots);

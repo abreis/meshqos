@@ -35,6 +35,7 @@
 	 * TODO: support grouping of multiple frames inside a single packet
 	 */
 
+enum FileFormat { ASU_H264, HINT_TRACK };
 enum InputFormat { TERSE, VERBOSE };
 enum OutputFormat { ASCII, BINARY };
 
@@ -84,6 +85,11 @@ int main(int argc, char** argv){
 		exit(1);
 	}
 
+	// get the input file format
+	FileFormat fformat;
+	// !!
+	fformat = HINT_TRACK;
+
 	// get input / output filenames
 	string inFilename, outFilename;
 	args >> Option(GetOpt_pp::EMPTY_OPTION, inFilename);
@@ -121,109 +127,154 @@ int main(int argc, char** argv){
 	unsigned psize = 200; 	// default packet size set to 200 bytes
 	args >> Option('p', "packet-size", psize);
 	// TODO: write checks for the packet size
+	// TODO: support not packetizing anything
 
-	unsigned len_;
-	float time_;
-	vector< unsigned > trace_len_;
-	vector< float > trace_time_;
-	vector < unsigned > trace_ftype_;
 
-	if(informat_ == TERSE) {
+
+	if(fformat == HINT_TRACK) {
+		//[DataUnitDecodingTime DeltaR DeltaD]
 		// read the {length,time} pairs from inFile into the vectors
-		while ( inFile >> len_ && inFile >> time_ ) {
-			trace_len_.push_back(len_);
-			trace_time_.push_back(time_);
+		float len_;
+		float time_;
+		float dist_;
+		vector< float > trace_len_;
+		vector< float > trace_time_;
+		vector< float > trace_dist_;
+
+
+		while ( inFile >> time_ && inFile >> len_ && inFile >> dist_) {
+//			trace_time_.push_back(time_);
+			trace_time_.push_back(time_ * 1000); // to usec
+			trace_len_.push_back(len_ / 8);	// to bytes
+			trace_dist_.push_back(dist_);
 		}
-	} else if(informat_ == VERBOSE) {
-		int fnumber_;
-		char ftype_;
-		float unknown_, psnr1_, psnr2_;
 
-		// read the {length,time,frametype} values from inFile into the vectors
-		while ( inFile >> fnumber_ && inFile >> unknown_ &&
-				inFile >> ftype_ && inFile >> len_ && inFile >> time_ &&
-				inFile >> psnr1_ && inFile >> psnr2_) {
-			trace_len_.push_back(len_);
-			trace_time_.push_back(time_);
-			trace_ftype_.push_back( (unsigned) ftype_);
+		for(unsigned i=0; i < trace_time_.size(); i++){
+			cout << "*** " << trace_time_[i] << '\t' << trace_len_[i] << '\t' << trace_dist_[i] << endl;
 		}
-	}
 
-	// TODO: sort the {length,time} pairs (atm we assume the input trace is sorted)
-
-	/* packetization algorithm
-	 * ns2 TrafficTrace expects a trace file with 2 32-bit fields in big-endian byte order.
-	 * The first field contains the time in microseconds until the next packet is generated,
-	 * and the second field contains the packet size in bytes (from the ns2 manual).
-	 */
-	unsigned packetcount = 0;
-	cout << "Processing " << trace_time_.size() << " frames..." << '\n';
-	for(unsigned i=0; i < trace_time_.size(); i++){
-		vector< unsigned > out_time_;
-		vector< unsigned > out_len_;
-		unsigned out_ftype_;
-		if(informat_ == VERBOSE)
-			out_ftype_ = trace_ftype_[i];
-
-		// uncomment this line to get some debug help into the output file (ASCII only)
-		//outFile << "*** " << trace_time_[i] << '\t' << trace_len_[i] << endl;
-
-		unsigned nexttime_ (trace_time_[i] * 1000); 	// convert from ms to us
-		unsigned nextsize_ (trace_len_[i] / 8); 	// convert from bits to bytes
-		unsigned npkts (nextsize_ / psize); 	// the number of packets to split this frame into
-		npkts++; 	// round up the number of frames (to account for a smaller last frame)
-
-		unsigned remsize (nextsize_); 	// remaining frame length to packetize
-		unsigned timefraction ( nexttime_ / npkts );	//
-
-		// due to rounding errors, the cumulative time of these packets might be different from the frame time
-		// finaltime makes up for this by increasing the last packet arrival time, if necessary
-		unsigned finaltime ( timefraction + (nexttime_ - timefraction*npkts) );
-
-		unsigned packets = 0;	// number of packets generated from this frame
-		while (remsize > psize) {
-			out_time_.push_back(timefraction);
-			out_len_.push_back(psize);
-			remsize -= psize; // decrease remaining size
-			packets++;	// increase packet count for this frame
-		}
-		// push the last packet
-		out_time_.push_back(finaltime);
-		out_len_.push_back(remsize);
-		packets++;
-
-		// statistics
-		packetcount += packets;
-
-		// immediately output the resulting frames, to keep the memory usage small
 		if( outformat_ == BINARY ) {
-			for(unsigned i=0; i < out_time_.size(); i++){
-				unsigned memtime_ = htonl(out_time_[i]);	// convert to bigendian (network byte order)
-				unsigned memlen_ = htonl(out_len_[i]);
-				unsigned memftype_;
-				if(informat_ == VERBOSE)
-					memftype_ = htonl(out_ftype_);
+			for(unsigned i=0; i < trace_time_.size(); i++){
+				unsigned memtime_ = htonl(trace_time_[i]);	// convert to bigendian (network byte order)
+				unsigned memlen_ = htonl(trace_len_[i]);
+				unsigned memdist_ = htonl(trace_dist_[i]);
 
 				outFile.write( (char*) &memtime_, 4);	// write 2*32 bits (4 bytes) into the file
 				outFile.write( (char*) &memlen_, 4);
-				if(informat_ == VERBOSE)
-					outFile.write( (char*) &memftype_, 4); // write 32 bits with frame type
-			}
-		} else if ( outformat_ == ASCII) {
-			for(unsigned i=0; i < out_time_.size(); i++){
-				outFile << (char)out_ftype_ << '\t' << out_time_[i] << '\t' << out_len_[i] << '\n';
+				outFile.write( (char*) &memdist_, 4);
 			}
 		}
-	}
 
-	// close all files
-	inFile.close();
-	outFile.close();
+		// close all files
+		inFile.close();
+		outFile.close();
 
-	// print some information
-	cout << '\n' << trace_time_.size() << " entries processed from '" << inFilename << "'\n";
-	cout << "Packet size: " << psize << ", output packet count: " << packetcount << '\n';
-	cout << "Output saved in '" << outFilename << "'\n";
+	} else if(fformat == ASU_H264) {
+
+		unsigned len_;
+		float time_;
+		vector< unsigned > trace_len_;
+		vector< float > trace_time_;
+		vector< unsigned > trace_ftype_;
+
+		if(informat_ == TERSE) {
+			// read the {length,time} pairs from inFile into the vectors
+			while ( inFile >> len_ && inFile >> time_ ) {
+				trace_len_.push_back(len_);
+				trace_time_.push_back(time_);
+			}
+		} else if(informat_ == VERBOSE) {
+			int fnumber_;
+			char ftype_;
+			float unknown_, psnr1_, psnr2_;
+
+			// read the {length,time,frametype} values from inFile into the vectors
+			while ( inFile >> fnumber_ && inFile >> unknown_ &&
+					inFile >> ftype_ && inFile >> len_ && inFile >> time_ &&
+					inFile >> psnr1_ && inFile >> psnr2_) {
+				trace_len_.push_back(len_);
+				trace_time_.push_back(time_);
+				trace_ftype_.push_back( (unsigned) ftype_);
+			}
+		}
+
+		// TODO: sort the {length,time} pairs (atm we assume the input trace is sorted)
+
+		/* packetization algorithm
+		 * ns2 TrafficTrace expects a trace file with 2 32-bit fields in big-endian byte order.
+		 * The first field contains the time in microseconds until the next packet is generated,
+		 * and the second field contains the packet size in bytes (from the ns2 manual).
+		 */
+		unsigned packetcount = 0;
+		cout << "Processing " << trace_time_.size() << " frames..." << '\n';
+		for(unsigned i=0; i < trace_time_.size(); i++){
+			vector< unsigned > out_time_;
+			vector< unsigned > out_len_;
+			unsigned out_ftype_;
+			if(informat_ == VERBOSE)
+				out_ftype_ = trace_ftype_[i];
+
+			// uncomment this line to get some debug help into the output file (ASCII only)
+			//outFile << "*** " << trace_time_[i] << '\t' << trace_len_[i] << endl;
+
+			unsigned nexttime_ (trace_time_[i] * 1000); 	// convert from ms to us
+			unsigned nextsize_ (trace_len_[i] / 8); 	// convert from bits to bytes
+			unsigned npkts (nextsize_ / psize); 	// the number of packets to split this frame into
+			npkts++; 	// round up the number of frames (to account for a smaller last frame)
+
+			unsigned remsize (nextsize_); 	// remaining frame length to packetize
+			unsigned timefraction ( nexttime_ / npkts );	//
+
+			// due to rounding errors, the cumulative time of these packets might be different from the frame time
+			// finaltime makes up for this by increasing the last packet arrival time, if necessary
+			unsigned finaltime ( timefraction + (nexttime_ - timefraction*npkts) );
+
+			unsigned packets = 0;	// number of packets generated from this frame
+			while (remsize > psize) {
+				out_time_.push_back(timefraction);
+				out_len_.push_back(psize);
+				remsize -= psize; // decrease remaining size
+				packets++;	// increase packet count for this frame
+			}
+			// push the last packet
+			out_time_.push_back(finaltime);
+			out_len_.push_back(remsize);
+			packets++;
+
+			// statistics
+			packetcount += packets;
+
+			// immediately output the resulting frames, to keep the memory usage small
+			if( outformat_ == BINARY ) {
+				for(unsigned i=0; i < out_time_.size(); i++){
+					unsigned memtime_ = htonl(out_time_[i]);	// convert to bigendian (network byte order)
+					unsigned memlen_ = htonl(out_len_[i]);
+					unsigned memftype_;
+					if(informat_ == VERBOSE)
+						memftype_ = htonl(out_ftype_);
+
+					outFile.write( (char*) &memtime_, 4);	// write 2*32 bits (4 bytes) into the file
+					outFile.write( (char*) &memlen_, 4);
+					if(informat_ == VERBOSE)
+						outFile.write( (char*) &memftype_, 4); // write 32 bits with frame type
+				}
+			} else if ( outformat_ == ASCII) {
+				for(unsigned i=0; i < out_time_.size(); i++){
+					outFile << (char)out_ftype_ << '\t' << out_time_[i] << '\t' << out_len_[i] << '\n';
+				}
+			}
+		}
+
+		// close all files
+		inFile.close();
+		outFile.close();
+
+		// print some information
+		cout << '\n' << trace_time_.size() << " entries processed from '" << inFilename << "'\n";
+		cout << "Packet size: " << psize << ", output packet count: " << packetcount << '\n';
+		cout << "Output saved in '" << outFilename << "'\n";
+
+	} // end of ASU_H264 format
 
 	return 0;
 }
