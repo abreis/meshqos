@@ -516,7 +516,7 @@ WimshSchedulerFairRR::RDscheduler (WimaxPdu* pdu, unsigned int ndx, unsigned cha
 			fprintf (stderr, "\tGot a VOD_DATA packet, distortion %f\n", vodinfo_->distortion());
 		}
 
-	fprintf (stderr, "\tVOD_DATA packets in buffer:\n");
+	fprintf (stderr, "\tpackets in the buffers:\n");
 
 	// vector array to store all PDUs in the buffers
 	// [ndx][serv][queueindex][pdu]
@@ -560,6 +560,20 @@ WimshSchedulerFairRR::RDscheduler (WimaxPdu* pdu, unsigned int ndx, unsigned cha
 			}
 		}
 	}
+
+
+	// show a list of all VOD_DATA packets in this node's buffers
+	for(unsigned i=0; i < pdulist_.size(); i++)
+		for(unsigned j=0; j < pdulist_[i].size(); j++)
+			for(unsigned k=0; k < pdulist_[i][j].size(); k++)
+				for(unsigned l=0; l < pdulist_[i][j][k].size(); l++) {
+					if(pdulist_[i][j][k][l]->sdu()->ip()->datalen())
+						if(pdulist_[i][j][k][l]->sdu()->ip()->userdata()->type() == VOD_DATA) {
+							VideoData* vodinfo_ = (VideoData*)pdulist_[i][j][k][l]->sdu()->ip()->userdata();
+							fprintf (stderr, "\t\tVOD_DATA ndx %d serv %d, distortion %f\n", i, j, vodinfo_->distortion());
+						}
+				}
+
 
 	// reconstruct queues
 	for(unsigned i=0; i < mac_->nneighs(); i++) {
