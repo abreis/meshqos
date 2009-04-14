@@ -162,6 +162,9 @@ private:
 
 	//! Recompute statistics of a flow's data rate
 	void recomputeCBR (WimaxPdu* pdu);
+
+	//! TODO
+	void RDscheduler (WimaxPdu* pdu, unsigned int ndx, unsigned char s);
 };
 
 #endif // __NS2_WIMSH_SCHEDULER_FRR_H

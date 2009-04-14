@@ -22,6 +22,8 @@
 #include <wimsh_mac.h>
 #include <wimsh_packet.h>
 #include <wimsh_bwmanager.h>
+#include <videodata.h>
+#include <ns-process.h>
 
 #include <stat.h>
 #include <ip.h>
@@ -109,7 +111,7 @@ void
 WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 {
 	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
-			"%.9f WSCH::addPdu     [%d] %s",
+			"%.9f WSCH::addPdu     [%d] %s\n",
 			NOW, mac_->nodeId(), WimaxDebug::format(pdu));
 
 	// index used to identify the next-hop neighbor node
@@ -125,7 +127,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	if ( ( bufferSharingMode_ == SHARED && bufSize_ + pdu->size() > maxBufSize_ ) ||
 			( bufferSharingMode_ == PER_LINK && link_[ndx][s].size_ + pdu->size() > maxBufSize_) ) {
 		drop (pdu);
-		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, " dropped\n");
+		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU dropped\n");
 		return;
 	}
 
@@ -149,13 +151,16 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	// check for per-flow buffer overflow
 	if ( bufferSharingMode_ == PER_FLOW &&
 		  desc.size_ + pdu->size() > maxBufSize_ ) {
-		drop (pdu);	// TODO: 2hop+ throughput issue begins here
-		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, " dropped\n");
+		drop (pdu);
+		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU dropped\n");
 		return;
 	}
 
 	// add the PDU to the flow descriptor
 	desc.queue_.push (pdu);
+
+	// call the RD scheduler
+	RDscheduler(pdu, ndx, s);
 
 	// update the cumulative/flow/link buffer occupancy
 	// this includes MAC overhead (header/crc), but not the fragmentation
@@ -167,7 +172,7 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	bufSize_ += pdu->size();          // shared
 
 	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
-			" buffsize %d\n",
+			"\tbuffsize %d\n",
 			link_[ndx][s].size_);
 
 	Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
@@ -479,4 +484,101 @@ WimshSchedulerFairRR::handle ()
 	}
 	// restart the timer
 	timer_.start ( interval_ );
+}
+
+void
+WimshSchedulerFairRR::RDscheduler (WimaxPdu* pdu, unsigned int ndx, unsigned char s) {
+
+	if ( WimaxDebug::trace("WSCH::RDscheduler") ) fprintf (stderr,
+			"%.9f WSCH::RDscheduler[%d]\n", NOW, mac_->nodeId());
+
+	// this scheduler won't work with per-flow buffer sharing
+	if (bufferSharingMode_ == PER_FLOW) return;
+
+	// TODO: scheduler code enters here
+	// Probably we need to do SHARED or PER_LINK buffer instead of PER_FLOW
+	// WimaxPdu* pdu
+	// desc.size_ -> buffer size
+	// pdu->size()
+	// link_[ndx][s] -> link queue
+	// 	.rr_ -> Round robin list of flow descriptors
+	// 	.queue_ -> Packet queue to go to the destination dst_ (std::queue<WimaxPdu*>)
+
+	// a std::queue cannot be manipulated, so we either:
+	//	- change all queues to vectors or lists
+	//	- dump the queues, apply the algorithms, and then rebuild them
+
+	// RDscheduler(WimaxPdu* pdu)
+
+	if(pdu->sdu()->ip()->datalen())
+		if(pdu->sdu()->ip()->userdata()->type() == VOD_DATA) {
+			VideoData* vodinfo_ = (VideoData*)pdu->sdu()->ip()->userdata();
+			fprintf (stderr, "\tGot a VOD_DATA packet, distortion %f\n", vodinfo_->distortion());
+		}
+
+	fprintf (stderr, "\tVOD_DATA packets in buffer:\n");
+
+	// vector array to store all PDUs in the buffers
+	// [ndx][serv][queueindex][pdu]
+	std::vector< std::vector< std::vector< std::vector< WimaxPdu* > > > > pdulist_;
+
+	// resize the array
+	pdulist_.resize(mac_->nneighs());
+	for(unsigned i=0; i < mac_->nneighs(); i++)
+		pdulist_[i].resize(wimax::N_SERV_CLASS);
+
+
+	// pop all PDUs from the queues, to process
+	// run all neighbors
+	for(unsigned i=0; i < mac_->nneighs(); i++) {
+		// run all services
+		for(unsigned j=0; j < wimax::N_SERV_CLASS; j++) {
+			// get the list of packet queues
+			std::list<FlowDesc> list_ = link_[i][j].rr_.list();
+			list<FlowDesc>::iterator iter1 = list_.begin();
+
+			// queue index, for indexing
+			unsigned int qindex = 0;
+
+			// resize the array for n packet queues
+			unsigned lsize = list_.size();
+			pdulist_[i][j].resize(lsize);
+
+			// for each packet queue
+			while( iter1 != list_.end() ) {
+				// for each PDU
+				while(!iter1->queue_.empty()) {
+					// pop a PDU from the list into the vector
+					WimaxPdu* temppdu = iter1->queue_.front();
+					pdulist_[i][j][qindex].push_back(temppdu);
+					iter1->queue_.pop();
+				}
+				// increment the queue index
+				qindex++;
+				// get the next packet queue
+				iter1++;
+			}
+		}
+	}
+
+	// reconstruct queues
+	for(unsigned i=0; i < mac_->nneighs(); i++) {
+		// run all services
+		for(unsigned j=0; j < wimax::N_SERV_CLASS; j++) {
+			std::list<FlowDesc> list_ = link_[i][j].rr_.list();
+			list<FlowDesc>::iterator iter1 = list_.begin();
+
+			// queue index, for indexing
+			unsigned int qindex = 0;
+
+			// for each packet queue
+			while( iter1 != list_.end() ) {
+				// for each PDU
+				for(unsigned k=0; k < pdulist_[i][j][qindex].size(); k++)
+					iter1->queue_.push(pdulist_[i][j][qindex][k]);
+				iter1++;
+			}
+
+		}
+	}
 }
