@@ -1,4 +1,8 @@
 // TODO: doc
+
+#ifndef ns_videodata_h
+#define ns_videodata_h
+
 class VideoData : public AppData {
 private:
 	float dist_;	// distortion importance
@@ -24,3 +28,4 @@ public:
 	}
 };
 
+#endif

@@ -171,9 +171,9 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	link_[ndx][s].size_ += pdu->size();  // per link/service pair
 	bufSize_ += pdu->size();          // shared
 
-	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
-			"\tbuffsize %d\n",
-			link_[ndx][s].size_);
+//	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
+//			"\tbuffsize %d\n",
+//			link_[ndx][s].size_);
 
 	Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
 	Stat::put ("wimsh_bufsize_mac_d", mac_->index(), bufSize_ );
@@ -492,8 +492,8 @@ WimshSchedulerFairRR::RDscheduler (WimaxPdu* pdu, unsigned int ndx, unsigned cha
 	if ( WimaxDebug::trace("WSCH::RDscheduler") ) fprintf (stderr,
 			"%.9f WSCH::RDscheduler[%d]\n", NOW, mac_->nodeId());
 
-	// this scheduler won't work with per-flow buffer sharing
-	if (bufferSharingMode_ == PER_FLOW) return;
+	// this scheduler won't work with per-flow or per-link buffer sharing
+	if (bufferSharingMode_ == PER_FLOW || bufferSharingMode_ == PER_LINK) return;
 
 	// TODO: scheduler code enters here
 	// Probably we need to do SHARED or PER_LINK buffer instead of PER_FLOW
@@ -574,6 +574,15 @@ WimshSchedulerFairRR::RDscheduler (WimaxPdu* pdu, unsigned int ndx, unsigned cha
 						}
 				}
 
+	// see how full the buffer is
+	unsigned int buffusage = 0;
+	for(unsigned i=0; i < pdulist_.size(); i++)
+		for(unsigned j=0; j < pdulist_[i].size(); j++)
+			for(unsigned k=0; k < pdulist_[i][j].size(); k++)
+				for(unsigned l=0; l < pdulist_[i][j][k].size(); l++) {
+					buffusage += pdulist_[i][j][k][l]->size();
+				}
+	fprintf (stderr, "\t\tbuffer usage %d/%d, %.2f%%\n", buffusage, maxBufSize_, ((float)buffusage/(float)maxBufSize_)*100 );
 
 	// reconstruct queues
 	for(unsigned i=0; i < mac_->nneighs(); i++) {
