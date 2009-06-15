@@ -505,6 +505,12 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 	// we pass the encapsulated IP datagram to the upper layer (ie. LL)
 	if ( (WimaxNodeId) HDR_IP(sdu->ip())->daddr() == nodeId_ ) {
 		HDR_CMN(sdu->ip())->direction () = hdr_cmn::UP;
+
+		// debug delay
+		fprintf(stderr,
+				"\tDEBUG delay SDU fid %d uid %d delay %f\n",
+				sdu->flowId(), HDR_CMN(sdu->ip())->uid(), NOW-sdu->timestamp());
+
 		ll_->recv (sdu->ip(), 0);
 		delete sdu;
 

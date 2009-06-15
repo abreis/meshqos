@@ -118,6 +118,39 @@ WimshBwManager::handle ()
 		}
 	}
 
+	// for debugging purposes, print out the 140 ministot status
+	if ( WimaxDebug::trace("WBWM::handle2") )
+	{
+		fprintf(stderr,
+				"\t[%d] Frame status for frame %d\n"
+				"\t\tFrame status: 1-transmit, 0-receive\n"
+				"\t\tFrame srv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n"
+				"\t\tdst only meaningful for 1-transmit\n",
+				mac_->nodeId(), F);
+
+		fprintf(stderr, "\tstatus:");
+		for (unsigned nslot=0; nslot < N ; nslot++) {
+			fprintf(stderr, "%2d", (bool)grants_[F][nslot]);
+		}
+
+
+		fprintf(stderr, "\n");
+		fprintf(stderr, "\t   dst:");
+		for (unsigned nslot=0; nslot < N ; nslot++) {
+			fprintf(stderr, "%2d", dst_[F][nslot]);
+		}
+
+
+		fprintf(stderr, "\n");
+		fprintf(stderr, "\t   srv:");
+		for (unsigned nslot=0; nslot < N ; nslot++) {
+			fprintf(stderr, "%2d", service_[F][nslot]);
+		}
+
+		fprintf(stderr, "\n");
+	}
+
+
 	/*
 	 * The loop below starts from the next available slot from the last call
 	 * and goes on until either the data subframe ends, or there is a
