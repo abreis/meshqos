@@ -123,14 +123,15 @@ WimshBwManager::handle ()
 	{
 		fprintf(stderr,
 				"\t[%d] Frame status for frame %d\n"
-				"\t\tFrame status: 1-transmit, 0-receive\n"
-				"\t\tFrame srv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n"
-				"\t\tdst only meaningful for 1-transmit\n",
+				"\t\tstatus: 1-transmit, 0-receive\n"
+				"\t\tdst: nodeID (only meaningful for status=1)\n"
+				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
 				mac_->nodeId(), F);
 
 		fprintf(stderr, "\tstatus:");
 		for (unsigned nslot=0; nslot < N ; nslot++) {
 			fprintf(stderr, "%2d", (bool)grants_[F][nslot]);
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       ");
 		}
 
 
@@ -138,6 +139,7 @@ WimshBwManager::handle ()
 		fprintf(stderr, "\t   dst:");
 		for (unsigned nslot=0; nslot < N ; nslot++) {
 			fprintf(stderr, "%2d", dst_[F][nslot]);
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       ");
 		}
 
 
@@ -145,6 +147,7 @@ WimshBwManager::handle ()
 		fprintf(stderr, "\t   srv:");
 		for (unsigned nslot=0; nslot < N ; nslot++) {
 			fprintf(stderr, "%2d", service_[F][nslot]);
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       ");
 		}
 
 		fprintf(stderr, "\n");
