@@ -202,9 +202,14 @@ WimshBwManager::handle ()
 		mac_->uncoordinated_opportunity (undsch, grant);
 
 	} else if ( status == true ) {
+//		if ( WimaxDebug::trace("WBWM::handle") ) fprintf(stderr,
+//				"\ttransmitting range %d dst %d ch %d srv %d\n",
+//				range, dst, channel, service);
 		// set transmit mode on channel 0 towards dst
 		mac_->transmit (range, dst, channel, service);
 	} else {
+//		if ( WimaxDebug::trace("WBWM::handle") ) fprintf(stderr,
+//				"\treceiving\n");
 		// set receive mode on channel 0
 		mac_->receive (channel);
 	}

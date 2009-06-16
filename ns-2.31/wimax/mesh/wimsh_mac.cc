@@ -1087,7 +1087,7 @@ void
 WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, unsigned int service)
 {
 	if ( WimaxDebug::trace ("WMAC::transmit" ) ) fprintf (stderr,
-			"%.9f WMAC::transmit   [%d] dst %d range %d chn %d serv %d\n",
+			"%.9f WMAC::transmit   [%d] dst %d range %d chn %d serv %d",
 			NOW, nodeId_, dst, range, channel, service);
 
 	// dst's index
@@ -1097,17 +1097,20 @@ WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, u
 	// we account for the physical preamble that must be transmitted
 	unsigned int bytes = slots2bytes (ndx, range, true);
 
-	/* if ( WimaxDebug::enabled() ) fprintf (stderr,
-		"!!!! range %d bytes %d\n", range, bytes); */
-
 	// create a new burst into the fragmentation buffer
 	bool room = fragbuf_[ndx]->newBurst (profile_[ndx], bytes, service);
+
+	if ( WimaxDebug::trace ("WMAC::transmit" ) ) fprintf (stderr,
+			" bytes %d room %d\n",
+			bytes, room);
 
 	// if there is room schedule more PDUs from the scheduler
 	if ( room ) scheduler_->schedule (*fragbuf_[ndx], dst, service);
 
 	// do not send out the buffer is there are not scheduled PDUs within
 	if ( fragbuf_[ndx]->getBurst()->npdus() == 0 ) {
+		if ( WimaxDebug::trace ("WMAC::transmit" ) ) fprintf (stderr,
+				"\tno scheduled PDUs within fragbuf_\n");
 		delete fragbuf_[ndx]->getBurst();
 		return;
 	}
@@ -1166,6 +1169,8 @@ WimshMac::transmit (unsigned int range, WimaxNodeId dst, unsigned int channel, u
 	// transmit the burst to the PHY (unless it is empty)
 	WimshBurst* burst = fragbuf_[ndx]->getBurst();
 	if ( burst->npdus() > 0 ) {
+		if ( WimaxDebug::trace ("WMAC::transmit" ) ) fprintf (stderr,
+				"\ttransmitting fragbuf_ with %d PDUs\n", burst->npdus());
 		bwmanager_->sent ( dst, burst->size(), service);
 		phy_[0]->sendBurst ( burst );
 	}

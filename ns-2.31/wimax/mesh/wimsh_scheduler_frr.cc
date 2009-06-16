@@ -127,7 +127,8 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	if ( ( bufferSharingMode_ == SHARED && bufSize_ + pdu->size() > maxBufSize_ ) ||
 			( bufferSharingMode_ == PER_LINK && link_[ndx][s].size_ + pdu->size() > maxBufSize_) ) {
 		drop (pdu);
-		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU dropped\n");
+		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU dropped - buffer %u/%u\n",
+				bufSize_, maxBufSize_);
 		return;
 	}
 
@@ -152,7 +153,8 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	if ( bufferSharingMode_ == PER_FLOW &&
 		  desc.size_ + pdu->size() > maxBufSize_ ) {
 		drop (pdu);
-		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU dropped\n");
+		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU dropped - buffer %u/%u\n",
+				bufSize_, maxBufSize_);
 		return;
 	}
 
@@ -167,6 +169,9 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	desc.size_ += pdu->size();        // per flow
 	link_[ndx][s].size_ += pdu->size();  // per link/service pair
 	bufSize_ += pdu->size();          // shared
+
+	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU added - buffer %u/%u\n",
+			bufSize_, maxBufSize_);
 
 //	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
 //			"\tbuffsize %d\n",

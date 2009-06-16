@@ -1581,9 +1581,15 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				// update request out (requested bytes per frame * persistence)
 				neigh_[ndx][serv].req_out_ = mac_->slots2bytes (ndx, ie.level_, true) * WimshMshDsch::pers2frames(ie.persistence_);
 
-				if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+				if ( WimaxDebug::trace("WBWM::requestGrant") ) {
+					fprintf (stderr,
 						"\trequesting: src %d dst %d bytes %d level %d pers %d serv %d\n",
 						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, ie.level_, ie.persistence_, ie.service_);
+
+					fprintf (stderr,
+						"\t\tbased on estimate: quocient %d bytes %d slots %d\n",
+						quocient, req_bytes, req_slots);
+				}
 
 			} else {
 				// no requests were made
