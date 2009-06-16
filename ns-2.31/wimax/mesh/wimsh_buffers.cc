@@ -63,9 +63,8 @@ WimshFragmentationBuffer::newBurst (wimax::BurstProfile p, unsigned int size, un
 	// there is room for the whole PDU (or fragment thereof)
 	if ( needed <= size_ ) {
 
-	if ( WimaxDebug::enabled() ) fprintf (stderr,
-			"!!lastPdu tamanho %d service %d\n",lastPdu_[s]->size(), s);
-
+//	if ( WimaxDebug::enabled() ) fprintf (stderr,
+//			"!!lastPdu tamanho %d service %d\n",lastPdu_[s]->size(), s);
 
 		// if the stored PDU is a fragment, then it is the last one
 		if ( lastPdu_[s]->hdr().fragmentation() == true )

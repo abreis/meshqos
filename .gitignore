@@ -11614,3 +11614,8 @@ zlib-1.2.3/zlib.3
 zlib-1.2.3/zlib.h
 zlib-1.2.3/zutil.c
 zlib-1.2.3/zutil.h
+ns-2.31/common/ptypes2tcl
+ns-2.31/gen/ns_tcl.cc
+ns-2.31/gen/ptypes.cc
+ns-2.31/gen/version.c
+ns-2.31/ns
