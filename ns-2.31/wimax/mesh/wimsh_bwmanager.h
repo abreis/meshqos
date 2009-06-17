@@ -167,18 +167,24 @@ WimshBwManager::setSlots (
       unsigned int fstart, unsigned int frange,
       unsigned int mstart, unsigned int mrange, const V& value)
 {
-   // for each frame
-   for ( unsigned int f = 0 ; f < frange ; f++ ) {
-      unsigned int F = ( fstart + f ) % HORIZON;
+	// TODO: implement debugging
+	if ( WimaxDebug::trace ("WBWM::setSlots" ) )
+		fprintf (stderr,
+			"\tWBWM::setSlots\tfstart %d frange %d mstart %d mrange %d val %d\n",
+			fstart, frange, mstart, mrange, value);
 
-      // for each minislot
-      for ( unsigned int s = 0 ; s < mrange ; s++ ) {
-         unsigned int S = mstart + s;
+	// for each frame
+	for ( unsigned int f = 0 ; f < frange ; f++ ) {
+		unsigned int F = ( fstart + f ) % HORIZON;
 
-         // mark the minislot
-         map[F][S] = value;
-      }
-   }
+		// for each minislot
+		for ( unsigned int s = 0 ; s < mrange ; s++ ) {
+			unsigned int S = mstart + s;
+
+			// mark the minislot
+			map[F][S] = value;
+		}
+	}
 }
 
 /*

@@ -223,6 +223,41 @@ WimshBwManager::invalidate (unsigned int F)
 	}
 }
 
+void
+WimshBwManager::printMiniSlots(void)
+{
+	{
+		const unsigned int F = mac_->frame() % HORIZON;        // alias
+		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
+		fprintf(stderr,
+				"\t[%d] Minislot status for frame %d\n"
+				"\t\tstatus: t-transmit, t-receive\n"
+				"\t\tdst: nodeID (only meaningful for status=1)\n"
+				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
+				mac_->nodeId(), F);
+
+		fprintf(stderr, "\t   dst:%3d:", 0);
+		for (unsigned nslot=0; nslot < N ; nslot++) {
+			fprintf(stderr, " %2d", dst_[F][nslot]);
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
+		}
+
+
+		fprintf(stderr, "\n");
+		fprintf(stderr, "\t   srv:%3d:", 0);
+		for (unsigned nslot=0; nslot < N ; nslot++) {
+
+			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
+
+
+
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
+		}
+
+		fprintf(stderr, "\n");
+	}
+}
+
 /*
  *
  * class WimshBwManagerDummy
@@ -310,37 +345,3 @@ WimshBwManagerDummy::schedule (WimshMshDsch* dsch, unsigned int dst)
 	}
 }
 
-void
-WimshBwManager::printMiniSlots(void)
-{
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
-}
