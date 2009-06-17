@@ -88,9 +88,6 @@ WimshBwManager::handle ()
 	unsigned int service = wimax::N_SERV_CLASS;		// traffic service class
 	unsigned int undsch = UINT_MAX;
 
-	// for debugging purposes, print out the 141 ministot status
-	printMiniSlots();
-
 	// search for next frame to transmit requests (turn on bwmanager_frr flags)
 	// these frames are assigned at end of request procedure in bwmanager_frr
 	for ( unsigned int ngh = 0 ; ngh < mac_->nneighs() ; ngh++ ) {
@@ -208,8 +205,6 @@ WimshBwManager::handle ()
 	} else {
 		timer_.start ( range * mac_->phyMib()->slotDuration() );
 	}
-
-	printMiniSlots();
 }
 
 void

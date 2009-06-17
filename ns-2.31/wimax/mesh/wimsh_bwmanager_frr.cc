@@ -285,107 +285,15 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 	if ( WimaxDebug::trace("WBWM::recvMshDsch") ) fprintf (stderr,
 			"%.9f WBWM::recvMshDsch[%d]\n", NOW, mac_->nodeId());
 
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
-
 	// breakpoint triggers
 	float tnow = NOW;
 	unsigned int tnode = mac_->nodeId();
 
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
 
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
 
 	rcvAvailabilities(dsch);	// we interpret AvlIEs first so we can correctly grant bandwidth afterwards
 	rcvGrants(dsch);			// we interpret GntIEs second so that bandwidth cancelations are processed before requests
 	rcvRequests(dsch);
-
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
-
 }
 
 void
@@ -806,39 +714,6 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 			//}
 		}
 	} // process the next GrantIE in the DSCH
-
-	fprintf(stderr,"DEBUG Receive grants\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
-
 }
 
 void
@@ -1023,38 +898,6 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 			}
 		}
 	}
-
-	fprintf(stderr, "DEBUG receive availabilities\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
 }
 
 void
@@ -1121,37 +964,6 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 						"\t\tscheduling an rtPS Grant DSCH in frame %d\n",
 						rtpsDschFrame_[ndx]);
 		}
-	}
-	fprintf(stderr, "DEBUG receive requests\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
 	}
 }
 
@@ -1283,38 +1095,6 @@ WimshBwManagerFairRR::availabilities (WimshMshDsch* dsch, unsigned int serv)
 		// add the grant to the MSH-DSCH message
 		dsch->add (gnt);
 		//dsch->gntCompact();
-	}
-
-	fprintf(stderr, "DEBUG availabilities\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
 	}
 }
 
@@ -1832,38 +1612,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 			// update the requested counter
 			Stat::put ("wimsh_req_out", mac_->index(), neigh_[ndx][serv].req_out_);
 	}
-
-	fprintf(stderr, "DEBUG request grant\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
 }
 
 void
@@ -1994,38 +1742,6 @@ WimshBwManagerFairRR::confirm (WimshMshDsch* dsch, unsigned int nodeid, unsigned
 		neigh_[ndx][serv].cnf_out_ = 0;                                    // XXX
 
 	}
-
-	fprintf(stderr, "DEBUG confirm\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
 }
 
 void
@@ -2059,39 +1775,6 @@ WimshBwManagerFairRR::invalidate (unsigned int F)
 	unconfirmedSlots_[F].reset();
 	unconfirmedSlots_NRTPS_[F].reset();
 	WimshBwManager::invalidate (F);
-
-
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
-
 }
 
 void
@@ -2152,38 +1835,6 @@ WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 			}
 		}
 	}
-
-	fprintf(stderr, "DEBUG cancel_Requester\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
 }
 
 void
@@ -2228,38 +1879,6 @@ WimshBwManagerFairRR::cancel_Granter (unsigned int ndx,
 						avl.start_, avl.range_, false);
 			}
 		}
-	}
-
-	fprintf(stderr, "DEBUG cancel granter\n");
-	{
-		const unsigned int F = mac_->frame() % HORIZON;        // alias
-		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
 	}
 }
 
