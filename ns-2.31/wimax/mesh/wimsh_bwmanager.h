@@ -119,6 +119,9 @@ public:
 	//! Initialize the internal data structures. Called by the MAC layer.
 	virtual void initialize () = 0;
 
+	//! Print the minislot status for this node
+	virtual void printMiniSlots(void);
+
 	//! Indicate some additional backlog of an end-to-end flow.
 	virtual void backlog (WimaxNodeId src, WimaxNodeId dst, unsigned char prio,
 			WimaxNodeId nexthop, unsigned int bytes ) = 0;

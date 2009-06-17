@@ -88,6 +88,9 @@ WimshBwManager::handle ()
 	unsigned int service = wimax::N_SERV_CLASS;		// traffic service class
 	unsigned int undsch = UINT_MAX;
 
+	// for debugging purposes, print out the 141 ministot status
+	printMiniSlots();
+
 	// search for next frame to transmit requests (turn on bwmanager_frr flags)
 	// these frames are assigned at end of request procedure in bwmanager_frr
 	for ( unsigned int ngh = 0 ; ngh < mac_->nneighs() ; ngh++ ) {
@@ -121,38 +124,6 @@ WimshBwManager::handle ()
 			searchTXslot (ngh, unDschState_[ngh][F]);
 		}
 	}
-
-	// for debugging purposes, print out the 140 ministot status
-	if ( WimaxDebug::trace("WBWM::handle2") )
-	{
-		fprintf(stderr,
-				"\t[%d] Minislot status for frame %d\n"
-				"\t\tstatus: t-transmit, t-receive\n"
-				"\t\tdst: nodeID (only meaningful for status=1)\n"
-				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
-				mac_->nodeId(), F);
-
-		fprintf(stderr, "\t   dst:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-
-		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:%3d:", 0);
-		for (unsigned nslot=0; nslot < N ; nslot++) {
-
-			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
-
-
-
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
-		}
-
-		fprintf(stderr, "\n");
-	}
-
 
 	/*
 	 * The loop below starts from the next available slot from the last call
@@ -237,6 +208,8 @@ WimshBwManager::handle ()
 	} else {
 		timer_.start ( range * mac_->phyMib()->slotDuration() );
 	}
+
+	printMiniSlots();
 }
 
 void
@@ -342,3 +315,37 @@ WimshBwManagerDummy::schedule (WimshMshDsch* dsch, unsigned int dst)
 	}
 }
 
+void
+WimshBwManager::printMiniSlots(void)
+{
+	{
+		const unsigned int F = mac_->frame() % HORIZON;        // alias
+		const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
+		fprintf(stderr,
+				"\t[%d] Minislot status for frame %d\n"
+				"\t\tstatus: t-transmit, t-receive\n"
+				"\t\tdst: nodeID (only meaningful for status=1)\n"
+				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
+				mac_->nodeId(), F);
+
+		fprintf(stderr, "\t   dst:%3d:", 0);
+		for (unsigned nslot=0; nslot < N ; nslot++) {
+			fprintf(stderr, " %2d", dst_[F][nslot]);
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
+		}
+
+
+		fprintf(stderr, "\n");
+		fprintf(stderr, "\t   srv:%3d:", 0);
+		for (unsigned nslot=0; nslot < N ; nslot++) {
+
+			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
+
+
+
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
+		}
+
+		fprintf(stderr, "\n");
+	}
+}

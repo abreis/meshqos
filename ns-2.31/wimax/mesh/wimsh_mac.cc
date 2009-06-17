@@ -646,9 +646,13 @@ WimshMac::recvMshDsch (WimshMshDsch* dsch, double txtime)
 		}
 
 		// send the MSH-DSCH message to the coordinator and to the bw manager
+		bwmanager_->printMiniSlots();
 		coordinator_->recvMshDsch (dsch, txtime);
+		bwmanager_->printMiniSlots();
 		bwmanager_->recvMshDsch (dsch);
+		bwmanager_->printMiniSlots();
 		forwarding_->recvMshDsch (dsch);
+		bwmanager_->printMiniSlots();
 
 	// dsch message dedicate to rtPS service class
 	} else
@@ -1069,8 +1073,11 @@ WimshMac::setControlChannel (wimax::ChannelStatus s)
 			"%.9f WMAC::setCtrlChn [%d] status %s\n",
 			NOW, nodeId_,
 			(s == wimax::TX) ? "TX" : (s == wimax::RX) ? "RX" : "NONE");
+	bwmanager_->printMiniSlots();
 
 	phy_[0]->setMode (s, channel_[0]);
+
+	bwmanager_->printMiniSlots();
 }
 
 void
