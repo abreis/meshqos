@@ -285,6 +285,12 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 	if ( WimaxDebug::trace("WBWM::recvMshDsch") ) fprintf (stderr,
 			"%.9f WBWM::recvMshDsch[%d]\n", NOW, mac_->nodeId());
 
+	// breakpoint triggers
+	float tnow = NOW;
+	unsigned int tnode = mac_->nodeId();
+
+
+
 	rcvAvailabilities(dsch);	// we interpret AvlIEs first so we can correctly grant bandwidth afterwards
 	rcvGrants(dsch);			// we interpret GntIEs second so that bandwidth cancelations are processed before requests
 	rcvRequests(dsch);
@@ -293,6 +299,9 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 void
 WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 {
+	// breakpoint triggers
+	unsigned int tnode = mac_->nodeId();
+
 	// true if we're interpreting an uncoordinated DSCH's grants
 	bool uncrdDSCH = dsch->reserved();
 	// ?
@@ -489,8 +498,7 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 					setSlots (neigh_tx_unavl_[ndx][ch], it->frame_, frange,
 							it->start_, it->range_, true);
 				}
-				setSlots (service_, it->frame_, frange,
-						it->start_, it->range_, serv);
+				setSlots (service_, it->frame_, frange,	it->start_, it->range_, serv);
 			}
 
 			//
@@ -522,8 +530,7 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 						setSlots (neigh_tx_unavl_[ndx][ch], it->frame_, frange,
 								it->start_, it->range_, true);
 					}
-					setSlots (service_, it->frame_, frange,
-							it->start_, it->range_, serv);
+					setSlots (service_, it->frame_, frange,	it->start_, it->range_, serv);
 				}
 			}
 
@@ -712,6 +719,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 void
 WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 {
+	// breakpoint triggers
+	unsigned int tnode = mac_->nodeId();
+
 	// get the list of availabilities
 	std::list<WimshMshDsch::AvlIE>& avl = dsch->avl();
 
@@ -1092,6 +1102,9 @@ void
 WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 		unsigned int ndx, unsigned int serv)
 {
+	// breakpoint triggers
+	unsigned int tnode = mac_->nodeId();
+
 	const unsigned int neighbors = mac_->nneighs();
 
 	// ndx parameter is only used for rtPS
@@ -1604,6 +1617,9 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 void
 WimshBwManagerFairRR::confirm (WimshMshDsch* dsch, unsigned int nodeid, unsigned int serv)
 {
+	// breakpoint triggers
+	unsigned int tnode = mac_->nodeId();
+
 	if ( serv == wimax::RTPS && dsch->grant() )
 		return;
 
@@ -1803,7 +1819,7 @@ WimshBwManagerFairRR::cancel_Requester (unsigned int ndx,
 				else
 					availabilities_[0].push_back (avl);
 
-				// clear data structures busy whith UGS service
+				// clear data structures busy with UGS service
 				setSlots (busy_UGS_, avl.frame_, 1,
 						avl.start_, avl.range_, false);
 				setSlots (grants_, avl.frame_, 1,

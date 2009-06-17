@@ -70,11 +70,15 @@ void
 WimshBwManager::handle ()
 {
 	if ( WimaxDebug::trace("WBWM::handle") ) fprintf (stderr,
-			"%.9f WBWM::handle     [%d] frame %d lastSlot_ %d\n",
+			"%.9f WBWM::handle     [%d] starting, frame %d lastSlot_ %d\n",
 			NOW, mac_->nodeId(), mac_->frame() % HORIZON, lastSlot_);
 
 	const unsigned int F = mac_->frame() % HORIZON;        // alias
 	const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
+
+	// for breakpoint hit
+	float tnow = NOW;
+	unsigned int tnode = mac_->nodeId();
 
 	bool status = true;       // tx = true, rx = false
 	WimaxNodeId  dst = UINT_MAX;     // only meaningful with tx
@@ -122,36 +126,28 @@ WimshBwManager::handle ()
 	if ( WimaxDebug::trace("WBWM::handle2") )
 	{
 		fprintf(stderr,
-				"\t[%d] Frame status for frame %d\n"
+				"\t[%d] Minislot status for frame %d\n"
 				"\t\tstatus: t-transmit, t-receive\n"
 				"\t\tdst: nodeID (only meaningful for status=1)\n"
 				"\t\tsrv: 0-BE, 1-nrtPS, 2-rtPS, 3-UGS\n",
 				mac_->nodeId(), F);
 
-//		fprintf(stderr, "\tstatus:");
-//		for (unsigned nslot=0; nslot < N ; nslot++) {
-//			fprintf(stderr, "%2d", (bool)grants_[F][nslot]);
-//			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       ");
-//		}
-//
-//
-//		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   dst:");
+		fprintf(stderr, "\t   dst:%3d:", 0);
 		for (unsigned nslot=0; nslot < N ; nslot++) {
 			fprintf(stderr, " %2d", dst_[F][nslot]);
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       ");
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
 		}
 
 
 		fprintf(stderr, "\n");
-		fprintf(stderr, "\t   srv:");
+		fprintf(stderr, "\t   srv:%3d:", 0);
 		for (unsigned nslot=0; nslot < N ; nslot++) {
 
 			fprintf(stderr, " %c%1d", grants_[F][nslot]?'t':'r', service_[F][nslot]);
 
 
 
-			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       ");
+			if( ((nslot+1) % 35) == 0 && nslot != 139) fprintf(stderr,"\n\t       %3d:",nslot+1);
 		}
 
 		fprintf(stderr, "\n");
