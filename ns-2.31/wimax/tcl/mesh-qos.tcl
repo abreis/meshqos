@@ -383,7 +383,6 @@ proc create_connections {} {
 		set u [new RandomVariable/Uniform]
 		$u set min_ 0 
 		$u set max_ $nodes
-		puts "======= nodes $nodes"
 		set src [expr round([$u value]) ]
 		set dst [expr round([$u value]) ]
 

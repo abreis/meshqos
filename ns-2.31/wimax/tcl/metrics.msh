@@ -57,7 +57,7 @@ proc create_metrics {} {
 #	$ns stat add wimsh_mac_tpt              avg rate
 #	$ns stat add wimsh_chn_ctrl_tpt         avg rate
 #	$ns stat add wimsh_chn_data_tpt         avg rate
-#	$ns stat add wimsh_drop_overflow        avg rate
+	$ns stat add wimsh_drop_overflow        avg rate
 #	$ns stat add wimsh_bufsize_mac_a        avg continuous
 #	$ns stat add wimsh_delay_access_a       avg discrete
 #	$ns stat add wimsh_delay_hopbyhop_a     avg discrete

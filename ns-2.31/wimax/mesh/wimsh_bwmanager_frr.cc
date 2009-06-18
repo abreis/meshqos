@@ -665,6 +665,7 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 				setSlots (self_rx_unavl_[it->channel_], fstart, frange,
 					it->start_, it->range_, true);
 			}
+			// TODO
 //			setSlots (service_, fstart, frange, it->start_,
 //					it->range_, serv);
 		}
@@ -873,6 +874,7 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 
 			// turn unavailable a range of slots (standard case)
 			} else {
+				// TODO
 //				setSlots (neigh_tx_unavl_[ndx][it->channel_],
 //						fstart, frange, it->start_, it->range_, true);
 //
