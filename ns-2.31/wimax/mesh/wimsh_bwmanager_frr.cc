@@ -490,9 +490,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 
 						setSlots (neigh_tx_unavl_NRTPS_[ndx][ch], it->frame_, frange,
 								it->start_, slots, true);
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-								it->frame_, it->start_, slots);
+//						if ( WimaxDebug::enabled() ) fprintf (stderr,
+//							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+//								it->frame_, it->start_, slots);
 					}
 
 					setSlots (neigh_tx_unavl_[ndx][ch], it->frame_, frange,
@@ -522,9 +522,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 
 							setSlots (neigh_tx_unavl_NRTPS_[ndx][ch], it->frame_, frange,
 									it->start_, slots, true);
-							if ( WimaxDebug::enabled() ) fprintf (stderr,
-								"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-									it->frame_, it->start_, slots);
+//							if ( WimaxDebug::enabled() ) fprintf (stderr,
+//								"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+//									it->frame_, it->start_, slots);
 						}
 
 						setSlots (neigh_tx_unavl_[ndx][ch], it->frame_, frange,
@@ -564,9 +564,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 
 						setSlots (neigh_tx_unavl_NRTPS_[ndx][it->channel_], it->frame_, frange,
 								it->start_, slots, true);
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-								it->frame_, it->start_, slots);
+//						if ( WimaxDebug::enabled() ) fprintf (stderr,
+//							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+//								it->frame_, it->start_, slots);
 					}
 
 					setSlots (neigh_tx_unavl_[ndx][it->channel_],
@@ -589,9 +589,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 
 					setSlots (self_tx_unavl_NRTPS_[it->channel_], it->frame_, frange,
 							it->start_, slots, true);
-					if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-							it->frame_, it->start_, slots);
+//					if ( WimaxDebug::enabled() ) fprintf (stderr,
+//						"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+//							it->frame_, it->start_, slots);
 				}
 
 				setSlots (self_tx_unavl_[it->channel_],
@@ -637,9 +637,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 
 						setSlots (neigh_tx_unavl_NRTPS_[ndx][ch], fstart, frange,
 								it->start_, slots, true);
-						if ( WimaxDebug::enabled() ) fprintf (stderr,
-							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-								it->frame_, it->start_, slots);
+//						if ( WimaxDebug::enabled() ) fprintf (stderr,
+//							"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+//								it->frame_, it->start_, slots);
 					}
 
 					setSlots (neigh_tx_unavl_[ndx][ch], fstart, frange,
@@ -657,9 +657,9 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 
 					setSlots (self_rx_unavl_NRTPS_[it->channel_], fstart, frange,
 							it->start_, slots, true);
-					if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-							it->frame_, it->start_, slots);
+//					if ( WimaxDebug::enabled() ) fprintf (stderr,
+//						"!!marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+//							it->frame_, it->start_, slots);
 				}
 
 				setSlots (self_rx_unavl_[it->channel_], fstart, frange,
@@ -893,9 +893,9 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 
 					nrtPS_slots[ndx] = nrtPS_slots[ndx] - slots;
 
-					if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!!avl marquei com nrtpsMin_ a frame %d start %d slots %d\n",
-							it->frame_, it->start_, slots);
+//					if ( WimaxDebug::enabled() ) fprintf (stderr,
+//						"!!avl marquei com nrtpsMin_ a frame %d start %d slots %d\n",
+//							it->frame_, it->start_, slots);
 				}
 			}
 		}
