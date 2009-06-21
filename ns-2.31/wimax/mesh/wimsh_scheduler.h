@@ -59,14 +59,14 @@ protected:
 	//! Stores rate statistics of outgoing traffic flows
 	struct Cbr {
 		unsigned int pkt_; // Packet count
-		unsigned int bytes_; // Byte count
-		unsigned int extbytes_; // Byte count for traffic directed to outside the neighborhood
-		std::vector<unsigned int> fwdbytes_; // Byte count vector for traffic being forwarded by the node
+		unsigned long bytes_; // Byte count
+		unsigned long extbytes_; // Byte count for traffic directed to outside the neighborhood
+		std::vector<unsigned long> fwdbytes_; // Byte count vector for traffic being forwarded by the node
 		double startime_; // Time of flow initialization
 		double endtime_; // Unused
-		unsigned int quocient_; // Estimated data rate in bits per second
-		unsigned int extquocient_; // Estimated data rate of traffic directed to outside the neighborhood
-		std::vector<unsigned int> fwdquocient_; // Estimated data rate of traffic being forwarded from neighbors
+		unsigned long quocient_; // Estimated data rate in bits per second
+		unsigned long extquocient_; // Estimated data rate of traffic directed to outside the neighborhood
+		std::vector<unsigned long> fwdquocient_; // Estimated data rate of traffic being forwarded from neighbors
 		Cbr () { pkt_ = 0; bytes_ = 0; extbytes_ = 0; startime_ = 0.0; endtime_ = 0.0; quocient_ = 0; extquocient_ = 0;}
 	};
 

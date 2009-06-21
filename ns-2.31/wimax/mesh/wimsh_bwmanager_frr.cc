@@ -665,7 +665,7 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 				setSlots (self_rx_unavl_[it->channel_], fstart, frange,
 					it->start_, it->range_, true);
 			}
-			// TODO
+			// again, no need to reset service allocations, we're only marking the slots
 //			setSlots (service_, fstart, frange, it->start_,
 //					it->range_, serv);
 		}
@@ -874,13 +874,13 @@ WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 
 			// turn unavailable a range of slots (standard case)
 			} else {
-				// TODO
-//				setSlots (neigh_tx_unavl_[ndx][it->channel_],
-//						fstart, frange, it->start_, it->range_, true);
-//
-//				setSlots (neigh_tx_unavl_UGS_[ndx][it->channel_],
-//						  fstart, frange, it->start_, it->range_, true);
-//
+				setSlots (neigh_tx_unavl_[ndx][it->channel_],
+						fstart, frange, it->start_, it->range_, true);
+
+				setSlots (neigh_tx_unavl_UGS_[ndx][it->channel_],
+						  fstart, frange, it->start_, it->range_, true);
+
+				// should an availabilityIE be able to change slot service allocations? me thinks not
 //				setSlots (service_, fstart, frange,
 //						it->start_, it->range_, it->service_);
 
@@ -921,7 +921,7 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 		unsigned char s = it->service_;
 
 		// cancel reservations
-		if ( it->persistence_ == WimshMshDsch::CANCEL ) { // TODO: bw cancellation here
+		if ( it->persistence_ == WimshMshDsch::CANCEL ) {
 			cancel_Granter  (ndx, s);
 			continue;
 		}
@@ -962,7 +962,7 @@ WimshBwManagerFairRR::rcvRequests (WimshMshDsch* dsch)
 			rtpsDschFrame_[ndx] = mac_->frame() + 1;
 			unDschState_[ndx][(mac_->frame() + 1) % HORIZON] = 1;
 
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
+				if ( WimaxDebug::trace("WBWM::rcvRequests") ) fprintf (stderr,
 						"\t\tscheduling an rtPS Grant DSCH in frame %d\n",
 						rtpsDschFrame_[ndx]);
 		}
@@ -979,6 +979,10 @@ WimshBwManagerFairRR::schedule (WimshMshDsch* dsch, unsigned int ndx)
 
 	// if this DSCH is dedicated to rtPS
 	if ( dsch->reserved() ) {
+
+		if ( WimaxDebug::trace("WBWM::schedule") )
+			fprintf (stderr,
+					"\tDSCH reserved to rtPS\n");
 
 		// schedule availabilities into the MSH-DSCH message
 		if ( avlAdvertise_ ) availabilities (dsch, wimax::RTPS);
@@ -1213,7 +1217,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 					"\tMSH-DSCH is for %s\n",
 					( dsch->grant() ) ? "GNT" : "REQ");
 
-			// TODO: ding
 			if ( ! dsch->grant() )
 				break;
 
@@ -1986,8 +1989,8 @@ WimshBwManagerFairRR::grantFit (
 
 			// frame is full
 			if ( s == N - 1 ) {
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-						"!1frame totalmente ocupada %d ultimo s %d \n", frame, s);
+//				if ( WimaxDebug::enabled() ) fprintf (stderr,
+//						"!1frame totalmente ocupada %d ultimo s %d \n", frame, s);
 				if ( serv_class == wimax::BE ) {
 					gnt.range_ = 0;
 					//if ( WimaxDebug::enabled() ) fprintf (stderr,
@@ -2097,8 +2100,8 @@ WimshBwManagerFairRR::grantFit (
 										 ( r - gnt.start_ ) < nSlots ; r++ ) { }
 
 									gnt.range_ = r - gnt.start_;
-									if ( WimaxDebug::enabled() ) fprintf (stderr,
-										"2gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, r, frame);
+//									if ( WimaxDebug::enabled() ) fprintf (stderr,
+//										"2gnt.range %d  %d-%d  frame %d\n", gnt.range_, gnt.start_, r, frame);
 
 									unsigned int symbols =
 										gnt.range_ * mac_->phyMib()->symPerSlot()
@@ -2152,7 +2155,7 @@ WimshBwManagerFairRR::grantFit (
 	//if ( WimaxDebug::enabled() ) fprintf (stderr, "!2frame totalmente ocupada %d\n", f);
 
 	gnt.range_ = 0;
-	if ( WimaxDebug::enabled() ) fprintf (stderr, "!3 final do grantfit \n");
+//	if ( WimaxDebug::enabled() ) fprintf (stderr, "!3 final do grantfit \n");
 	return gnt;
 }
 
@@ -2191,7 +2194,7 @@ WimshBwManagerFairRR::realGrantStart (
 		} else
 			c++;
 	}
-	if ( WimaxDebug::enabled() ) fprintf (stderr, "mais 10 gnt.frame_ %d\n",gnt.frame_);
+//	if ( WimaxDebug::enabled() ) fprintf (stderr, "mais 10 gnt.frame_ %d\n",gnt.frame_);
 	gnt.frame_ = gframe + 10;
 }
 
@@ -2231,8 +2234,8 @@ WimshBwManagerFairRR::confFit (
 
 		// grant range is full
 		if ( s == (mstart + mrange - 1) && serv_class == wimax::NRTPS ) {
-				if ( WimaxDebug::enabled() ) fprintf (stderr,
-				"!1frame totalmente ocupada \n");
+//				if ( WimaxDebug::enabled() ) fprintf (stderr,
+//				"!1frame totalmente ocupada \n");
 			for ( unsigned int s = mstart ; s < mstart + mrange ; s++ ) {
 
 				// borrow bandwidth from nrtPS slots // TODO: review
@@ -2433,7 +2436,7 @@ WimshBwManagerFairRR::searchTXslot (unsigned int ndx, unsigned int reqState)
 				for( s = N-1 ; (dst_[F][s] != dst || service_[F][s] != wimax::RTPS) && s >=0; s--);
 
 				// caution: this assumes the first reservation we find is size nslots
-				unsigned mstart = s - nslots;
+				unsigned mstart = (s+1) - nslots; // TODO panic if nslots > s
 				unsigned &mrange = nslots;
 
 				// use those slots

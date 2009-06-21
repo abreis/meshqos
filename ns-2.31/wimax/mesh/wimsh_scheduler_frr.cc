@@ -396,7 +396,7 @@ WimshSchedulerFairRR::recomputeCBR (WimaxPdu* pdu)
 		cbr_[ndx][s].fwdbytes_.resize(mac_->nneighs(),0);
 
 		if ( WimaxDebug::trace("WSCH::recomputeCBR") ) fprintf (stderr,
-					"%.9f WSCH::recompCBR  [%d] recomputeCBR start ndx %d serv %d pkt %d bytes %d startime %.9f\n", NOW, mac_->nodeId(),
+					"%.9f WSCH::recompCBR  [%d] recomputeCBR start ndx %d serv %d pkt %d bytes %lu startime %.9f\n", NOW, mac_->nodeId(),
 					ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_);
 
 	} else {
@@ -417,13 +417,13 @@ WimshSchedulerFairRR::recomputeCBR (WimaxPdu* pdu)
 
 		if ( WimaxDebug::trace("WSCH::recomputeCBR") ) {
 			fprintf (stderr,
-					"%.9f WSCH::recompCBR  [%d] ndx %d serv %d pkt %d bytes %d startime %.9f deltatime %.9f frame %d estimate %d extestimate %d\n", NOW, mac_->nodeId(),
+					"%.9f WSCH::recompCBR  [%d] ndx %d serv %d pkt %d bytes %lu startime %.9f deltatime %.9f frame %d estimate %lu extestimate %lu\n", NOW, mac_->nodeId(),
 					ndx, s, cbr_[ndx][s].pkt_, cbr_[ndx][s].bytes_, cbr_[ndx][s].startime_, (NOW - cbr_[ndx][s].startime_), mac_->frame(), cbr_[ndx][s].quocient_, cbr_[ndx][s].extquocient_);
 
 			for(unsigned i=0; i < mac_->nneighs() ; i++)
 				if( ndx != i && cbr_[ndx][s].fwdquocient_[i] != 0 )
 					fprintf (stderr,
-						"\t src %d dst %d sndx %d dndx %d serv %d fwdquocient %d\n",
+						"\t src %d dst %d sndx %d dndx %d serv %d fwdquocient %lu\n",
 						mac_->ndx2neigh(i), mac_->ndx2neigh(ndx), i, ndx, s, cbr_[ndx][s].fwdquocient_[i]);
 		}
 	}
