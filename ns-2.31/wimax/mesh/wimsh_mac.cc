@@ -936,6 +936,9 @@ WimshMac::recvBurst (WimshBurst* burst)
 		WimaxDebug::print (burst, stderr);
 	}
 
+	// breakpoint trigger
+	float tnow = NOW;
+
 	//
 	// manage a control message
 	//
@@ -963,6 +966,10 @@ WimshMac::recvBurst (WimshBurst* burst)
 				// flip the link quality status
 				link.good_ = ! link.good_;
 			}
+		} else {
+			// burst is uncorrupted
+			// TODO: MSH-DSCH bursts are being corrupted somewhere
+			burst->error() = false;
 		}
 
 		// actually decode data contained into the MSH-DSCH message
@@ -973,17 +980,7 @@ WimshMac::recvBurst (WimshBurst* burst)
 		} else {
 			Stat::put ("wimsh_dsch_error", index_, 1.0);
 		}
-/*
-	} else if ( burst->type() == wimax::MSHDSCH_uncoordinated ) {
-		if ( ! burst->error() ) {
-			//Stat::put ("wimsh_dsch_error", index_, 0.0);
-			fprintf (stderr, "!!!wimsh_dsch_rtPS_error=0\n");
-			recvMshDsch (burst->mshDsch_uncoordinated(), burst->txtime());
-		} else {
-			//Stat::put ("wimsh_dsch_error", index_, 1.0);
-			fprintf (stderr, "!!!wimsh_dsch_rtPS_error=1\n");
-		}
-*/
+
 	} else if ( burst->type() == wimax::MSHNCFG ) {
 		if ( ! burst->error() ) recvMshNcfg (burst->mshNcfg(), burst->txtime());
 

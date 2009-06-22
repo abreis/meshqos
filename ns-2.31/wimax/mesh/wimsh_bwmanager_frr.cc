@@ -285,11 +285,26 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 	if ( WimaxDebug::trace("WBWM::recvMshDsch") ) fprintf (stderr,
 			"%.9f WBWM::recvMshDsch[%d]\n", NOW, mac_->nodeId());
 
+	// get the number of Avl/Req/Gnt-IEs for debugging
+	std::list<WimshMshDsch::AvlIE>& avl = dsch->avl();
+	std::list<WimshMshDsch::GntIE>& gnt = dsch->gnt();
+	std::list<WimshMshDsch::ReqIE>& req = dsch->req();
+	unsigned int nAvlIE = avl.size();
+	unsigned int nGntIE = gnt.size();
+	unsigned int nReqIE = req.size();
+
+	// get DSCH source
+	WimaxNodeId& dschsrc= dsch->src();
+
+	// debug
+	if ( WimaxDebug::trace("WBWM::recvMshDsch") )
+		fprintf (stderr,
+			"\tMSH-DSCH src %d AvlIE %d GntIE %d ReqIE %d (reserved: %d)\n",
+				dschsrc, nAvlIE, nGntIE, nReqIE, dsch->reserved());
+
 	// breakpoint triggers
 	float tnow = NOW;
 	unsigned int tnode = mac_->nodeId();
-
-
 
 	rcvAvailabilities(dsch);	// we interpret AvlIEs first so we can correctly grant bandwidth afterwards
 	rcvGrants(dsch);			// we interpret GntIEs second so that bandwidth cancelations are processed before requests
@@ -1400,7 +1415,8 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				WimshMshDsch::ReqIE ie;
 				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
-				unsigned int quocient, req_bytes, req_slots;
+				unsigned long quocient, req_bytes;
+				unsigned int req_slots;
 				if( !rtPShurry ) {
 					// get this class' bandwidth estimates
 					quocient = mac_->scheduler()->cbrQuocient (ndx, serv);
@@ -1415,7 +1431,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 					req_bytes = mac_->scheduler()->cbrBytes (ndx, serv);
 					req_slots = mac_->bytes2slots (ndx, req_bytes, true);
 					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf(stderr,
-							"\tfasttracking rtPS: bytes %d slots %d\n",
+							"\tfasttracking rtPS: bytes %lu slots %d\n",
 							req_bytes, req_slots);
 				}
 
@@ -1503,7 +1519,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 						mstart = 0; mrange = 0;
 					}
 
-					if ( WimaxDebug::trace("WBWM::requestGrant") ) fprintf (stderr,
+					if ( WimaxDebug::trace("WBWM::requestGrant") && rtPShurry) fprintf (stderr,
 							"\tfwdtraffic: ndx %d needing %d slots to ndx %d, using %d/%d slots, %d available for fwd [%d:%d]\n",
 							sndx, fwdSlots, ndx, bwdSlots, mac_->phyMib()->slotPerFrame(), mrange, mstart, mstart+mrange);
 
@@ -1601,11 +1617,11 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 
 				if ( WimaxDebug::trace("WBWM::requestGrant") ) {
 					fprintf (stderr,
-						"\trequesting: src %d dst %d bytes %d level %d pers %d serv %d\n",
+						"\trequesting: src %d dst %d bytes %lu level %d pers %d serv %d\n",
 						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, ie.level_, ie.persistence_, ie.service_);
 
 					fprintf (stderr,
-						"\t\tbased on estimate: quocient %d bytes %d slots %d\n",
+						"\t\tbased on estimate: quocient %lu bytes %lu slots %d\n",
 						quocient, req_bytes, req_slots);
 				}
 

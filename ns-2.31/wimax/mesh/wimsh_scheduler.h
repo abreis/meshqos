@@ -98,16 +98,16 @@ public:
 	virtual unsigned int bufSize () { return bufSize_; }
 
 	//! Return the estimated traffic needs of service s towards node ndx.
-	unsigned int cbrQuocient (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].quocient_; }
+	unsigned long cbrQuocient (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].quocient_; }
 
 	//! Return the estimated traffic needs of service s towards node ndx, whose final destination != ndx.
-	unsigned int cbrExtQuocient (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].extquocient_; }
+	unsigned long cbrExtQuocient (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].extquocient_; }
 
 	//! Return the estimated traffic needs of packets being forwarded from node sndx to node dndx, service s.
-	unsigned int cbrFwdQuocient (unsigned int sndx, unsigned int dndx, unsigned int s) { return cbr_[dndx][s].fwdquocient_[sndx]; }
+	unsigned long cbrFwdQuocient (unsigned int sndx, unsigned int dndx, unsigned int s) { return cbr_[dndx][s].fwdquocient_[sndx]; }
 
 	//! Return the accumulated bytes (useful when there is no quocient yet)
-	unsigned int cbrBytes (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].bytes_; }
+	unsigned long cbrBytes (unsigned int ndx, unsigned int s) { return cbr_[ndx][s].bytes_; }
 };
 
 /*
