@@ -2356,6 +2356,7 @@ WimshBwManagerFairRR::searchTXslot (unsigned int ndx, unsigned int reqState)
 				 dst = mac_->ndx2neigh (ndx), // neighbour ID (from the local identifier ndx)
 				 flimit = 10, // number of frames to look in advance when trying to reserve slots
 				 dschSize = WimshMshDsch::MAX_SIZE; // maximum size of the MSH-DSCH message (in bytes)
+	WimaxNodeId nodeid = mac_->nodeId();
 
 	// evaluate how many slots are required to transmit a DSCH (dschSize) to node ndx, according to the burst profile. No preamble. (?)
 	unsigned int nslots = mac_->bytes2slots (ndx, dschSize, false);
@@ -2404,7 +2405,16 @@ WimshBwManagerFairRR::searchTXslot (unsigned int ndx, unsigned int reqState)
 		signed int s; 	// need signed to detect going beyond 0
 
 		// locate the first free slot, going from finish to start
-		for ( s = N-1 ; map[s] == true && (unsigned)s >= (nslots-1) ; s--);
+			// normal
+//			for ( s = N-1 ; map[s] == true && (unsigned)s >= (nslots-1) ; s--);
+
+			/* collision avoidance
+			 * this is a very crude modification to stop neighbor nodes from colliding
+			 * in rtPS reservations; basically it offsets the beginning of the search
+			 * by nslots*nodeid
+			 */
+			for ( s = N-1-(nslots*nodeid) ; map[s] == true && (unsigned)s >= (nslots-1) ; s--);
+
 
 		// if we didn't hit the start of the frame, try to find nslots free for us to use
 		if( s != (signed)(nslots-2) ) {
