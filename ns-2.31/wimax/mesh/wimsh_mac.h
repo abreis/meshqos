@@ -46,6 +46,7 @@ class WimshForwarding;
 class WimshCoordinator;
 class WimshPhyMib;
 class WimshBurst;
+class WimshMOSScheduler;
 
 class Packet;
 class LL;
@@ -183,6 +184,9 @@ class WimshMac : public TclObject {
 	//! Packet scheduler. Initialized via tcl command.
 	WimshScheduler* scheduler_;
 
+	//! MOS scheduler. Initialized via tcl command.
+	WimshMOSScheduler* mosscheduler_;
+
 	//! Map each neighbor to a local numerical identifier for other structures.
 	/*!
 	  Initialized via a the initialization() function from the topology.
@@ -254,6 +258,9 @@ class WimshMac : public TclObject {
 	double sponsorStart_;
 	//! Sponsor node ID. Set via Tcl.
 	WimaxNodeId sponsorId_;
+
+	//! Vector containing the time the first packet of a flow was received
+	std::vector<double> startTime_;
 
 	//! State of the link establishment procedure. Started via Tcl.
 	LinkEstState linkEstState_;
@@ -328,6 +335,16 @@ class WimshMac : public TclObject {
 	//! Array of link quality indicators, one for each neighbor.
 	std::vector<LinkQuality> mshDschLinkQuality_;
 
+	struct FlowSeq {
+		int fid_;
+		unsigned int seq_;
+		FlowSeq (int fid = 0)
+			{ fid_ = fid; seq_ = 0; }
+	};
+
+	//! Seq number per flow
+	std::vector<FlowSeq> flowseq_;
+
 public:
 	//! Build an empty MAC.
 	WimshMac ();
@@ -350,6 +367,9 @@ public:
 	void recvMshNent (WimshMshNent* nent, double txtime);
 	//! Receive a burst, either control or data, from PHY.
 	void recvBurst (WimshBurst* burst);
+
+	//! Proxy for informing the MOS scheduler of a drop
+	void dropPDU (WimaxPdu* pdu);
 
 	//! Receive a partial MSH-DSCH from the coordinator and send it to the PHY.
 	/*!
@@ -393,6 +413,9 @@ public:
 	WimshTopology* topology () { return topology_; }
 	//! Return the scheduler.
 	WimshScheduler* scheduler () { return scheduler_; }
+	//! Return the MOS scheduler.
+	WimshMOSScheduler* mosscheduler() { return mosscheduler_; }
+
 	//! Return the bandwidth manager.
 	WimshBwManager* bwmanager () { return bwmanager_; }
 

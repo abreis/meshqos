@@ -32,7 +32,6 @@ public:
 	//! Buffer sharing strategy.
 	enum BufferSharingMode { SHARED, PER_LINK, PER_FLOW };
 
-protected:
 	//! Flow descriptor.
 	/*!
 	  Used for packet scheduling. Contains the packet queue and related
@@ -95,6 +94,7 @@ protected:
 		LinkDesc () { size_ = 0; }
 	};
 
+protected:
 	//! Factors to be used to compute weights according to priorities.
 	/*!
 		 Default values are all equal to 1.
@@ -145,6 +145,12 @@ public:
 
 	//! Return the size, in bytes, of the queue to a neighbor (by index).
 	unsigned int neighbor (unsigned ndx, unsigned int service) { return link_[ndx][service].size_; }
+
+	//! Return the buffer sharing mode
+	BufferSharingMode BufferMode() { return bufferSharingMode_; }
+
+	//! Return the array of link descriptors
+	std::vector< std::vector< LinkDesc > > Link() { return link_; }
 
 	//! Tcl interface via MAC.
 	int command (int argc, const char*const* argv);

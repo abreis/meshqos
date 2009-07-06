@@ -32,6 +32,7 @@
 #include <wimsh_coordinator_std.h>
 #include <wimsh_scheduler.h>
 #include <wimsh_scheduler_frr.h>
+#include <wimsh_mossched.h>
 
 #include <ll.h>
 #include <packet.h>
@@ -234,6 +235,9 @@ WimshMac::command (int argc, const char*const* argv)
 		return TCL_OK;
 	} else if ( argc == 3 && strcmp (argv[1], "topology") == 0 ) {
 		topology_ = (WimshTopology*) TclObject::lookup (argv[2]);
+		return TCL_OK;
+	} else if ( argc == 3 && strcmp (argv[1], "mosscheduler") == 0 ) {
+		mosscheduler_ = (WimshMOSScheduler*) TclObject::lookup(argv[2]);
 		return TCL_OK;
 	} else if ( argc == 3 && strcmp (argv[1], "phy") == 0 ) {
 		phy_.push_back ((WimshPhy*) TclObject::lookup (argv[2]));
@@ -504,13 +508,93 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 	// if this node is the final destination of the SDU, then
 	// we pass the encapsulated IP datagram to the upper layer (ie. LL)
 	if ( (WimaxNodeId) HDR_IP(sdu->ip())->daddr() == nodeId_ ) {
+
+		// NOTE: final destination of an SDU
+
+		// process statistics for RD scheduler
+		if(sdu->ip()->datalen()) {
+			if(sdu->ip()->userdata()->type() == VOD_DATA) { // VOD
+				// increase frame count
+				Stat::put ("rd_vod_recv_frames", sdu->flowId(), 1);
+
+				// get the number of lost frames
+				unsigned int nlost = (unsigned int) Stat::get("rd_vod_lost_frames", sdu->flowId());
+				// get the cumulative mse lost
+				float mselost = (float) Stat::get("rd_vod_lost_mse", sdu->flowId());
+				// calculate the loss
+				float loss = (float)nlost / (float)(Stat::get("rd_vod_recv_frames", sdu->flowId()) + nlost);
+
+				// get the new MOS
+				float mos = mosscheduler_->mseVideoMOS(mselost, nlost, loss);
+
+				// update MOS stat
+				Stat::put ("rd_vod_mos", sdu->flowId(), mos);
+
+			} else if(sdu->ip()->userdata()->type() == VOIP_DATA) { // VOIP
+				// increase frame count
+				Stat::put ("rd_voip_recv_frames", sdu->flowId(), 1);
+
+				// get the flow's error rate
+				float ploss = (float) Stat::get("e2e_owpl", sdu->flowId());
+				// get the delay
+				float delay = (float) Stat::get("e2e_owd_a", sdu->flowId());
+
+				// get the new MOS
+				float mos = mosscheduler_->audioMOS(delay, ploss);
+
+				// update MOS stat
+				Stat::put ("rd_voip_mos", sdu->flowId(), mos);
+
+			}
+		}
+		else
+		{ // FTP
+			// increase frame count
+			Stat::put ("rd_ftp_recv_frames", sdu->flowId(), 1);
+			// increase received bits
+			Stat::put("rd_ftp_recbits", sdu->flowId(), sdu->size()*8);
+
+			double flowstart = 0;
+			// update throughput
+			if(startTime_.size() <= (unsigned)sdu->flowId()) // flow not present
+			{
+				startTime_.resize(sdu->flowId()+1, 0); // create
+				startTime_[sdu->flowId()] = NOW; // assign start time
+				flowstart = NOW;
+			} else { // flow present
+				if(startTime_[sdu->flowId()] == 0) // first packet
+					startTime_[sdu->flowId()] = NOW; // assign start time
+				flowstart = startTime_[sdu->flowId()]; // fetch time
+			}
+
+			if(flowstart != NOW)
+			{
+				// update the throughput
+				// get total bits
+				unsigned long recbits = Stat::get("rd_ftp_recbits", sdu->flowId());
+				// new tpt
+				unsigned int newtpt = (recbits/8) / (NOW-flowstart);
+				Stat::put("rd_ftp_tpt", sdu->flowId(), newtpt);
+
+				// get the flow's error rate
+				float ploss = (float) Stat::get("e2e_owpl", sdu->flowId());
+
+				// get the flow's throughput
+				unsigned long tpt = (unsigned long) Stat::get("rd_ftp_tpt", sdu->flowId());
+
+				// convert to kbps
+				tpt *= 8;
+				tpt /= 1000;
+
+				// calculate the MOS
+				float mos = mosscheduler_->dataMOS(ploss, tpt);
+
+				// update MOS stat
+				Stat::put ("rd_ftp_mos", sdu->flowId(), mos);
+			}
+		}
+
 		HDR_CMN(sdu->ip())->direction () = hdr_cmn::UP;
-
-		// debug delay
-//		fprintf(stderr,
-//				"\tDEBUG delay SDU fid %d uid %d delay %f\n",
-//				sdu->flowId(), HDR_CMN(sdu->ip())->uid(), NOW-sdu->timestamp());
-
 		ll_->recv (sdu->ip(), 0);
 		delete sdu;
 
@@ -534,6 +618,35 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 
 		// timestamp the SDU to compute the access delay
 		sdu->timestamp() = NOW;
+
+		// ID the SDU to compute packet loss
+		{
+			bool fid_present = FALSE;
+			for (unsigned i=0; i < flowseq_.size(); i++) {
+				// find this flowID in the vector, if it doesn't exist create it
+				if(flowseq_[i].fid_ == fid) {
+					fid_present = TRUE;
+					break;
+				}
+			}
+			if(!fid_present) {
+				FlowSeq flowseq (fid);
+				flowseq_.push_back(flowseq);
+			}
+		}
+
+		for(unsigned i=0; i<flowseq_.size(); i++)
+		{
+			if(flowseq_[i].fid_ == fid)
+			{
+				sdu->seqnumber() = flowseq_[i].seq_;
+				flowseq_[i].seq_++;
+				break;
+			}
+		}
+
+		// inform the MOS scheduler of this SDU (for stats)
+		mosscheduler_->statSDU(sdu);
 
 		// create a new MAC PDU which encapsulates the MAC SDU
 		WimaxPdu* pdu = new WimaxPdu;
@@ -609,6 +722,9 @@ WimshMac::recvSdu (WimaxSdu* sdu)
 		scheduler_->addPdu (pdu);
 	}
 }
+
+void WimshMac::dropPDU (WimaxPdu* pdu)
+{ mosscheduler_->dropPDU(pdu); }
 
 void
 WimshMac::recvMshDsch (WimshMshDsch* dsch, double txtime)

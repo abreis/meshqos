@@ -1415,7 +1415,7 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 				WimshMshDsch::ReqIE ie;
 				ie.nodeId_ = mac_->ndx2neigh (ndx);
 
-				unsigned long quocient, req_bytes;
+				unsigned long quocient=0, req_bytes;
 				unsigned int req_slots;
 				if( !rtPShurry ) {
 					// get this class' bandwidth estimates
@@ -1620,9 +1620,10 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 						"\trequesting: src %d dst %d bytes %lu level %d pers %d serv %d\n",
 						mac_->nodeId(), mac_->ndx2neigh(ndx), req_bytes, ie.level_, ie.persistence_, ie.service_);
 
-					fprintf (stderr,
-						"\t\tbased on estimate: quocient %lu bytes %lu slots %d\n",
-						quocient, req_bytes, req_slots);
+					if( !rtPShurry )
+						fprintf (stderr,
+							"\t\tbased on estimate: quocient %lu bytes %lu slots %d\n",
+							quocient, req_bytes, req_slots);
 				}
 
 			} else {

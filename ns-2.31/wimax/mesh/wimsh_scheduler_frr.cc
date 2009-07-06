@@ -22,11 +22,13 @@
 #include <wimsh_mac.h>
 #include <wimsh_packet.h>
 #include <wimsh_bwmanager.h>
-#include <videodata.h>
-#include <ns-process.h>
+#include <wimsh_mossched.h>
 
 #include <stat.h>
 #include <ip.h>
+
+#include <videodata.h>
+#include <ns-process.h>
 
 WimshSchedulerFairRR::WimshSchedulerFairRR (WimshMac* m) :
 	WimshScheduler (m), timer_(this)
@@ -111,8 +113,8 @@ void
 WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 {
 	if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr,
-			"%.9f WSCH::addPdu     [%d] %s\n",
-			NOW, mac_->nodeId(), WimaxDebug::format(pdu));
+			"%.9f WSCH::addPdu     [%d] %s seq %d\n",
+			NOW, mac_->nodeId(), WimaxDebug::format(pdu), pdu->sdu()->seqnumber());
 
 	// index used to identify the next-hop neighbor node
 	const unsigned int ndx = mac_->neigh2ndx (pdu->hdr().meshCid().dst());
@@ -120,12 +122,21 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	// priority of this PDU
 	const unsigned char prio = pdu->hdr().meshCid().priority();
 
+	// call the RD scheduler on buffer overflow
+	if(bufSize_ + pdu->size() > maxBufSize_)
+		mac_->mosscheduler()->trigger(pdu->size());
+
 	// map IP PRIO field to service class at the mac layer
 	const unsigned char s = WimshMshDsch::prio2serv(prio);
 
 	// if the size of this PDU overflows the buffer size, drop the PDU/SDU/IP
 	if ( ( bufferSharingMode_ == SHARED && bufSize_ + pdu->size() > maxBufSize_ ) ||
-			( bufferSharingMode_ == PER_LINK && link_[ndx][s].size_ + pdu->size() > maxBufSize_) ) {
+			( bufferSharingMode_ == PER_LINK && link_[ndx][s].size_ + pdu->size() > maxBufSize_) )
+	{
+		// stat the lost packet for the RD sched
+		Stat::put ("rd_packet_lost_overflow", pdu->sdu()->flowId(), 1);
+		// notify the MAC layer of the pdu about to be dropped
+		mac_->dropPDU(pdu);
 		drop (pdu);
 		if ( WimaxDebug::trace("WSCH::addPdu") ) fprintf (stderr, "\tPDU dropped - buffer %u/%u\n",
 				bufSize_, maxBufSize_);
@@ -307,6 +318,11 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 		flow.size_ -= pdu->size();			// flow
 		link_[ndx][s].size_ -= pdu->size();	// link
 		bufSize_ -= pdu->size();			// MAC
+
+		if(bufSize_ < pdu->size())	// TODO: this is a hack, something's missing
+			bufSize_ = 0;
+		else
+			bufSize_ -= pdu->size();            // MAC
 
 		Stat::put ("wimsh_bufsize_mac_a", mac_->index(), bufSize_ );
 		Stat::put ("wimsh_bufsize_mac_d", mac_->index(), bufSize_ );
