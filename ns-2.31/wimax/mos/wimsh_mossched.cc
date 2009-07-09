@@ -499,22 +499,22 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 
 	// vector array to store all PDUs in the buffers
 	// [ndx][serv][queueindex][pdu]
-//	std::vector< std::vector< std::vector< std::vector< WimaxPdu* > > > > pdulist_;
-	std::vector< std::vector< std::vector< WimaxPdu* > > > pdulist_;
+	std::vector< std::vector< std::vector< std::vector< WimaxPdu* > > > > pdulist_;
+//	std::vector< std::vector< std::vector< WimaxPdu* > > > pdulist_;
 
 	// resize the array
 	pdulist_.resize(mac_->nneighs());
-//	for(unsigned i=0; i < mac_->nneighs(); i++)
-//		pdulist_[i].resize(wimax::N_SERV_CLASS);
+	for(unsigned i=0; i < mac_->nneighs(); i++)
+		pdulist_[i].resize(wimax::N_SERV_CLASS);
 
 
 	// pop all PDUs from the queues, to process
 	// run all neighbors
 	for(unsigned i=0; i < mac_->nneighs(); i++) {
 		// run all services
-//		for(unsigned j=0; j < wimax::N_SERV_CLASS; j++) {
+		for(unsigned js=0; js < wimax::N_SERV_CLASS; js++) {
 			// get the list of packet queues
-			std::list<WimshSchedulerFairRR::FlowDesc> list_ = sched_->Link()[i].rr_.list();
+			std::list<WimshSchedulerFairRR::FlowDesc> list_ = sched_->Link()[i][js].rr_.list();
 			list<WimshSchedulerFairRR::FlowDesc>::iterator iter1 = list_.begin();
 
 			// queue index, for indexing
@@ -522,7 +522,7 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 
 			// resize the array for n packet queues
 			unsigned lsize = list_.size();
-			pdulist_[i].resize(lsize);
+			pdulist_[i][js].resize(lsize);
 
 			// for each packet queue
 			while( iter1 != list_.end() ) {
@@ -530,7 +530,7 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 				while(!iter1->queue_.empty()) {
 					// pop a PDU from the list into the vector
 					WimaxPdu* temppdu = iter1->queue_.front();
-					pdulist_[i][qindex].push_back(temppdu);
+					pdulist_[i][js][qindex].push_back(temppdu);
 					iter1->queue_.pop();
 				}
 				// increment the queue index
@@ -538,7 +538,7 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 				// get the next packet queue
 				iter1++;
 			}
-//		}
+		}
 	}
 
 
@@ -546,24 +546,24 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 	{
 		// show a list of all VOD_DATA packets in this node's buffers
 		for(unsigned i=0; i < pdulist_.size(); i++)
-//			for(unsigned j=0; j < pdulist_[i].size(); j++)
+			for(unsigned j=0; j < pdulist_[i].size(); j++)
 				for(unsigned k=0; k < pdulist_[i].size(); k++)
-					for(unsigned l=0; l < pdulist_[i][k].size(); l++) {
-						if(pdulist_[i][k][l]->sdu()->ip()->datalen()) {
-							if(pdulist_[i][k][l]->sdu()->ip()->userdata()->type() == VOD_DATA) {
-								VideoData* vodinfo_ = (VideoData*)pdulist_[i][k][l]->sdu()->ip()->userdata();
+					for(unsigned l=0; l < pdulist_[i][j][k].size(); l++) {
+						if(pdulist_[i][j][k][l]->sdu()->ip()->datalen()) {
+							if(pdulist_[i][j][k][l]->sdu()->ip()->userdata()->type() == VOD_DATA) {
+								VideoData* vodinfo_ = (VideoData*)pdulist_[i][j][k][l]->sdu()->ip()->userdata();
 								fprintf (stderr, "\t\tVOD_DATA\tfid %d ndx %d id %d size %d\tdistortion %f\n",
-										pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-										pdulist_[i][k][l]->size() ,vodinfo_->distortion());
-							} else if(pdulist_[i][k][l]->sdu()->ip()->userdata()->type() == VOIP_DATA) {
+										pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+										pdulist_[i][j][k][l]->size() ,vodinfo_->distortion());
+							} else if(pdulist_[i][j][k][l]->sdu()->ip()->userdata()->type() == VOIP_DATA) {
 								fprintf (stderr, "\t\tVOIP_DATA\tfid %d ndx %d id %d size %d\n",
-										pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-										pdulist_[i][k][l]->size());
+										pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+										pdulist_[i][j][k][l]->size());
 							}
 						} else {
 								fprintf (stderr, "\t\tFTP_DATA\tfid %d ndx %d id %d size %d\n",
-										pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-										pdulist_[i][k][l]->size());
+										pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+										pdulist_[i][j][k][l]->size());
 						}
 					}
 	}
@@ -572,23 +572,23 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 	std::vector <int> flowids_;
 
 	for(unsigned i=0; i < pdulist_.size(); i++)
-//		for(unsigned j=0; j < pdulist_[i].size(); j++)
+		for(unsigned j=0; j < pdulist_[i].size(); j++)
 			for(unsigned k=0; k < pdulist_[i].size(); k++)
-				for(unsigned l=0; l < pdulist_[i][k].size(); l++) {
+				for(unsigned l=0; l < pdulist_[i][j][k].size(); l++) {
 					// vector empty, push
 					if(flowids_.size() == 0) {
-						flowids_.push_back(pdulist_[i][k][l]->sdu()->flowId());
+						flowids_.push_back(pdulist_[i][j][k][l]->sdu()->flowId());
 					} else {
 						// see if the fid is already in the list
 						bool inlist_ = false;
 						for(unsigned int m=0; m < flowids_.size(); m++) {
-							if(flowids_[m] == pdulist_[i][k][l]->sdu()->flowId()) {
+							if(flowids_[m] == pdulist_[i][j][k][l]->sdu()->flowId()) {
 								inlist_ = true;
 							}
 						}
 						// not on the list, push
 						if(!inlist_)
-							flowids_.push_back(pdulist_[i][k][l]->sdu()->flowId());
+							flowids_.push_back(pdulist_[i][j][k][l]->sdu()->flowId());
 					}
 				}
 
@@ -613,10 +613,10 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 //	// see how full the buffer is
 //	unsigned int buffusage = 0;
 //	for(unsigned i=0; i < pdulist_.size(); i++)
-////		for(unsigned j=0; j < pdulist_[i].size(); j++)
+//		for(unsigned j=0; j < pdulist_[i].size(); j++)
 //			for(unsigned k=0; k < pdulist_[i].size(); k++)
-//				for(unsigned l=0; l < pdulist_[i][k].size(); l++) {
-//					buffusage += pdulist_[i][k][l]->size();
+//				for(unsigned l=0; l < pdulist_[i][j][k].size(); l++) {
+//					buffusage += pdulist_[i][j][k][l]->size();
 //				}
 //	fprintf (stderr, "\tBuffer usage %d/%d, %.2f%%\n",
 //			buffusage, sched_->maxBufSize(), ((float)buffusage/(float)sched_->maxBufSize())*100 );
@@ -629,9 +629,9 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 	// get the number of packets in the buffers
 	unsigned int npackets = 0;
 	for(unsigned i=0; i < pdulist_.size(); i++)
-//		for(unsigned j=0; j < pdulist_[i].size(); j++)
+		for(unsigned j=0; j < pdulist_[i].size(); j++)
 			for(unsigned k=0; k < pdulist_[i].size(); k++)
-				npackets += pdulist_[i][k].size();
+				npackets += pdulist_[i][j][k].size();
 
 	fprintf (stderr, "\t%u packets in the buffers\n", npackets);
 
@@ -649,7 +649,7 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 		fprintf (stderr, "\tRD Scheduler Triggered\n");
 
 		/* here, we have:
-		 * pdulist_[i][k][l] -> vector with all packets in the buffers
+		 * pdulist_[i][j][k][l] -> vector with all packets in the buffers
 		 * npackets
 		 * flowids_[i] -> vector of all flowIDs
 		 * stats_[i] -> flowinfo stats
@@ -720,13 +720,13 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 			unsigned int combsize = 0;
 			unsigned int packetid = 0;
 			for(unsigned i=0; i < pdulist_.size(); i++)
-		//		for(unsigned j=0; j < pdulist_[i].size(); j++)
+				for(unsigned j=0; j < pdulist_[i].size(); j++)
 					for(unsigned k=0; k < pdulist_[i].size(); k++)
-						for(unsigned l=0; l < pdulist_[i][k].size(); l++)
+						for(unsigned l=0; l < pdulist_[i][j][k].size(); l++)
 						{
 							if(combsize > rbound) break; // premature break in order to speed up the process
 							if(binComb[packetid] == TRUE)
-								combsize += pdulist_[i][k][l]->size();
+								combsize += pdulist_[i][j][k][l]->size();
 							packetid++;
 						}
 
@@ -762,34 +762,34 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 				unsigned int packetid = 0;
 				std::vector<WimaxPdu*> combPdu;
 				for(unsigned i=0; i < pdulist_.size(); i++)
-	//				for(unsigned j=0; j < pdulist_[i].size(); j++)
+					for(unsigned j=0; j < pdulist_[i].size(); j++)
 						for(unsigned k=0; k < pdulist_[i].size(); k++)
-							for(unsigned l=0; l < pdulist_[i][k].size(); l++)
+							for(unsigned l=0; l < pdulist_[i][j][k].size(); l++)
 							{
 								if(binComb[packetid] == TRUE)
 								{
 									if(WimaxDebug::trace("WMOS::buffMOS3"))
 									{
 									// print the packet info
-										if(pdulist_[i][k][l]->sdu()->ip()->datalen()) {
-											if(pdulist_[i][k][l]->sdu()->ip()->userdata()->type() == VOD_DATA) {
-												VideoData* vodinfo_ = (VideoData*)pdulist_[i][k][l]->sdu()->ip()->userdata();
+										if(pdulist_[i][j][k][l]->sdu()->ip()->datalen()) {
+											if(pdulist_[i][j][k][l]->sdu()->ip()->userdata()->type() == VOD_DATA) {
+												VideoData* vodinfo_ = (VideoData*)pdulist_[i][j][k][l]->sdu()->ip()->userdata();
 												fprintf (stderr, "\t\t\tVOD_DATA\tfid %d ndx %d id %d size %d\tdistortion %f\n",
-														pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-														pdulist_[i][k][l]->size() ,vodinfo_->distortion());
-											} else if(pdulist_[i][k][l]->sdu()->ip()->userdata()->type() == VOIP_DATA) {
+														pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+														pdulist_[i][j][k][l]->size() ,vodinfo_->distortion());
+											} else if(pdulist_[i][j][k][l]->sdu()->ip()->userdata()->type() == VOIP_DATA) {
 												fprintf (stderr, "\t\t\tVOIP_DATA\tfid %d ndx %d id %d size %d\n",
-														pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-														pdulist_[i][k][l]->size());
+														pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+														pdulist_[i][j][k][l]->size());
 											}
 										} else {
 												fprintf (stderr, "\t\t\tFTP_DATA\tfid %d ndx %d id %d size %d\n",
-														pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-														pdulist_[i][k][l]->size());
+														pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+														pdulist_[i][j][k][l]->size());
 										}
 									}
 								// store the packet for MOS processing
-									combPdu.push_back(pdulist_[i][k][l]);
+									combPdu.push_back(pdulist_[i][j][k][l]);
 								}
 								packetid++;
 							}
@@ -1054,11 +1054,11 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 			// kill the packets
 			unsigned int packetid = 0;
 			for(unsigned i=0; i < pdulist_.size(); i++)
-		//		for(unsigned j=0; j < pdulist_[i].size(); j++)
+				for(unsigned j=0; j < pdulist_[i].size(); j++)
 					for(unsigned k=0; k < pdulist_[i].size(); k++)
 					{
-						vector<WimaxPdu*>::iterator iter1 = pdulist_[i][k].begin();
-						while( iter1 != pdulist_[i][k].end())
+						vector<WimaxPdu*>::iterator iter1 = pdulist_[i][j][k].begin();
+						while( iter1 != pdulist_[i][j][k].end())
 						{
 							if(binComb[packetid] == TRUE)
 							{
@@ -1080,7 +1080,7 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 								sched_->setBufSize(sched_->bufSize() - pdu->size());
 
 								// erase packet from the pdu list
-								pdulist_[i][k].erase(iter1);
+								pdulist_[i][j][k].erase(iter1);
 							} else
 							{ ++iter1; } // iter1 is autoincremented after erase()
 							packetid++;
@@ -1100,24 +1100,24 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 		if(WimaxDebug::trace("WMOS::buffMOS2"))
 		{
 			for(unsigned i=0; i < pdulist_.size(); i++)
-		//		for(unsigned j=0; j < pdulist_[i].size(); j++)
+				for(unsigned j=0; j < pdulist_[i].size(); j++)
 					for(unsigned k=0; k < pdulist_[i].size(); k++)
-						for(unsigned l=0; l < pdulist_[i][k].size(); l++) {
-							if(pdulist_[i][k][l]->sdu()->ip()->datalen()) {
-								if(pdulist_[i][k][l]->sdu()->ip()->userdata()->type() == VOD_DATA) {
-									VideoData* vodinfo_ = (VideoData*)pdulist_[i][k][l]->sdu()->ip()->userdata();
+						for(unsigned l=0; l < pdulist_[i][j][k].size(); l++) {
+							if(pdulist_[i][j][k][l]->sdu()->ip()->datalen()) {
+								if(pdulist_[i][j][k][l]->sdu()->ip()->userdata()->type() == VOD_DATA) {
+									VideoData* vodinfo_ = (VideoData*)pdulist_[i][j][k][l]->sdu()->ip()->userdata();
 									fprintf (stderr, "\t\tVOD_DATA\tfid %d ndx %d id %d size %d\tdistortion %f\n",
-											pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-											pdulist_[i][k][l]->size() ,vodinfo_->distortion());
-								} else if(pdulist_[i][k][l]->sdu()->ip()->userdata()->type() == VOIP_DATA) {
+											pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+											pdulist_[i][j][k][l]->size() ,vodinfo_->distortion());
+								} else if(pdulist_[i][j][k][l]->sdu()->ip()->userdata()->type() == VOIP_DATA) {
 									fprintf (stderr, "\t\tVOIP_DATA\tfid %d ndx %d id %d size %d\n",
-											pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-											pdulist_[i][k][l]->size());
+											pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+											pdulist_[i][j][k][l]->size());
 								}
 							} else {
 									fprintf (stderr, "\t\tFTP_DATA\tfid %d ndx %d id %d size %d\n",
-											pdulist_[i][k][l]->sdu()->flowId(), i, pdulist_[i][k][l]->sdu()->seqnumber(),
-											pdulist_[i][k][l]->size());
+											pdulist_[i][j][k][l]->sdu()->flowId(), i, pdulist_[i][j][k][l]->sdu()->seqnumber(),
+											pdulist_[i][j][k][l]->size());
 							}
 						}
 		}
@@ -1126,8 +1126,8 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 	// reconstruct queues
 	for(unsigned i=0; i < mac_->nneighs(); i++) {
 		// run all services
-//		for(unsigned j=0; j < wimax::N_SERV_CLASS; j++) {
-			std::list<WimshSchedulerFairRR::FlowDesc> list_ = sched_->Link()[i].rr_.list();
+		for(unsigned js=0; js < wimax::N_SERV_CLASS; js++) {
+			std::list<WimshSchedulerFairRR::FlowDesc> list_ = sched_->Link()[i][js].rr_.list();
 			list<WimshSchedulerFairRR::FlowDesc>::iterator iter1 = list_.begin();
 
 			// queue index, for indexing
@@ -1136,12 +1136,12 @@ WimshMOSScheduler::bufferMOS(unsigned int targetsize)
 			// for each packet queue
 			while( iter1 != list_.end() ) {
 				// for each PDU
-				for(unsigned k=0; k < pdulist_[i][qindex].size(); k++)
-					iter1->queue_.push(pdulist_[i][qindex][k]);
+				for(unsigned k=0; k < pdulist_[i][js][qindex].size(); k++)
+					iter1->queue_.push(pdulist_[i][js][qindex][k]);
 				iter1++;
 			}
 
-//		}
+		}
 	}
 }
 
