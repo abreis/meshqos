@@ -129,6 +129,13 @@ set opt(sch-round-duration) 21312      ;# FairRR scheduler, in bytes
 set opt(buffer-sharing)     "per-flow" ;# FairRR scheduler only
 
 #
+# MOS scheduler
+#
+set opt(mos-enable) 0			;# scheduler enabled (1) or disabled (0)
+set opt(mos-maxcombs) 5000		;# max number of combs to eval for MOS
+set opt(mos-ncombs) 18			;# max number of combs to eval for size
+					;# power of 2, evals 2^18 = 262144
+#
 # link profiles
 #
 set opt(prfall) 0    ;# default burst profile index, overriden by prfndx's
@@ -633,6 +640,26 @@ proc create_nodes {} {
 
       # bind the MAC to the topology
       $mac($i) topology $topo
+
+	# create and initialize the MOS scheduler
+	set mossched [new WimshMOSScheduler]
+	$mossched mac $mac($i)
+
+	# link the mos scheduler to the MAC
+	$mac($i) mosscheduler $mossched
+
+	# enable / disable the mos scheduler
+	if { $opt(mos-enable) == 1 } {
+		$mossched enable
+	} else {
+		$mossched disable
+	}
+
+	# set the maximum number of combinations to eval MOS
+	$mossched maxcombs $opt(mos-maxcombs)
+
+	# set the maximum number of combinations to eval size (2^ncombs)
+	$mossched ncombs $opt(mos-ncombs)
 
       # define the list of channels that all the nodes can use
       for { set j 0 } { $j < $opt(channel) } { incr j } {

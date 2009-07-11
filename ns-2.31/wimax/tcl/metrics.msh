@@ -30,14 +30,14 @@ proc create_metrics {} {
 	set buffer $opt(buffer)
 	set nbins [expr $opt(buffer) / 1000]
 
-	$ns stat add wimsh_dsch_election_slots_d  dst discrete 16 115 100
-	$ns stat add wimsh_dsch_inter_time_rcv_d  dst discrete 0 0.1 250
-	$ns stat add wimsh_dsch_inter_time_snd_d  dst discrete 0 0.1 250
-	$ns stat add wimsh_bufsize_mac_d    dst continuous 0  $buffer $nbins
-	$ns stat add wimsh_delay_access_d   dst discrete   0  5       100
-	$ns stat add wimsh_delay_hopbyhop_d dst discrete   0  5       100
-	$ns stat add wimsh_dsch_size_d      dst discrete   15 120     105
-	$ns stat add wimsh_unused_d         dst discrete   0  256     256
+#	$ns stat add wimsh_dsch_election_slots_d  dst discrete 16 115 100
+#	$ns stat add wimsh_dsch_inter_time_rcv_d  dst discrete 0 0.1 250
+#	$ns stat add wimsh_dsch_inter_time_snd_d  dst discrete 0 0.1 250
+#	$ns stat add wimsh_bufsize_mac_d    dst continuous 0  $buffer $nbins
+#	$ns stat add wimsh_delay_access_d   dst discrete   0  5       100
+#	$ns stat add wimsh_delay_hopbyhop_d dst discrete   0  5       100
+#	$ns stat add wimsh_dsch_size_d      dst discrete   15 120     105
+#	$ns stat add wimsh_unused_d         dst discrete   0  256     256
 
 #	$ns stat add wimsh_gnt_in               avg continuous
 #	$ns stat add wimsh_gnt_size             avg discrete
@@ -86,6 +86,27 @@ proc create_metrics {} {
 
 #	$ns stat add voip_mos_talkspurt        avg discrete
 #	$ns stat add voip_%_of_bad_talkspurts  avg discrete
+
+	# for rd scheduler
+	$ns stat add rd_vod_lost_mse	avg counter
+	$ns stat add rd_vod_lost_frames	avg counter
+	$ns stat add rd_vod_recv_frames	avg counter
+	$ns stat add rd_vod_mos		avg discrete
+	#$ns stat add rd_vod_mos_instant	dst discrete ? ? ?
+
+	$ns stat add rd_voip_mos	avg discrete
+	$ns stat add rd_voip_lost_frames	avg counter
+	$ns stat add rd_voip_recv_frames	avg counter
+
+	$ns stat add rd_ftp_mos	avg discrete
+	$ns stat add rd_ftp_tpt	avg discrete
+	$ns stat add rd_ftp_recbits avg counter
+	$ns stat add rd_ftp_lost_frames	avg counter
+	$ns stat add rd_ftp_recv_frames	avg counter
+	
+	$ns stat add rd_packet_lost_overflow	avg counter
+	$ns stat add rd_packet_lost_scheduler	avg counter
+	$ns stat add rd_scheduler_triggered	avg counter
 
 #	$ns stat add tcp_cwnd_a      avg continuous
 #	$ns stat add tcp_dupacks     avg continuous

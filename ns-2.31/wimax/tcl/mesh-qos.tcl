@@ -48,8 +48,8 @@ source metrics.msh
 # simulation environment
 #
 set opt(run)        1		;# replic ID
-set opt(duration)   15.0	;# run duration, in seconds 
-set opt(warm)       5.0		;# run duration, in seconds 
+set opt(duration)   10.0	;# run duration, in seconds
+set opt(warm)       1.0		;# run duration, in seconds
 set opt(out)        "out"	;# statistics output file
 set opt(debug)      ""		;# debug configuration file, "" = no debug
 set opt(startdebug) 0.0		;# start time of debug output
@@ -155,6 +155,13 @@ set opt(buffer)             1000000    ;# buffer size, in bytes
 set opt(sch-round-duration) 21312      ;# FairRR scheduler, in bytes
 set opt(buffer-sharing)     "per-flow" ;# FairRR scheduler only
 
+#
+# MOS scheduler
+#
+set opt(mos-enable) 0			;# scheduler enabled (1) or disabled (0)
+set opt(mos-maxcombs) 5000		;# max number of combs to eval for MOS
+set opt(mos-ncombs) 18			;# max number of combs to eval for size
+					;# power of 2, evals 2^18 = 262144
 #
 # link profiles
 #
