@@ -1052,9 +1052,6 @@ WimshMac::recvBurst (WimshBurst* burst)
 		WimaxDebug::print (burst, stderr);
 	}
 
-	// breakpoint trigger
-	float tnow = NOW;
-
 	//
 	// manage a control message
 	//

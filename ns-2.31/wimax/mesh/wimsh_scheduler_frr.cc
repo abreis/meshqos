@@ -123,8 +123,6 @@ WimshSchedulerFairRR::addPdu (WimaxPdu* pdu)
 	const unsigned char prio = pdu->hdr().meshCid().priority();
 
 	// call the RD scheduler on buffer overflow
-	fprintf(stderr, "DEBUG bufsize %u maxbufsize %u pdu->size() %u\n",
-			bufSize_, maxBufSize_, pdu->size());
 	if(bufSize_ + pdu->size() > maxBufSize_)
 		mac_->mosscheduler()->trigger(pdu->size());
 
@@ -319,7 +317,6 @@ WimshSchedulerFairRR::serve (WimshFragmentationBuffer& frag,
 		// update the buffer occupancies
 		flow.size_ -= pdu->size();			// flow
 		link_[ndx][s].size_ -= pdu->size();	// link
-//		bufSize_ -= pdu->size();			// MAC
 
 		if(bufSize_ < pdu->size())	// TODO: this is a hack, something's missing
 			bufSize_ = 0;

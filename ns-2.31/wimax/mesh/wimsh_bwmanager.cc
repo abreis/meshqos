@@ -76,10 +76,6 @@ WimshBwManager::handle ()
 	const unsigned int F = mac_->frame() % HORIZON;        // alias
 	const unsigned int N = mac_->phyMib()->slotPerFrame(); // alias
 
-	// for breakpoint hit
-	float tnow = NOW;
-	unsigned int tnode = mac_->nodeId();
-
 	bool status = true;       // tx = true, rx = false
 	WimaxNodeId  dst = UINT_MAX;     // only meaningful with tx
 	unsigned int channel = 0; // channel identifier
@@ -340,6 +336,7 @@ WimshBwManagerDummy::schedule (WimshMshDsch* dsch, unsigned int dst)
 		gnt.fromRequester_ = false;
 		gnt.persistence_ = WimshMshDsch::FRAME1;
 		gnt.channel_ = 0;
+		gnt.service_ = 0;
 
 		dsch->add (gnt);
 	}

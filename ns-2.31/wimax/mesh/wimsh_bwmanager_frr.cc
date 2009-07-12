@@ -302,10 +302,6 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 			"\tMSH-DSCH src %d AvlIE %d GntIE %d ReqIE %d (reserved: %d)\n",
 				dschsrc, nAvlIE, nGntIE, nReqIE, dsch->reserved());
 
-	// breakpoint triggers
-	float tnow = NOW;
-	unsigned int tnode = mac_->nodeId();
-
 	rcvAvailabilities(dsch);	// we interpret AvlIEs first so we can correctly grant bandwidth afterwards
 	rcvGrants(dsch);			// we interpret GntIEs second so that bandwidth cancelations are processed before requests
 	rcvRequests(dsch);
@@ -314,9 +310,6 @@ WimshBwManagerFairRR::recvMshDsch (WimshMshDsch* dsch)
 void
 WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 {
-	// breakpoint triggers
-	unsigned int tnode = mac_->nodeId();
-
 	// true if we're interpreting an uncoordinated DSCH's grants
 	bool uncrdDSCH = dsch->reserved();
 	// ?
@@ -735,9 +728,6 @@ WimshBwManagerFairRR::rcvGrants (WimshMshDsch* dsch)
 void
 WimshBwManagerFairRR::rcvAvailabilities (WimshMshDsch* dsch)
 {
-	// breakpoint triggers
-	unsigned int tnode = mac_->nodeId();
-
 	// get the list of availabilities
 	std::list<WimshMshDsch::AvlIE>& avl = dsch->avl();
 
@@ -1123,9 +1113,6 @@ void
 WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 		unsigned int ndx, unsigned int serv)
 {
-	// breakpoint triggers
-	unsigned int tnode = mac_->nodeId();
-
 	const unsigned int neighbors = mac_->nneighs();
 
 	// ndx parameter is only used for rtPS
@@ -1639,9 +1626,6 @@ WimshBwManagerFairRR::requestGrant (WimshMshDsch* dsch,
 void
 WimshBwManagerFairRR::confirm (WimshMshDsch* dsch, unsigned int nodeid, unsigned int serv)
 {
-	// breakpoint triggers
-	unsigned int tnode = mac_->nodeId();
-
 	if ( serv == wimax::RTPS && dsch->grant() )
 		return;
 
